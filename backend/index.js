@@ -104,26 +104,23 @@ if (fs.existsSync(frontendDist)) {
   });
 }
 
-// Start unified Server (HTTP + WebSockets + PostgreSQL Listener)
-(async function start() {
+// Initialize WebSockets on HTTP server
+initSocketServer(server);
+
+// Start HTTP server immediately so cloud healthchecks succeed instantly
+server.listen(port, host, () => {
+  console.log(`[EduScholar Server] HTTP listening on port ${port} (0.0.0.0:${port})`);
+  console.log(`[EduScholar Realtime] WebSocket listening on ws://0.0.0.0:${port}/ws`);
+  console.log(`[EduScholar Docs] Swagger OpenAPI available at http://0.0.0.0:${port}/api-docs`);
+});
+
+// Initialize Database & PostgreSQL listener in background
+(async function initBackgroundServices() {
   try {
     await initDb();
-    
-    // Initialize WebSockets on HTTP server
-    initSocketServer(server);
-
-    // Initialize PostgreSQL LISTEN/NOTIFY client
     await initPgListener();
-
-    server.listen(port, host, () => {
-      console.log(`[EduScholar Server] HTTP listening on http://localhost:${port}`);
-      console.log(`[EduScholar Realtime] WebSocket listening on ws://localhost:${port}/ws`);
-      console.log(`[EduScholar Docs] Swagger OpenAPI available at http://localhost:${port}/api-docs`);
-    });
+    console.log('[EduScholar Server] Database and realtime listener ready.');
   } catch (error) {
-    console.error('[EduScholar Server] Init error:', error.message);
-    server.listen(port, host, () => {
-      console.log(`[EduScholar Server] Running on http://localhost:${port} (warning: check DB connection)`);
-    });
+    console.warn('[EduScholar Server] Background services warning:', error.message);
   }
 })();
