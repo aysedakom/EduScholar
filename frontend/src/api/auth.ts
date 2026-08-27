@@ -11,6 +11,7 @@ export interface AuthResponse {
 export interface LoginRequestResponse {
   requireOtp?: boolean;
   email?: string;
+  devOtp?: string;
   message: string;
   token?: string;
   user?: User;
@@ -20,6 +21,7 @@ export interface RegisterResponse {
   success: boolean;
   message: string;
   email: string;
+  devVerifyUrl?: string;
 }
 
 export interface RegisterPayload {
@@ -42,7 +44,7 @@ export const verifyOtp = (email: string, otp: string) => {
 };
 
 export const resendOtp = (email: string, purpose: string = 'login') => {
-  return api.post<{ success: boolean; message: string }>('/auth/resend-otp', { email, purpose });
+  return api.post<{ success: boolean; message: string; devOtp?: string }>('/auth/resend-otp', { email, purpose });
 };
 
 export const verifyEmail = (token: string, email?: string) => {
@@ -50,11 +52,11 @@ export const verifyEmail = (token: string, email?: string) => {
 };
 
 export const resendVerification = (email: string) => {
-  return api.post<{ success: boolean; message: string }>('/auth/resend-verification', { email });
+  return api.post<{ success: boolean; message: string; devVerifyUrl?: string }>('/auth/resend-verification', { email });
 };
 
 export const forgotPassword = (email: string) => {
-  return api.post<{ success: boolean; message: string }>('/auth/forgot-password', { email });
+  return api.post<{ success: boolean; message: string; devResetUrl?: string }>('/auth/forgot-password', { email });
 };
 
 export const resetPassword = (token: string, newPassword: string, email?: string) => {

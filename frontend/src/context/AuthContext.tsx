@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 interface LoginRequestResult {
   requireOtp: boolean;
   email: string;
+  devOtp?: string;
   message?: string;
 }
 
@@ -19,14 +20,14 @@ interface AuthContextType {
   apiError: string | null;
   loginRequest: (email: string, password: string) => Promise<LoginRequestResult>;
   verifyOtp: (email: string, otp: string, targetRole?: UserRole) => Promise<boolean>;
-  resendOtp: (email: string, purpose?: string) => Promise<boolean>;
+  resendOtp: (email: string, purpose?: string) => Promise<{ success: boolean; devOtp?: string }>;
   verifyEmailToken: (token: string, email?: string) => Promise<boolean>;
   verifyEmailCode: (email: string, code: string) => Promise<boolean>;
-  resendVerification: (email: string) => Promise<boolean>;
-  forgotPassword: (email: string) => Promise<{ success: boolean; message: string }>;
+  resendVerification: (email: string) => Promise<{ success: boolean; devVerifyUrl?: string }>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message: string; devResetUrl?: string }>;
   resetPassword: (token: string, newPassword: string, email?: string) => Promise<{ success: boolean; message: string }>;
   login: (email: string, password: string, role?: UserRole) => Promise<boolean>;
-  register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; email?: string; message?: string }>;
+  register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; email?: string; devVerifyUrl?: string; message?: string }>;
   logout: () => void;
   switchRole: (newRole: UserRole) => void;
   loadUser: () => Promise<void>;
@@ -143,6 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         requireOtp: res.data.requireOtp ?? true,
         email: res.data.email || email,
+        devOtp: res.data.devOtp,
         message: res.data.message,
       };
     } catch (err: any) {
@@ -184,15 +186,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   /**
    * Resend fresh OTP code
    */
-  const resendOtp = async (email: string, purpose: string = 'login'): Promise<boolean> => {
+  const resendOtp = async (email: string, purpose: string = 'login'): Promise<{ success: boolean; devOtp?: string }> => {
     try {
       const res = await authApi.resendOtp(email, purpose);
       toast.success(res.data.message || 'A fresh verification code has been dispatched to your email.');
-      return true;
+      return { success: true, devOtp: res.data.devOtp };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Failed to resend code.';
       toast.error(message);
-      return false;
+      return { success: false };
     }
   };
 
@@ -213,37 +215,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Backward compatible alias for verifyEmailCode
+   * Verify Email with 6-digit Code (Applicant Email Activation)
    */
   const verifyEmailCode = async (email: string, code: string): Promise<boolean> => {
-    return verifyEmailToken(code, email);
+    setApiError(null);
+    try {
+      const res = await authApi.verifyEmail(code, email);
+      toast.success(res.data.message || 'Email authorization verified successfully! You may now sign in.');
+      return true;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Invalid or expired authorization code.';
+      setApiError(message);
+      throw new Error(message);
+    }
   };
 
   /**
-   * Resend Email Verification Link
+   * Resend Account Verification Link
    */
-  const resendVerification = async (email: string): Promise<boolean> => {
+  const resendVerification = async (email: string): Promise<{ success: boolean; devVerifyUrl?: string }> => {
     try {
       const res = await authApi.resendVerification(email);
-      toast.success(res.data.message || 'A fresh verification link has been sent to your email.');
-      return true;
+      toast.success(res.data.message || 'A fresh verification link has been dispatched to your email.');
+      return { success: true, devVerifyUrl: res.data.devVerifyUrl };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Failed to resend verification link.';
       toast.error(message);
-      return false;
+      return { success: false };
     }
   };
 
   /**
    * Request password reset link (sends verification email)
    */
-  const forgotPassword = async (email: string): Promise<{ success: boolean; message: string }> => {
+  const forgotPassword = async (email: string): Promise<{ success: boolean; message: string; devResetUrl?: string }> => {
     setApiError(null);
     try {
       const res = await authApi.forgotPassword(email);
       const msg = res.data.message || 'A password reset authorization link has been sent to your email.';
       toast.success(msg);
-      return { success: true, message: msg };
+      return { success: true, message: msg, devResetUrl: res.data.devResetUrl };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Failed to process password reset request.';
       setApiError(message);
@@ -329,7 +340,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email: string,
     password: string,
     selectedRole: UserRole
-  ): Promise<{ success: boolean; email?: string; message?: string }> => {
+  ): Promise<{ success: boolean; email?: string; devVerifyUrl?: string; message?: string }> => {
     setApiError(null);
     try {
       const res = await authApi.register({ name, email, password, role: selectedRole });
@@ -348,6 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return {
         success: true,
         email: res.data.email || email,
+        devVerifyUrl: res.data.devVerifyUrl,
         message: res.data.message || 'Account registered successfully! Please log in with your email, password, and OTP.',
       };
     } catch (err: any) {

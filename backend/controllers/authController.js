@@ -93,6 +93,7 @@ const register = async (req, res) => {
       success: true,
       requireEmailVerification: true,
       email: user.email,
+      devVerifyUrl: verifyUrl,
       message: 'Account created! Please check your email and click the verification button to verify your account.',
     });
   } catch (error) {
@@ -177,6 +178,7 @@ const resendVerification = async (req, res) => {
 
     res.json({
       success: true,
+      devVerifyUrl: verifyUrl,
       message: 'A fresh verification link has been dispatched to your email.',
     });
   } catch (error) {
@@ -230,10 +232,11 @@ const login = async (req, res) => {
       expiresInMinutes: 10,
     }).catch((err) => console.warn('[authController] Email dispatch warning:', err.message));
 
-    // Return requireOtp signal immediately
+    // Return requireOtp signal immediately along with devOtp
     res.json({
       requireOtp: true,
       email: user.email,
+      devOtp: otp.otp_code,
       message: 'A unique 6-digit verification code has been dispatched to your email.',
     });
   } catch (error) {
@@ -314,6 +317,7 @@ const resendOtp = async (req, res) => {
 
     res.json({
       success: true,
+      devOtp: otp.otp_code,
       message: 'A fresh verification code has been dispatched to your email.',
     });
   } catch (error) {
@@ -389,6 +393,7 @@ const forgotPassword = async (req, res) => {
 
     res.json({
       success: true,
+      devResetUrl: resetUrl,
       message: 'If an account exists with this email address, a password reset verification link has been sent.',
     });
   } catch (error) {

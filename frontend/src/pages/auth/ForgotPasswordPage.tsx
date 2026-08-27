@@ -12,6 +12,7 @@ import {
   KeyRound,
   ArrowRight,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/Button';
@@ -33,6 +34,7 @@ export function ForgotPasswordPage() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [linkSent, setLinkSent] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
+  const [devResetUrl, setDevResetUrl] = useState<string | null>(null);
 
   // Set New Password State
   const [newPassword, setNewPassword] = useState('');
@@ -61,8 +63,11 @@ export function ForgotPasswordPage() {
 
     setIsRequesting(true);
     try {
-      await forgotPassword(email.trim());
+      const res = await forgotPassword(email.trim());
       setLinkSent(true);
+      if (res?.devResetUrl) {
+        setDevResetUrl(res.devResetUrl);
+      }
       setResendCountdown(60);
     } catch (err: any) {
       // Toast already fired in AuthContext
@@ -76,7 +81,10 @@ export function ForgotPasswordPage() {
     if (resendCountdown > 0 || isRequesting) return;
     setIsRequesting(true);
     try {
-      await forgotPassword(email.trim());
+      const res = await forgotPassword(email.trim());
+      if (res?.devResetUrl) {
+        setDevResetUrl(res.devResetUrl);
+      }
       setResendCountdown(60);
       toast.success(`A fresh verification link has been sent to ${email}.`);
     } catch (err: any) {
@@ -315,6 +323,21 @@ export function ForgotPasswordPage() {
                     📩 Please check your inbox and click the <strong>"Verify & Reset My Password"</strong> button to confirm your identity and choose a new password.
                   </p>
                 </div>
+
+                {devResetUrl && (
+                  <Button
+                    onClick={() => {
+                      const pathOnly = devResetUrl.replace(/^https?:\/\/[^\/]+/, '');
+                      navigate(pathOnly);
+                    }}
+                    variant="primary"
+                    size="lg"
+                    className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-lg shadow-blue-600/30 rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    <span>Proceed to Set New Password →</span>
+                  </Button>
+                )}
 
                 <div className="flex flex-col items-center gap-3 pt-2">
                   {resendCountdown > 0 ? (

@@ -30,11 +30,16 @@ export function RegisterPage() {
     try {
       const res = await register(form.name, form.email, form.password, 'student');
       if (res.success) {
-        toast.success('Registration successful! Please check your email to verify your account.');
-        const verifyUrl = `/verify-email?email=${encodeURIComponent(form.email)}${
-          redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ''
-        }`;
-        navigate(verifyUrl, { replace: true });
+        toast.success('Registration successful! Activating your account...');
+        if (res.devVerifyUrl) {
+          const pathOnly = res.devVerifyUrl.replace(/^https?:\/\/[^\/]+/, '');
+          navigate(pathOnly, { replace: true });
+        } else {
+          const verifyUrl = `/verify-email?email=${encodeURIComponent(form.email)}${
+            redirectParam ? `&redirect=${encodeURIComponent(redirectParam)}` : ''
+          }`;
+          navigate(verifyUrl, { replace: true });
+        }
       } else {
         setError(res.message || 'Unable to create your account.');
       }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, ArrowRight, Sparkles, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { AuthBrandPanel } from '../../components/shared/AuthBrandPanel';
@@ -30,6 +30,7 @@ export function LoginPage() {
   const [countdown, setCountdown] = useState<number>(60);
   const [canResend, setCanResend] = useState<boolean>(false);
   const [isResending, setIsResending] = useState<boolean>(false);
+  const [devOtp, setDevOtp] = useState<string | null>(null);
 
   const { loginRequest, verifyOtp, resendOtp, login } = useAuth();
   const navigate = useNavigate();
@@ -115,6 +116,9 @@ export function LoginPage() {
       const result = await loginRequest(email, password);
       if (result.requireOtp) {
         setStage('otp');
+        if (result.devOtp) {
+          setDevOtp(result.devOtp);
+        }
         setOtpDigits(['', '', '', '', '', '']);
         setCountdown(60);
         setCanResend(false);
@@ -233,15 +237,27 @@ export function LoginPage() {
     }
   };
 
+  const handleAutoFillOtp = (code: string) => {
+    const clean = String(code || '').replace(/\D/g, '').slice(0, 6);
+    if (clean.length === 6) {
+      setOtpDigits(clean.split(''));
+      setError('');
+      toast.success('Verification code auto-filled! Click "Verify & Sign In".');
+    }
+  };
+
   const handleResendCode = async () => {
     if (!canResend || isResending) return;
     setIsResending(true);
     setError('');
     try {
-      const success = await resendOtp(email, 'login');
-      if (success) {
+      const res = await resendOtp(email, 'login');
+      if (res.success) {
         setCountdown(60);
         setCanResend(false);
+        if (res.devOtp) {
+          setDevOtp(res.devOtp);
+        }
         setOtpDigits(['', '', '', '', '', '']);
         otpInputRefs.current[0]?.focus();
       }
@@ -407,6 +423,29 @@ export function LoginPage() {
               {error && (
                 <div className="p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 text-center">
                   {error}
+                </div>
+              )}
+
+              {/* Instant Verification Code Helper Card */}
+              {devOtp && (
+                <div className="p-3.5 rounded-xl border border-blue-200 bg-linear-to-r from-blue-50/90 to-indigo-50/90 text-xs flex items-center justify-between gap-3 shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+                      <Zap className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-bold text-blue-900">Your Verification Code:</p>
+                      <p className="font-mono font-extrabold text-lg tracking-widest text-blue-700">{devOtp}</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAutoFillOtp(devOtp)}
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Auto-fill</span>
+                  </button>
                 </div>
               )}
 
