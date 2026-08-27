@@ -76,11 +76,11 @@ const frontendDist = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(frontendDist)) {
   console.log('[EduScholar Server] Serving frontend production bundle from frontend/dist');
   app.use(express.static(frontendDist));
-  app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api') || req.path.startsWith('/api-docs') || req.path.startsWith('/ws')) {
-      return next();
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/api-docs') && !req.path.startsWith('/ws')) {
+      return res.sendFile(path.join(frontendDist, 'index.html'));
     }
-    res.sendFile(path.join(frontendDist, 'index.html'));
+    next();
   });
 } else {
   app.get('/', (req, res) => {
