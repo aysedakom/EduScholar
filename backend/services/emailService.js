@@ -1,4 +1,8 @@
 // backend/services/emailService.js
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 const nodemailer = require('nodemailer');
 const { pool } = require('../config/db');
 const path = require('path');
@@ -67,10 +71,11 @@ function getSmtpTransporter() {
       host,
       port,
       secure: port === 465,
+      family: 4,
       auth: { user, pass },
-      connectionTimeout: 2500,
-      greetingTimeout: 2500,
-      socketTimeout: 2500,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 4000,
       tls: {
         rejectUnauthorized: false,
       },
