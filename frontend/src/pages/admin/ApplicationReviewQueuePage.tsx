@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Filter, Inbox, X } from 'lucide-react';
+import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Inbox, X } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
@@ -599,12 +599,12 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
         <DocumentAttachmentViewerModal
           isOpen={!!docViewerApp}
           onClose={() => setDocViewerApp(null)}
-          applicationId={docViewerApp.id}
+          applicantId={docViewerApp.id}
           applicantName={docViewerApp.studentName}
-          scholarshipTitle={docViewerApp.scholarshipTitle}
-          documents={docViewerApp.documentsUploaded}
-          onApprove={() => handleApprove(docViewerApp.id)}
-          onReject={() => handleReject(docViewerApp.id)}
+          programTitle={docViewerApp.scholarshipTitle}
+          documents={docViewerApp.documentsUploaded as any}
+          onApproveApplication={() => handleApprove(docViewerApp.id)}
+          onRejectApplication={() => handleReject(docViewerApp.id)}
         />
       )}
 
@@ -617,9 +617,6 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
             setNoticeRecipient(null);
           }}
           recipient={noticeRecipient}
-          onNoticeDispatched={() => {
-            toast.success(`Official email notice dispatched to ${noticeRecipient.email}!`);
-          }}
         />
       )}
 

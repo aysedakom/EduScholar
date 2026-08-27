@@ -9,17 +9,12 @@ import {
   ShieldCheck,
   CheckCircle2,
   Award,
-  Calendar,
-  Building2,
-  GraduationCap,
   Sparkles,
-  QrCode,
   Check,
   Loader2
 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 import { toast } from 'sonner';
 import api from '../../services/api';
 

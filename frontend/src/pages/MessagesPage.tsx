@@ -6,12 +6,7 @@ import {
   Megaphone,
   ChevronDown,
   ChevronUp,
-  User,
   ShieldCheck,
-  Clock,
-  CheckCheck,
-  Radio,
-  Plus,
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -153,7 +148,7 @@ export const MessagesPage: React.FC = () => {
     const optimisticMsg: ChatMessageItem = {
       id: Date.now(),
       conversation_id: selectedConv.conversation_id,
-      sender_id: user?.id || 0,
+      sender_id: user?.id ? Number(user.id) : 0,
       sender_name: user?.name || 'You',
       sender_role: (user?.role as any) || 'student',
       message: currentText,
@@ -169,13 +164,15 @@ export const MessagesPage: React.FC = () => {
         recipient_id: selectedConv.participant_id,
       });
 
-      if (res.data?.data) {
-        setMessages((prev) => prev.map((m) => (m.id === optimisticMsg.id ? res.data.data : m)));
+      if (res && res.data) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimisticMsg.id ? res.data.data : m))
+        );
       }
       loadConversations(false);
     } catch (err) {
       console.error('Failed to send message:', err);
-      toast.error('Message failed to send. Please try again.');
+      toast.error('Could not send message. Please try again.');
     } finally {
       setIsSending(false);
     }
@@ -185,28 +182,30 @@ export const MessagesPage: React.FC = () => {
   const handleCreateAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!annTitle.trim() || !annMessage.trim()) {
-      toast.error('Please enter announcement title and message body');
+      toast.error('Please enter announcement title and message content');
       return;
     }
 
     setIsBroadcasting(true);
     try {
       const res = await createAnnouncement({
-        title: annTitle,
+        title: annTitle.trim(),
         target_group: targetGroup,
+        message: annMessage.trim(),
         priority: priority,
-        message: annMessage,
         sent_by: `${user?.name || 'Admin'} (QCYDO Desk)`,
       });
 
-      toast.success(res.data.message || 'Bulk Notification successfully broadcasted!');
-      setShowBulkModal(false);
-      setAnnTitle('');
-      setAnnMessage('');
-      setPriority('normal');
-      loadAnnouncements();
+      if (res.data) {
+        toast.success(`Announcement broadcasted to ${targetGroup}!`);
+        setShowBulkModal(false);
+        setAnnTitle('');
+        setAnnMessage('');
+        setPriority('normal');
+        loadAnnouncements();
+      }
     } catch (err) {
-      console.error('Error broadcasting announcement:', err);
+      console.error('Failed to broadcast announcement:', err);
       toast.error('Failed to broadcast announcement');
     } finally {
       setIsBroadcasting(false);
@@ -229,93 +228,82 @@ export const MessagesPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-              Communication & Bulk Notifications
+              Official Communication Center
             </h1>
             <Badge variant="primary" size="sm">
-              Live Messaging Desk
+              Live Helpdesk & Broadcasts
             </Badge>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-            Direct counselor messaging channel, student inquiry helpdesk, and administrative bulk broadcast system.
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {isAdminOrStaff
+              ? 'Broadcast citywide scholarship advisories and provide live assistance to applicant inquiries.'
+              : 'Direct hotline with the Quezon City Scholarship Helpdesk and view official program announcements.'}
           </p>
         </div>
 
         <div className="flex items-center gap-2">
+          {isAdminOrStaff && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowBulkModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 font-bold text-xs shadow-xs"
+              leftIcon={<Megaphone className="h-4 w-4" />}
+            >
+              Post Official Announcement
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
               loadAnnouncements();
-              loadConversations(false);
-              if (selectedConv) loadMessagesForSelected(selectedConv.conversation_id);
-              toast.success('Communication channels refreshed!');
+              loadConversations();
             }}
             leftIcon={<RefreshCw className="h-3.5 w-3.5 text-slate-500" />}
             className="font-bold text-xs"
           >
             Refresh
           </Button>
-
-          {isAdminOrStaff && (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowBulkModal(true)}
-              leftIcon={<Megaphone className="h-4 w-4" />}
-              className="font-bold bg-blue-600 text-white shadow-md shadow-blue-600/20 whitespace-nowrap"
-            >
-              Create Bulk Announcement
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Broadcast Announcements Feed */}
-      <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <CardHeader
-          onClick={() => setShowAnnouncements(!showAnnouncements)}
-          className={`flex flex-row items-center justify-between cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/60 transition-colors p-4 ${
-            showAnnouncements ? 'border-b border-slate-100 dark:border-slate-800 pb-4' : ''
-          }`}
-        >
-          <div>
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-slate-900 dark:text-white">
-              <Megaphone className="h-4 w-4 text-blue-600" />
-              System Announcements & Broadcasts
-            </CardTitle>
-            <CardDescription className="text-xs text-slate-500">
-              Broadcasting city-wide scholarship notices, stipend release schedules, and deadline updates.
-            </CardDescription>
+      {/* Announcements Broadcast Card */}
+      <Card className="border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/20">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 cursor-pointer" onClick={() => setShowAnnouncements(!showAnnouncements)}>
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              <Megaphone className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-sm font-extrabold text-blue-950 dark:text-blue-200 flex items-center gap-2">
+                Citywide Scholarship Announcements & Advisories
+                <Badge variant="primary" size="sm" className="text-[10px]">
+                  {announcements.length} Active
+                </Badge>
+              </CardTitle>
+              <CardDescription className="text-xs text-slate-500 dark:text-slate-400">
+                Official notices regarding payouts, evaluation updates, and renewal cycles
+              </CardDescription>
+            </div>
           </div>
-
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            <Badge variant={showAnnouncements ? 'primary' : 'outline'} size="sm">
-              {announcements.length} Active Broadcasts
-            </Badge>
-
-            <button
-              type="button"
-              onClick={() => setShowAnnouncements(!showAnnouncements)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-              title={showAnnouncements ? 'Collapse Announcements' : 'Expand Announcements'}
-            >
-              {showAnnouncements ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-          </div>
+          <button className="text-slate-400 hover:text-slate-600 transition-colors p-1">
+            {showAnnouncements ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          </button>
         </CardHeader>
 
         {showAnnouncements && (
-          <CardContent className="pt-4 animate-in fade-in duration-200 p-4">
+          <CardContent className="pt-0 space-y-3">
             {announcements.length === 0 ? (
-              <div className="text-center py-6 text-slate-400 text-xs font-medium">
-                No active announcements broadcasted yet. Click &quot;Create Bulk Announcement&quot; above to broadcast an official announcement to scholars.
+              <div className="p-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                No active announcements right now.
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {announcements.map((anc) => (
                   <div
                     key={anc.id}
-                    className="p-4 bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-xs space-y-1.5"
+                    className="p-3.5 bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-xs space-y-2"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -324,7 +312,7 @@ export const MessagesPage: React.FC = () => {
                         </span>
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white">{anc.title}</h4>
                         {anc.priority === 'urgent' && (
-                          <Badge variant="danger" size="sm">
+                          <Badge variant="destructive" size="sm">
                             Urgent
                           </Badge>
                         )}
@@ -378,6 +366,7 @@ export const MessagesPage: React.FC = () => {
           <div className="space-y-1.5 flex-1 overflow-y-auto pr-1">
             {filteredConversations.map((c) => {
               const isSelected = selectedConv?.conversation_id === c.conversation_id;
+              const badgeVar = c.status_badge_variant === 'danger' ? 'destructive' : (c.status_badge_variant as any) || 'outline';
               return (
                 <div
                   key={c.conversation_id}
@@ -413,7 +402,7 @@ export const MessagesPage: React.FC = () => {
                     </div>
                     {c.academic_status && (
                       <div className="mb-1">
-                        <Badge variant={c.status_badge_variant || 'outline'} size="sm" className="text-[9px] py-0 px-1.5">
+                        <Badge variant={badgeVar} size="sm" className="text-[9px] py-0 px-1.5">
                           {c.academic_status}
                         </Badge>
                       </div>
@@ -442,7 +431,7 @@ export const MessagesPage: React.FC = () => {
                     {selectedConv?.participant_name || 'Financial Aid Desk'}
                   </h3>
                   {selectedConv?.academic_status && (
-                    <Badge variant={selectedConv.status_badge_variant || 'primary'} size="sm" className="text-[10px]">
+                    <Badge variant={selectedConv.status_badge_variant === 'danger' ? 'destructive' : (selectedConv.status_badge_variant as any) || 'primary'} size="sm" className="text-[10px]">
                       {selectedConv.academic_status}
                     </Badge>
                   )}
@@ -477,7 +466,7 @@ export const MessagesPage: React.FC = () => {
               </div>
             ) : (
               messages.map((c) => {
-                const isMe = c.sender_id === user?.id || (isAdminOrStaff && c.sender_role === 'admin') || (!isAdminOrStaff && c.sender_role === 'student');
+                const isMe = String(c.sender_id) === String(user?.id) || (isAdminOrStaff && c.sender_role === 'admin') || (!isAdminOrStaff && c.sender_role === 'student');
 
                 return (
                   <div

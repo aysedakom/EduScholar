@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Award, Sparkles, Download, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Award } from 'lucide-react';
 import { getMyApplications } from '../api/applications';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';

@@ -7,7 +7,6 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { formatCurrency, formatDate } from '../../utils/cn';
 import { getMyApplications, updateApplicationStatus } from '../../api/applications';
-import type { Application } from '../../types';
 
 interface ComplianceItem {
   name: string;
@@ -102,7 +101,7 @@ export const ConditionalOffersPage: React.FC = () => {
       const idMap: { [key: string]: number } = {};
       renewals.forEach((app) => {
         const refId = app.reference_id || app.application_code || String(app.id);
-        idMap[refId] = app.id;
+        idMap[refId] = Number(app.id);
       });
       setDbIdMap(idMap);
       setOffers(mapped);

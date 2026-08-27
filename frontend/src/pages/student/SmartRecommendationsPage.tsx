@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { Sparkles, CheckCircle2, ArrowRight, Filter, GraduationCap } from 'lucide-react';
+import { Sparkles, CheckCircle2, ArrowRight, Filter } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { formatCurrency, formatDate } from '../../utils/cn';
 import { useAuth } from '../../context/AuthContext';
-import { ALL_SCHOLARSHIP_PROGRAMS } from '../../utils/scholarshipPrograms';
 import { Link } from 'react-router-dom';
 
 interface RecommendationItem {
@@ -25,10 +24,10 @@ export const SmartRecommendationsPage: React.FC = () => {
   const [filter, setFilter] = useState('All');
   const categories = ['All', '90%+ Match', 'STEM Major', 'Need-Based'];
 
-  const studentGpa = Number(user?.gpa || user?.basicProfile?.gpa || 1.50);
-  const studentCourse = user?.major || user?.basicProfile?.course || 'B.S. Information Technology';
-  const studentSchool = user?.department || user?.basicProfile?.school || 'Bestlink College of the Philippines (BCP)';
-  const studentBarangay = user?.barangay || user?.basicProfile?.barangay || 'Barangay Central, Quezon City';
+  const studentGpa = Number(user?.gpa || (user?.basicProfile as any)?.gpa || 1.50);
+  const studentCourse = user?.major || (user?.basicProfile as any)?.course || 'B.S. Information Technology';
+  const studentSchool = user?.department || (user?.basicProfile as any)?.school || 'Bestlink College of the Philippines (BCP)';
+  const studentBarangay = user?.barangay || (user?.basicProfile as any)?.barangay || 'Barangay Central, Quezon City';
 
   const recommendations: RecommendationItem[] = useMemo(() => {
     return [

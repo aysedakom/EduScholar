@@ -201,7 +201,7 @@ export const ApplicationForm: React.FC = () => {
     trigger,
     formState: { errors },
   } = useForm<ApplicationFormData>({
-    resolver: zodResolver(applicationSchema),
+    resolver: zodResolver(applicationSchema) as any,
     defaultValues: {
       firstName: user?.name?.split(' ')[0] || '',
       lastName: user?.name?.split(' ').slice(1).join(' ') || '',
@@ -823,7 +823,7 @@ export const ApplicationForm: React.FC = () => {
         </div>
 
         {/* FORM CONTAINER */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
           {/* STEP 1: BASIC INFORMATION */}
           {currentStep === 1 && (
             <div className={`p-6 sm:p-8 rounded-3xl border shadow-sm space-y-6 animate-in fade-in duration-300 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/90'}`}>

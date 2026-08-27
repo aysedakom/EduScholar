@@ -59,33 +59,50 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
 
 // Health check & System Information
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     system: 'EduScholar Quezon City Scholarship Management System',
     version: '2.0.0',
-    database: 'PostgreSQL 18 Connected',
-    realtime: {
-      websockets: `ws://localhost:${port}/ws`,
-      pg_listener: 'eduscholar_events (LISTEN/NOTIFY active)',
-    },
-    mcp: {
-      server: 'eduscholar-mcp-server',
-      command: 'npm run mcp',
-    },
-    endpoints: {
-      docs: '/api-docs',
-      auth: '/api/auth',
-      scholarships: '/api/scholarships',
-      applications: '/api/applications',
-      partners: '/api/partners',
-      reports: '/api/reports/monitoring',
-      distributions: '/api/distributions',
-      registry: '/api/registry',
-      admin: '/api/admin/stats',
-    },
+    database: 'PostgreSQL Connected',
+    timestamp: new Date().toISOString(),
   });
 });
+
+// If built frontend exists, serve it with SPA fallback
+const path = require('path');
+const fs = require('fs');
+const frontendDist = path.join(__dirname, '../frontend/dist');
+if (fs.existsSync(frontendDist)) {
+  console.log('[EduScholar Server] Serving frontend production bundle from frontend/dist');
+  app.use(express.static(frontendDist));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/api-docs') || req.path.startsWith('/ws')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDist, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'online',
+      system: 'EduScholar Quezon City Scholarship Management System API',
+      version: '2.0.0',
+      database: 'PostgreSQL Connected',
+      endpoints: {
+        docs: '/api-docs',
+        auth: '/api/auth',
+        scholarships: '/api/scholarships',
+        applications: '/api/applications',
+        partners: '/api/partners',
+        reports: '/api/reports/monitoring',
+        distributions: '/api/distributions',
+        registry: '/api/registry',
+        admin: '/api/admin/stats',
+      },
+    });
+  });
+}
 
 // Start unified Server (HTTP + WebSockets + PostgreSQL Listener)
 (async function start() {
