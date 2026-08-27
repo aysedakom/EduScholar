@@ -46,6 +46,10 @@ const pool = new Pool(createPoolConfig(DB_NAME));
  * If the DB does not exist, create it.
  */
 async function ensureDatabaseExists() {
+  if (process.env.DATABASE_URL) {
+    console.log('[db] Using cloud DATABASE_URL, skipping CREATE DATABASE check');
+    return;
+  }
   try {
     const check = await adminPool.query(
       `SELECT 1 FROM pg_database WHERE datname = $1`,

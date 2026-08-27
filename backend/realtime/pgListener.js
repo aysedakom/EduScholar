@@ -15,8 +15,12 @@ let listenerClient = null;
  */
 async function initPgListener() {
   try {
+    const isLocal = !process.env.DATABASE_URL || process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
     const config = process.env.DATABASE_URL
-      ? { connectionString: process.env.DATABASE_URL }
+      ? {
+          connectionString: process.env.DATABASE_URL,
+          ssl: isLocal ? false : { rejectUnauthorized: false },
+        }
       : {
           host: DB_HOST,
           port: DB_PORT,
