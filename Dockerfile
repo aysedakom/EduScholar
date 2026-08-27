@@ -1,5 +1,5 @@
-# Stage 1: Build Frontend Static Bundle
-FROM node:20-alpine AS frontend-builder
+# Stage 1: Build Frontend Static Bundle with Node 22 LTS
+FROM node:22-alpine AS frontend-builder
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
@@ -8,8 +8,8 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# Stage 2: Backend & Production Web Server
-FROM node:20-alpine AS runner
+# Stage 2: Backend & Production Web Server with Node 22 LTS
+FROM node:22-alpine AS runner
 WORKDIR /app
 
 # Set production environment
