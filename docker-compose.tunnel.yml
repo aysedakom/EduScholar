@@ -1,0 +1,16 @@
+# Cloudflare Tunnel Extension for EduScholar
+# Secure Zero-Trust public HTTPS routing without opening router ports or exposing IP
+services:
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: eduscholar-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    networks:
+      - eduscholar-net
+
+networks:
+  eduscholar-net:
+    external: true

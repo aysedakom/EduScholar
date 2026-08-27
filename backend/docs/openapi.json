@@ -1,0 +1,173 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "EduScholar & Campus Aid Hub API",
+    "description": "Enterprise REST API, Real-Time Event System, and MCP Service for the Quezon City Scholarship Management System (QCSP).",
+    "version": "2.0.0",
+    "contact": {
+      "name": "Quezon City Youth Development Office (QCYDO) ITDD",
+      "email": "qcydo@quezoncity.gov.ph"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api",
+      "description": "Local Development Server"
+    },
+    {
+      "url": "https://api.eduscholar.qc.gov.ph/api",
+      "description": "Production Cloudflare Gateway"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Maria Santos" },
+          "email": { "type": "string", "example": "student@demo.edu" },
+          "role": { "type": "string", "enum": ["student", "admin", "supervisor", "school_coordinator", "treasury", "system_admin"] },
+          "student_id": { "type": "string", "example": "2024-00192" },
+          "department": { "type": "string", "example": "College of Computer Studies" },
+          "major": { "type": "string", "example": "BS Computer Science" },
+          "gpa": { "type": "number", "example": 1.45 }
+        }
+      },
+      "Application": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 101 },
+          "application_code": { "type": "string", "example": "APP-QC-1786810009242" },
+          "type": { "type": "string", "example": "Scholarship" },
+          "program_id": { "type": "string", "example": "tertiary-academic" },
+          "program_name": { "type": "string", "example": "Quezon City Scholarship Program (QCSP) Tertiary Academic Track" },
+          "amount": { "type": "number", "example": 105000 },
+          "status": { "type": "string", "enum": ["Draft", "Submitted", "Under Review", "Interview Scheduled", "Approved", "Rejected", "Paid", "Renewal Processing"] },
+          "submission_date": { "type": "string", "format": "date", "example": "2026-08-24" },
+          "progress": { "type": "integer", "example": 60 }
+        }
+      },
+      "DistributionBatch": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "batch_code": { "type": "string", "example": "BATCH-2026-01-SHS" },
+          "program_name": { "type": "string", "example": "Senior High School (SHS) Educational Grant" },
+          "beneficiary_count": { "type": "integer", "example": 640 },
+          "total_amount": { "type": "number", "example": 6400000.00 },
+          "disbursement_channel": { "type": "string", "example": "Landbank ATM / Cash Card" },
+          "status": { "type": "string", "enum": ["Completed", "Processing", "Scheduled", "Auditing"] }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate User with Email & Password",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "example": "student@demo.edu" },
+                  "password": { "type": "string", "example": "password123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated successfully. Returns JWT Bearer token and user profile."
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Current user profile" }
+        }
+      }
+    },
+    "/scholarships": {
+      "get": {
+        "summary": "List all active QCSP Scholarship programs",
+        "tags": ["Scholarships"],
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } },
+          { "name": "level", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Array of scholarships" }
+        }
+      }
+    },
+    "/applications": {
+      "get": {
+        "summary": "List applications (role-scoped)",
+        "tags": ["Applications"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of user or all applications" }
+        }
+      },
+      "post": {
+        "summary": "Submit a new scholarship or aid application",
+        "tags": ["Applications"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": { "description": "Application submitted and saved to PostgreSQL" }
+        }
+      }
+    },
+    "/distributions": {
+      "get": {
+        "summary": "List School Aid Distribution Payout Batches",
+        "tags": ["Distributions"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of distribution batches" }
+        }
+      }
+    },
+    "/registry": {
+      "get": {
+        "summary": "List active scholars in the Student Registry",
+        "tags": ["Registry"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "List of verified scholars" }
+        }
+      }
+    },
+    "/admin/reset-db": {
+      "post": {
+        "summary": "Reset and reseed all database tables to default QCSP state",
+        "tags": ["Administration"],
+        "responses": {
+          "200": { "description": "Database reset and seeded" }
+        }
+      }
+    }
+  }
+}

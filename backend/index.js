@@ -1,0 +1,112 @@
+// backend/index.js
+require('dotenv').config();
+const http = require('http');
+const express = require('express');
+const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const { initDb } = require('./config/db');
+const { initSocketServer } = require('./realtime/socketServer');
+const { initPgListener } = require('./realtime/pgListener');
+const openapiSpec = require('./docs/openapi.json');
+
+const app = express();
+const server = http.createServer(app);
+const port = process.env.PORT || 5000;
+const host = '0.0.0.0';
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// OpenAPI / Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const opportunityRoutes = require('./routes/opportunities');
+const scholarshipRoutes = require('./routes/scholarships');
+const bursaryRoutes = require('./routes/bursaries');
+const applicationRoutes = require('./routes/applications');
+const documentRoutes = require('./routes/documents');
+const notificationRoutes = require('./routes/notifications');
+const partnerRoutes = require('./routes/partners');
+const reportRoutes = require('./routes/reports');
+const distributionRoutes = require('./routes/distributions');
+const registryRoutes = require('./routes/registry');
+const adminRoutes = require('./routes/admin');
+const qcidRoutes = require('./routes/qcid');
+const schoolSyncRoutes = require('./routes/schoolSync');
+const fundRoutes = require('./routes/funds');
+const communicationRoutes = require('./routes/communication');
+const calendarRoutes = require('./routes/calendar');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/opportunities', opportunityRoutes);
+app.use('/api/scholarships', scholarshipRoutes);
+app.use('/api/bursaries', bursaryRoutes);
+app.use('/api/applications', applicationRoutes);
+app.use('/api/documents', documentRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/partners', partnerRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/distributions', distributionRoutes);
+app.use('/api/registry', registryRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/qcid', qcidRoutes);
+app.use('/api/schools-sync', schoolSyncRoutes);
+app.use('/api/funds', fundRoutes);
+app.use('/api/communication', communicationRoutes);
+app.use('/api/calendar', calendarRoutes);
+
+// Health check & System Information
+app.get('/', (req, res) => {
+  res.json({
+    status: 'online',
+    system: 'EduScholar Quezon City Scholarship Management System',
+    version: '2.0.0',
+    database: 'PostgreSQL 18 Connected',
+    realtime: {
+      websockets: `ws://localhost:${port}/ws`,
+      pg_listener: 'eduscholar_events (LISTEN/NOTIFY active)',
+    },
+    mcp: {
+      server: 'eduscholar-mcp-server',
+      command: 'npm run mcp',
+    },
+    endpoints: {
+      docs: '/api-docs',
+      auth: '/api/auth',
+      scholarships: '/api/scholarships',
+      applications: '/api/applications',
+      partners: '/api/partners',
+      reports: '/api/reports/monitoring',
+      distributions: '/api/distributions',
+      registry: '/api/registry',
+      admin: '/api/admin/stats',
+    },
+  });
+});
+
+// Start unified Server (HTTP + WebSockets + PostgreSQL Listener)
+(async function start() {
+  try {
+    await initDb();
+    
+    // Initialize WebSockets on HTTP server
+    initSocketServer(server);
+
+    // Initialize PostgreSQL LISTEN/NOTIFY client
+    await initPgListener();
+
+    server.listen(port, host, () => {
+      console.log(`[EduScholar Server] HTTP listening on http://localhost:${port}`);
+      console.log(`[EduScholar Realtime] WebSocket listening on ws://localhost:${port}/ws`);
+      console.log(`[EduScholar Docs] Swagger OpenAPI available at http://localhost:${port}/api-docs`);
+    });
+  } catch (error) {
+    console.error('[EduScholar Server] Init error:', error.message);
+    server.listen(port, host, () => {
+      console.log(`[EduScholar Server] Running on http://localhost:${port} (warning: check DB connection)`);
+    });
+  }
+})();

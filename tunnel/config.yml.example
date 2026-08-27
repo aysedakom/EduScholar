@@ -1,0 +1,12 @@
+# Cloudflare Tunnel Configuration Example (tunnel/config.yml.example)
+tunnel: <YOUR-CLOUDFLARE-TUNNEL-UUID>
+credentials-file: /etc/cloudflared/creds.json
+
+ingress:
+  # Route traffic to Traefik Reverse Proxy gateway
+  - hostname: eduscholar.qc.gov.ph
+    service: http://traefik:80
+  - hostname: api.eduscholar.qc.gov.ph
+    service: http://traefik:80
+  # Default catch-all (404)
+  - service: http_status:404
