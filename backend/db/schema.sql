@@ -7,9 +7,6 @@ BEGIN;
 DROP TABLE IF EXISTS system_logs CASCADE;
 DROP TABLE IF EXISTS treasury_budgets CASCADE;
 DROP TABLE IF EXISTS payment_history CASCADE;
-DROP TABLE IF EXISTS punches CASCADE;
-DROP TABLE IF EXISTS timesheets CASCADE;
-DROP TABLE IF EXISTS work_study_jobs CASCADE;
 DROP TABLE IF EXISTS student_evaluations CASCADE;
 DROP TABLE IF EXISTS education_monitoring_reports CASCADE;
 DROP TABLE IF EXISTS school_aid_distributions CASCADE;
@@ -326,47 +323,8 @@ CREATE TABLE student_evaluations (
 );
 
 -- ============================================================
--- 13. WORK STUDY JOBS & TIMESHEETS
+-- 13. PAYMENT HISTORY & DISBURSEMENTS
 -- ============================================================
-CREATE TABLE work_study_jobs (
-  id SERIAL PRIMARY KEY,
-  title VARCHAR(200) NOT NULL,
-  department VARCHAR(160) NOT NULL,
-  role_title VARCHAR(160),
-  hourly_rate NUMERIC(10,2) DEFAULT 85.00,
-  max_hours_per_week INTEGER DEFAULT 15,
-  location VARCHAR(160),
-  schedule VARCHAR(200),
-  supervisor VARCHAR(120),
-  description TEXT,
-  spots_available INTEGER DEFAULT 3,
-  status VARCHAR(20) DEFAULT 'Open' CHECK (status IN ('Open', 'Filled', 'Closed')),
-  employer_type VARCHAR(50) DEFAULT 'On-Campus'
-);
-
-CREATE TABLE timesheets (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  week_ending DATE,
-  total_hours NUMERIC(6,2) DEFAULT 0,
-  hourly_rate NUMERIC(10,2) DEFAULT 85.00,
-  gross_earnings NUMERIC(12,2) DEFAULT 0,
-  status VARCHAR(30) DEFAULT 'submitted' CHECK (status IN ('draft', 'submitted', 'approved', 'rejected')),
-  job_title VARCHAR(200),
-  entries JSONB DEFAULT '[]',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE punches (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  job_title VARCHAR(200),
-  punch_in TIMESTAMPTZ,
-  punch_out TIMESTAMPTZ,
-  hours NUMERIC(6,2),
-  manual BOOLEAN DEFAULT TRUE
-);
-
 CREATE TABLE payment_history (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,

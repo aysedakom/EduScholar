@@ -166,6 +166,7 @@ export function App() {
                 <Route path="/school/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/batch-verification" element={<BatchVerificationPage />} />
                 <Route path="/school/academic" element={<AcademicMonitoringPage />} />
+                <Route path="/school/academic-monitoring" element={<AcademicMonitoringPage />} />
                 <Route path="/school/reports" element={<ReportsModulePage />} />
               </Route>
 

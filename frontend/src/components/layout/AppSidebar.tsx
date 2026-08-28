@@ -82,15 +82,15 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'School Portal',
     items: [
-      { label: 'Academic Monitoring', to: '/school/academic-monitoring', icon: BookOpen, roles: ['school_coordinator'] as const },
-      { label: 'Batch Verification', to: '/school/batch-verification', icon: CheckSquare, roles: ['school_coordinator'] as const },
+      { label: 'Academic Monitoring', to: '/school/academic-monitoring', icon: BookOpen, roles: ['school_coordinator', 'admin', 'system_admin'] as const },
+      { label: 'Batch Verification', to: '/school/batch-verification', icon: CheckSquare, roles: ['school_coordinator', 'admin', 'system_admin'] as const },
     ],
   },
   {
     label: 'Treasury Portal',
     items: [
-      { label: 'Budget Management', to: '/treasury/budget', icon: DollarSign, roles: ['treasury'] as const },
-      { label: 'Reconciliation', to: '/treasury/reconciliation', icon: FileText, roles: ['treasury'] as const },
+      { label: 'Budget Management', to: '/treasury/budget', icon: DollarSign, roles: ['treasury', 'admin', 'system_admin'] as const },
+      { label: 'Reconciliation', to: '/treasury/reconciliation', icon: FileText, roles: ['treasury', 'admin', 'system_admin'] as const },
     ],
   },
   {

@@ -109,15 +109,6 @@ async function seed() {
   // 9. STUDENT REGISTRY & EDUCATION MONITORING (Populated dynamically upon application approval)
   console.log('[seed] Student registry and monitoring reports are dynamically populated upon application approval.');
 
-  // 12. SEED WORK STUDY JOBS & TIMESHEETS
-  console.log('[seed] Seeding work study jobs...');
-  await pool.query(
-    `INSERT INTO work_study_jobs (title, department, role_title, hourly_rate, max_hours_per_week, location, schedule, supervisor, description, spots_available, status, employer_type)
-     VALUES
-     ('University Library Student Assistant', 'University Main Library', 'Library Assistant', 95.00, 15, 'QCU Main Campus Library', 'Mon/Wed/Fri 8am-12pm', 'Elena Ramirez (Head Librarian)', 'Assist students with digital cataloging, research assistance, and library desk inquiries.', 3, 'Open', 'On-Campus'),
-     ('IT Helpdesk Peer Support Specialist', 'Information Technology Development Dept', 'IT Peer Tech', 110.00, 20, 'IT Computer Center', 'Tue/Thu 1pm-5pm', 'Engr. Alex Mercado', 'Provide basic hardware, network setup, and software troubleshooting support to campus faculty.', 2, 'Open', 'On-Campus'),
-     ('Youth Programs Logistics Assistant', 'Quezon City Youth Development Office', 'Civic Event Assistant', 100.00, 12, 'QC Hall Student Center', 'Flexible Weekend/Evenings', 'Hon. Roberto Cruz', 'Help organize city youth summits, campus aid registration desks, and orientation seminars.', 4, 'Open', 'On-Campus')`
-  );
 
   // 13. SEED TREASURY BUDGETS
   console.log('[seed] Seeding treasury budget allocations...');
