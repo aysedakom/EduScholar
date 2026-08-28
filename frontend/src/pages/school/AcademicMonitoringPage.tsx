@@ -201,7 +201,7 @@ export const AcademicMonitoringPage: React.FC = () => {
     );
     toast.success(`Academic record for ${selectedScholar.studentName} updated & synced!`);
     if (hasAlert) {
-      toast.warning(`Academic alert flag dispatched to QCYDO Scholarship Secretariat.`);
+      toast.warning(`Academic alert flag dispatched to QCYDO Scholarship Admin.`);
     }
     setSelectedScholar(null);
     setHasAlert(false);
@@ -503,7 +503,7 @@ export const AcademicMonitoringPage: React.FC = () => {
               />
               <label htmlFor="alert-checkbox" className="text-[11px] font-bold text-rose-800 flex items-center gap-1 cursor-pointer">
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0 text-rose-600" />
-                Dispatch Academic Warning/Alert to QCYDO Secretariat
+                Dispatch Academic Warning/Alert to QCYDO Scholarship Admin
               </label>
             </div>
           </form>

@@ -101,7 +101,7 @@ async function seed() {
   await pool.query(
     `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
      VALUES
-     ($1, 'Application Under Secretariat Review', 'Your Economic Scholarship application (Ref: APP-QC-1787645562754) is under active administrative verification.', 'info', false, 'application_status', '/dashboard'),
+     ($1, 'Application Under QCYDO Admin Review', 'Your Economic Scholarship application (Ref: APP-QC-1787645562754) is under active administrative verification.', 'info', false, 'application_status', '/dashboard'),
      ($1, 'Documentary Attachments Encrypted & Uploaded', 'All 5 submitted files have been archived in your QC Student Document Vault.', 'success', false, 'document', '/documents')`,
     [studentUserId]
   );
