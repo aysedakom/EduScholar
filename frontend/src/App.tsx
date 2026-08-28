@@ -140,7 +140,7 @@ export function App() {
               <Route path="/surveys" element={<SurveysPage />} />
 
               {/* Admin & Staff Phase 4 & 8 Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'system_admin', 'school_coordinator', 'treasury']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'system_admin']} />}>
                 <Route path="/admin/partner-schools" element={<AdminPartnerSchoolsPage />} />
                 <Route path="/admin/partners" element={<AdminPartnerSchoolsPage />} />
                 <Route path="/admin/scholarships" element={<ScholarshipsPage />} />

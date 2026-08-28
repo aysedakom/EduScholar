@@ -64,11 +64,11 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'Admin Portal (QCYDO)',
     items: [
-      { label: 'Scholarship Application Portal', to: '/admin/scholarships', icon: GraduationCap, roles: ['admin', 'system_admin', 'school_coordinator', 'treasury'] as const },
-      { label: 'School Aid Distribution', to: '/admin/school-aid-distribution', icon: DollarSign, roles: ['admin', 'system_admin', 'treasury'] as const },
+      { label: 'Scholarship Application Portal', to: '/admin/scholarships', icon: GraduationCap, roles: ['admin', 'system_admin'] as const },
+      { label: 'School Aid Distribution', to: '/admin/school-aid-distribution', icon: DollarSign, roles: ['admin', 'system_admin'] as const },
       { label: 'Student Registry', to: '/admin/student-registry', icon: ShieldCheck, roles: ['admin', 'system_admin'] as const },
-      { label: 'Partner School Database', to: '/admin/partner-schools', icon: Building2, roles: ['admin', 'system_admin', 'school_coordinator'] as const },
-      { label: 'Education Monitoring Reports', to: '/admin/education-reports', icon: BarChart3, roles: ['admin', 'system_admin', 'school_coordinator'] as const },
+      { label: 'Partner School Database', to: '/admin/partner-schools', icon: Building2, roles: ['admin', 'system_admin'] as const },
+      { label: 'Education Monitoring Reports', to: '/admin/education-reports', icon: BarChart3, roles: ['admin', 'system_admin'] as const },
     ],
   },
   {
