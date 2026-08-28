@@ -484,6 +484,7 @@ export const AcademicMonitoringPage: React.FC = () => {
         <Modal
           isOpen={!!inspectScholar}
           onClose={() => setInspectScholar(null)}
+          maxWidth="4xl"
           title={`Documentary Verification: ${inspectScholar.studentName}`}
           description={`Student ID: ${inspectScholar.studentId} • ${inspectScholar.course} (${inspectScholar.school})`}
           footer={

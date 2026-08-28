@@ -576,6 +576,7 @@ export const BatchVerificationPage: React.FC = () => {
         <Modal
           isOpen={!!inspectRow}
           onClose={() => setInspectRow(null)}
+          maxWidth="4xl"
           title={`Documentary Verification: ${inspectRow.name}`}
           description={`Student ID: ${inspectRow.studentId} • ${inspectRow.course} (${inspectRow.schoolName})`}
           footer={
