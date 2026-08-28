@@ -17,8 +17,8 @@ export function LoginPage() {
   // Stages: 'credentials' | 'otp'
   const [stage, setStage] = useState<'credentials' | 'otp'>('credentials');
   
-  const [email, setEmail] = useState(emailParam || 'student@university.edu');
-  const [password, setPassword] = useState(emailParam ? '' : 'password123');
+  const [email, setEmail] = useState(emailParam || '');
+  const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
@@ -349,7 +349,7 @@ export function LoginPage() {
                     type="email"
                     value={email}
                     onChange={(e) => handleEmailChange(e.target.value)}
-                    placeholder="student@university.edu"
+                    placeholder="Enter your email address"
                     leftIcon={<Mail className="h-4 w-4 text-slate-400" />}
                     className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11"
                     required
@@ -372,7 +372,7 @@ export function LoginPage() {
                       type={show ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••••••"
+                      placeholder="Enter your password"
                       leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
                       className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
                       required
