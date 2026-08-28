@@ -123,7 +123,7 @@ const updateStatus = async (id, status, notes, remarks) => {
       progress = 100;
     } else if (statusLower === 'approved' || statusLower === 'granted' || statusLower === 'rejected' || statusLower === 'disapproved' || statusLower === 'denied') {
       progress = 83;
-    } else if (statusLower === 'interview scheduled' || statusLower === 'assessment' || statusLower === 'screening' || statusLower === 'shortlisted') {
+    } else if (statusLower.includes('endorse') || statusLower.includes('verified') || statusLower === 'interview scheduled' || statusLower === 'assessment' || statusLower === 'screening' || statusLower === 'shortlisted') {
       progress = 66;
     } else if (statusLower === 'eligibility' || statusLower === 'eligible' || statusLower === 'eligibility verified') {
       progress = 50;
@@ -144,6 +144,26 @@ const updateStatus = async (id, status, notes, remarks) => {
     );
 
     const updatedApp = result.rows[0];
+
+    // If endorsed by school coordinator, dispatch notification to QCYDO Admin
+    if (updatedApp && statusLower.includes('endorse')) {
+      try {
+        const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin')");
+        for (const admin of adminUsers.rows) {
+          await pool.query(
+            `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+             VALUES ($1, $2, $3, 'info', false, 'application_status', '/admin/review-queue')`,
+            [
+              admin.id,
+              `School Endorsement: ${updatedApp.title || updatedApp.program_name}`,
+              `Application #${updatedApp.id} (${updatedApp.application_code || 'Ref'}) has been verified and endorsed by the School Coordinator. Ready for QCYDO approval.`
+            ]
+          );
+        }
+      } catch (notifErr) {
+        console.warn('[applicationModel] Endorsement notification note:', notifErr.message);
+      }
+    }
 
     // Automatically enroll scholar into registry, generate award certificate, and dispatch email upon Approval
     if (updatedApp && (statusLower === 'approved' || statusLower === 'granted')) {

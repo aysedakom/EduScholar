@@ -40,6 +40,7 @@ export interface ReviewApplication {
   complianceFlags: string[];
   documentsUploaded: ReviewDocItem[];
   notes?: string;
+  schoolEndorsed?: boolean;
 }
 
 export interface ApplicationReviewQueuePageProps {
@@ -92,13 +93,16 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
     : [];
 
   let status: 'Submitted' | 'Under Review' | 'Approved' | 'Rejected' = 'Submitted';
+  const rawStatus = String(app.status || '');
   if (app.status === 'Approved' || app.status === 'Paid') {
     status = 'Approved';
   } else if (app.status === 'Rejected') {
     status = 'Rejected';
-  } else if (app.status === 'Under Review' || app.status === 'Interview Scheduled') {
+  } else if (app.status === 'Under Review' || app.status === 'Interview Scheduled' || rawStatus.includes('Endorsed') || rawStatus.includes('Verified')) {
     status = 'Under Review';
   }
+
+  const isSchoolEndorsed = rawStatus.toLowerCase().includes('endorse') || rawStatus.toLowerCase().includes('verified');
 
   return {
     id: app.reference_id || app.application_code || String(app.id),
@@ -117,6 +121,7 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
     complianceFlags: complianceFlags,
     documentsUploaded: documentsUploaded,
     notes: app.notes || 'Submitted through E-SCHOLAR Portal with complete attachments.',
+    schoolEndorsed: isSchoolEndorsed,
   };
 }
 
@@ -501,7 +506,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                       <td className="p-3">
                         <span className="font-bold text-slate-800 block">{app.scholarshipTitle}</span>
                         <span className="text-[10px] text-slate-500">{app.school}</span>
-                        <div className="mt-0.5">
+                        <div className="mt-0.5 flex flex-wrap gap-1 items-center">
                           <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
                             app.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
                             app.status === 'Rejected' ? 'bg-rose-100 text-rose-800' :
@@ -510,6 +515,11 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                           }`}>
                             {app.status}
                           </span>
+                          {app.schoolEndorsed && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" /> School Endorsed
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="p-3">

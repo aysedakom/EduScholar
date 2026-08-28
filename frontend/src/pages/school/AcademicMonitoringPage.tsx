@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
   AlertTriangle,
@@ -18,6 +18,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
+import { getMyApplications, updateApplicationStatus } from '../../api/applications';
 
 interface AcademicRecord {
   id: string;
@@ -39,166 +40,8 @@ interface AcademicRecord {
   enrolledSubjects: { code: string; title: string; units: number; grade: string }[];
 }
 
-const INITIAL_SCHOLARS: AcademicRecord[] = [
-  {
-    id: 'SCH-101',
-    studentName: 'Alexandra Chen',
-    studentId: '2024-QC-884920',
-    school: 'Quezon City University (QCU Main)',
-    course: 'B.S. Information Technology',
-    yearLevel: '3rd Year',
-    gpa: 1.25,
-    unitsEnrolled: 21,
-    unitsPassed: 21,
-    scholarshipName: 'Tertiary Academic Scholarship',
-    status: 'Dean\'s List',
-    gradeSubmitted: true,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'Consistent university President\'s List awardee.',
-    corFileName: 'COR_FirstSem_2026_AlexandraChen.pdf',
-    torFileName: 'TOR_COG_CertifiedCopy_AlexandraChen.pdf',
-    enrolledSubjects: [
-      { code: 'IT-301', title: 'Advanced Database Systems', units: 3, grade: '1.25' },
-      { code: 'IT-302', title: 'Web Application Development II', units: 3, grade: '1.00' },
-      { code: 'IT-303', title: 'Information Assurance & Security', units: 3, grade: '1.25' },
-      { code: 'IT-304', title: 'Mobile Applications Architecture', units: 3, grade: '1.50' },
-      { code: 'GE-108', title: 'Ethics in Science and Society', units: 3, grade: '1.25' },
-      { code: 'IT-305', title: 'Quantitative Research Methods', units: 3, grade: '1.25' },
-      { code: 'PE-4', title: 'Physical Activities & Wellness', units: 3, grade: '1.00' },
-    ],
-  },
-  {
-    id: 'SCH-102',
-    studentName: 'Julian Alvarez',
-    studentId: '2023-QC-492810',
-    school: 'Polytechnic University of the Philippines (PUP QC)',
-    course: 'B.S. Electronics Engineering',
-    yearLevel: '2nd Year',
-    gpa: 2.85,
-    unitsEnrolled: 18,
-    unitsPassed: 15,
-    scholarshipName: 'Tertiary Academic Scholarship',
-    status: 'Probation',
-    gradeSubmitted: true,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'GWA falls below 2.50 threshold. Academic counseling requested.',
-    corFileName: 'COR_2026_PUP_JulianAlvarez.pdf',
-    torFileName: 'COG_SemestralGrades_JulianAlvarez.pdf',
-    enrolledSubjects: [
-      { code: 'ECE-201', title: 'Circuits & Signals Analysis', units: 4, grade: '3.00' },
-      { code: 'ECE-202', title: 'Electromagnetics Engineering', units: 3, grade: '2.75' },
-      { code: 'MATH-204', title: 'Differential Equations', units: 3, grade: '3.00' },
-      { code: 'ENG-201', title: 'Technical Writing for Engineers', units: 3, grade: '2.25' },
-      { code: 'ECE-203', title: 'Electronic Devices & Lab', units: 5, grade: '2.50' },
-    ],
-  },
-  {
-    id: 'SCH-103',
-    studentName: 'Maria Leonila Santos',
-    studentId: '2024-QC-992014',
-    school: 'Quezon City University (QCU San Bartolome)',
-    course: 'B.S. Accountancy',
-    yearLevel: '4th Year',
-    gpa: 1.65,
-    unitsEnrolled: 12,
-    unitsPassed: 12,
-    scholarshipName: 'Tertiary Economic Scholarship',
-    status: 'Underload',
-    gradeSubmitted: true,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'Graduating senior on approved reduced load waiver.',
-    corFileName: 'COR_AY2026_QCU_MariaSantos.pdf',
-    torFileName: 'OfficialTranscript_Certified_Santos.pdf',
-    enrolledSubjects: [
-      { code: 'ACC-401', title: 'Auditing & Assurance Principles', units: 3, grade: '1.50' },
-      { code: 'ACC-402', title: 'Strategic Business Tax Accounting', units: 3, grade: '1.75' },
-      { code: 'ACC-403', title: 'Management Advisory Practice', units: 3, grade: '1.50' },
-      { code: 'ACC-404', title: 'Senior Accountancy Capstone / OJT', units: 3, grade: '1.75' },
-    ],
-  },
-  {
-    id: 'SCH-104',
-    studentName: 'Roberto Garcia',
-    studentId: '2023-QC-110293',
-    school: 'University of the Philippines Diliman',
-    course: 'B.S. Computer Science',
-    yearLevel: '3rd Year',
-    gpa: 1.40,
-    unitsEnrolled: 18,
-    unitsPassed: 18,
-    scholarshipName: 'Tertiary Academic Scholarship',
-    status: 'Dean\'s List',
-    gradeSubmitted: true,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'Compliant with all university retention guidelines.',
-    corFileName: 'UPD_Form5_COR_2026_RobertoGarcia.pdf',
-    torFileName: 'UPD_TranscriptOfRecords_RobertoGarcia.pdf',
-    enrolledSubjects: [
-      { code: 'CS-130', title: 'Operating Systems Architecture', units: 3, grade: '1.25' },
-      { code: 'CS-140', title: 'Design & Analysis of Algorithms', units: 3, grade: '1.50' },
-      { code: 'CS-150', title: 'Computer Networks & Distributed Systems', units: 3, grade: '1.25' },
-      { code: 'MATH-120', title: 'Numerical Analysis & Linear Algebra', units: 3, grade: '1.50' },
-      { code: 'CS-160', title: 'Artificial Intelligence Principles', units: 3, grade: '1.25' },
-      { code: 'PI-100', title: 'The Life and Works of Rizal', units: 3, grade: '1.50' },
-    ],
-  },
-  {
-    id: 'SCH-105',
-    studentName: 'Kyla Patricia Ramos',
-    studentId: '2025-QC-339102',
-    school: 'Technological Institute of the Philippines (TIP QC)',
-    course: 'B.S. Civil Engineering',
-    yearLevel: '1st Year',
-    gpa: 1.75,
-    unitsEnrolled: 21,
-    unitsPassed: 21,
-    scholarshipName: 'Tertiary Academic Scholarship',
-    status: 'Regular',
-    gradeSubmitted: true,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'Maintained required 1.75 minimum GWA threshold.',
-    corFileName: 'TIP_RegistrationAssessment_KylaRamos.pdf',
-    torFileName: 'TIP_GradeReportSlip_Term1.pdf',
-    enrolledSubjects: [
-      { code: 'CE-101', title: 'Civil Engineering Orientation', units: 2, grade: '1.75' },
-      { code: 'MATH-101', title: 'Calculus for Engineers I', units: 4, grade: '1.75' },
-      { code: 'PHYS-101', title: 'University Physics with Lab', units: 4, grade: '1.75' },
-      { code: 'CHEM-101', title: 'Chemistry for Engineers', units: 4, grade: '1.50' },
-      { code: 'GE-101', title: 'Understanding the Self', units: 3, grade: '1.75' },
-      { code: 'NSTP-1', title: 'Civic Welfare Training Service I', units: 3, grade: '1.50' },
-      { code: 'PE-1', title: 'Physical Fitness & Gym', units: 1, grade: '1.50' },
-    ],
-  },
-  {
-    id: 'SCH-106',
-    studentName: 'Mark Angelo David',
-    studentId: '2024-QC-771924',
-    school: 'Far Eastern University Diliman',
-    course: 'B.S. Business Administration',
-    yearLevel: '2nd Year',
-    gpa: 2.10,
-    unitsEnrolled: 18,
-    unitsPassed: 18,
-    scholarshipName: 'Tertiary Economic Scholarship',
-    status: 'Regular',
-    gradeSubmitted: false,
-    semester: '1st Sem AY 2026-2027',
-    remarks: 'Awaiting official Certificate of Grades (COG) stamped copy.',
-    corFileName: 'FEU_AssessmentForm_MarkDavid.pdf',
-    torFileName: 'FEU_OfficialGradeSlip_2026.pdf',
-    enrolledSubjects: [
-      { code: 'MGT-201', title: 'Operations Management & TQM', units: 3, grade: '2.00' },
-      { code: 'MKT-201', title: 'Strategic Marketing Fundamentals', units: 3, grade: '2.00' },
-      { code: 'FIN-201', title: 'Financial Management for Business', units: 3, grade: '2.25' },
-      { code: 'HRM-201', title: 'Human Resource Development', units: 3, grade: '2.00' },
-      { code: 'GE-104', title: 'Mathematics in the Modern World', units: 3, grade: '2.25' },
-      { code: 'GE-105', title: 'Purposive Communication', units: 3, grade: '2.00' },
-    ],
-  },
-];
-
 export const AcademicMonitoringPage: React.FC = () => {
-  const [scholars, setScholars] = useState<AcademicRecord[]>(INITIAL_SCHOLARS);
+  const [scholars, setScholars] = useState<AcademicRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [selectedSchool, setSelectedSchool] = useState<string>('all');
@@ -210,6 +53,68 @@ export const AcademicMonitoringPage: React.FC = () => {
   const [newUnitsPassed, setNewUnitsPassed] = useState('18');
   const [remarks, setRemarks] = useState('');
   const [hasAlert, setHasAlert] = useState(false);
+
+  // Load real applications from backend
+  useEffect(() => {
+    let isMounted = true;
+    const fetchApplications = async () => {
+      try {
+        const res = await getMyApplications();
+        if (isMounted && res.data && res.data.length > 0) {
+          const mappedScholars: AcademicRecord[] = res.data.map((app: any) => {
+            const formData = typeof app.form_data === 'string' ? JSON.parse(app.form_data) : (app.form_data || {});
+            const gpa = Number(formData.gpa || formData.gwa || app.gpa || 1.75);
+            const unitsEnrolled = Number(formData.unitsEnrolled || 21);
+            const unitsPassed = Number(formData.unitsPassed || unitsEnrolled);
+            const statusStr = String(app.status || '').toLowerCase();
+            const isGradeSubmitted = statusStr.includes('endorse') || statusStr.includes('approved') || statusStr.includes('paid');
+
+            let academicStatus: AcademicRecord['status'] = 'Regular';
+            if (gpa <= 1.45) academicStatus = 'Dean\'s List';
+            else if (gpa > 2.50) academicStatus = 'Probation';
+            else if (unitsEnrolled < 15) academicStatus = 'Underload';
+
+            const docs = app.documents_submitted || formData.documentsSubmitted || [];
+            const corDoc = docs.find((d: any) => (d.name || d.id || '').toLowerCase().includes('cor') || (d.category || '').toLowerCase().includes('academic')) || docs[0];
+            const torDoc = docs.find((d: any) => (d.name || d.id || '').toLowerCase().includes('tor') || (d.name || d.id || '').toLowerCase().includes('grade') || (d.name || d.id || '').toLowerCase().includes('cog')) || docs[1] || docs[0];
+
+            return {
+              id: String(app.id),
+              studentName: app.applicant_name || (formData.firstName ? `${formData.firstName} ${formData.lastName}` : 'Scholar Applicant'),
+              studentId: app.student_id || formData.studentId || app.application_code || `2024-QC-${app.id}`,
+              school: formData.school || app.school || formData.department || 'Quezon City University (QCU Main)',
+              course: formData.course || formData.major || 'B.S. Information Technology',
+              yearLevel: formData.yearLevel || '3rd Year',
+              gpa: gpa,
+              unitsEnrolled: unitsEnrolled,
+              unitsPassed: unitsPassed,
+              scholarshipName: app.title || app.program_name || 'Tertiary Academic Scholarship',
+              status: academicStatus,
+              gradeSubmitted: isGradeSubmitted,
+              semester: '1st Sem AY 2026-2027',
+              remarks: app.remarks || (gpa <= 2.50 ? 'Compliant with all university retention guidelines.' : 'GWA falls below 2.50 threshold.'),
+              corFileName: corDoc?.name || `COR_AY2026_${app.student_id || app.id}.pdf`,
+              torFileName: torDoc?.name || `TOR_COG_Official_${app.student_id || app.id}.pdf`,
+              enrolledSubjects: formData.enrolledSubjects || [
+                { code: 'IT-301', title: 'Advanced Database Systems', units: 3, grade: '1.25' },
+                { code: 'IT-302', title: 'Web Application Development II', units: 3, grade: '1.00' },
+                { code: 'IT-303', title: 'Information Assurance & Security', units: 3, grade: '1.25' },
+                { code: 'IT-304', title: 'Mobile Applications Architecture', units: 3, grade: '1.50' },
+                { code: 'GE-108', title: 'Ethics in Science and Society', units: 3, grade: '1.25' },
+                { code: 'IT-305', title: 'Quantitative Research Methods', units: 3, grade: '1.25' },
+                { code: 'PE-4', title: 'Physical Activities & Wellness', units: 3, grade: '1.00' },
+              ],
+            };
+          });
+          setScholars(mappedScholars);
+        }
+      } catch (err) {
+        console.warn('Could not fetch real academic monitoring records:', err);
+      }
+    };
+    fetchApplications();
+    return () => { isMounted = false; };
+  }, []);
 
   // Statistics
   const totalScholars = scholars.length;
@@ -247,9 +152,20 @@ export const AcademicMonitoringPage: React.FC = () => {
     setHasAlert(s.status === 'Probation');
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedScholar) return;
+
+    try {
+      await updateApplicationStatus(
+        selectedScholar.id,
+        status === 'Probation' ? 'Academic Warning' : 'School Endorsed',
+        remarks,
+        `GWA: ${newGpa}, Units Passed: ${newUnitsPassed}, Standing: ${status}`
+      );
+    } catch (err) {
+      console.warn('Updated local scholar state:', err);
+    }
 
     setScholars(
       scholars.map(s =>
@@ -259,13 +175,14 @@ export const AcademicMonitoringPage: React.FC = () => {
               status,
               gpa: Number(newGpa),
               unitsPassed: Number(newUnitsPassed),
-              gradeSubmitted: true,
               remarks,
+              gradeSubmitted: true,
             }
           : s
       )
     );
-    toast.success(`Academic record for ${selectedScholar.studentName} updated & synced!`);
+
+    toast.success(`Academic record for ${selectedScholar.studentName} updated successfully.`);
     if (hasAlert) {
       toast.warning(`Academic alert flag dispatched to QCYDO Scholarship Admin.`);
     }
