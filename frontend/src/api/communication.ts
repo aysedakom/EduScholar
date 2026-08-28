@@ -33,7 +33,7 @@ export interface ChatMessageItem {
   conversation_id: string;
   sender_id: number;
   sender_name: string;
-  sender_role: 'student' | 'admin' | 'supervisor' | 'system';
+  sender_role: 'student' | 'admin' | 'supervisor' | 'system' | 'school_coordinator' | 'treasury' | string;
   recipient_id?: number;
   recipient_role?: string;
   message: string;

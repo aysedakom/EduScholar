@@ -116,11 +116,28 @@ export const CalendarPage: React.FC = () => {
     return `${year}-${mm}-${dd}`;
   };
 
+  // Role-based Category & Notice Scoping
+  const availableCategories = user?.role === 'school_coordinator'
+    ? ['All', 'Academic', 'Deadline', 'Announcement', 'Interview']
+    : user?.role === 'treasury'
+    ? ['All', 'Disbursement', 'Deadline', 'Announcement']
+    : ['All', 'Disbursement', 'Deadline', 'Announcement', 'Academic', 'Interview'];
+
+  const roleFilteredNotices = notices.filter((n) => {
+    if (user?.role === 'school_coordinator') {
+      return n.category !== 'Disbursement';
+    }
+    if (user?.role === 'treasury') {
+      return n.category === 'Disbursement' || n.category === 'Deadline' || n.category === 'Announcement';
+    }
+    return true;
+  });
+
   const getNoticesForDate = (dateStr: string): CalendarNotice[] => {
-    return notices.filter((n) => n.date === dateStr);
+    return roleFilteredNotices.filter((n) => n.date === dateStr);
   };
 
-  const filteredNotices = notices.filter((n) => {
+  const filteredNotices = roleFilteredNotices.filter((n) => {
     const matchesCategory = selectedCategory === 'All' || n.category === selectedCategory;
     const matchesSearch =
       n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -225,9 +242,32 @@ export const CalendarPage: React.FC = () => {
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
-          <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-            Official Academic & Financial Aid Calendar
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+              {user?.role === 'school_coordinator'
+                ? 'Academic & Evaluation Calendar'
+                : user?.role === 'treasury'
+                ? 'Treasury Payout & Financial Calendar'
+                : 'Official Academic & Financial Aid Calendar'}
+            </h1>
+            {user?.role === 'school_coordinator' && (
+              <Badge variant="secondary" className="font-bold text-xs">
+                Registrar Scope
+              </Badge>
+            )}
+            {user?.role === 'treasury' && (
+              <Badge variant="success" className="font-bold text-xs">
+                Fiscal & Payout Scope
+              </Badge>
+            )}
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {user?.role === 'school_coordinator'
+              ? 'Institutional milestones for grade submissions, underload evaluations, and coordinator verification cutoffs.'
+              : user?.role === 'treasury'
+              ? 'Fiscal milestones for Landbank ATM releases, GCash crediting windows, and budget reconciliation dates.'
+              : 'Master Quezon City Youth Development Office scheduling portal for citywide scholarships and grants.'}
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -551,11 +591,11 @@ export const CalendarPage: React.FC = () => {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full sm:w-auto h-8 px-2 text-xs font-semibold bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-blue-600 cursor-pointer shrink-0"
                 >
-                  <option value="All">All Categories</option>
-                  <option value="Disbursement">Disbursements</option>
-                  <option value="Deadline">Deadlines</option>
-                  <option value="Announcement">Announcements</option>
-                  <option value="Academic">Academic</option>
+                  {availableCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat === 'All' ? 'All Categories' : cat}
+                    </option>
+                  ))}
                 </select>
               </div>
             </CardHeader>

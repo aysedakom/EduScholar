@@ -5,13 +5,15 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../co
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
+import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/cn';
 
 interface FAQItem {
   id: string;
-  category: 'scholarships' | 'grants' | 'documents' | 'disbursement';
+  category: string;
   question: string;
   answer: string;
+  roleScope?: string;
 }
 
 interface SupportTicket {
@@ -24,86 +26,184 @@ interface SupportTicket {
   description: string;
 }
 
-const INITIAL_FAQS: FAQItem[] = [
+const ALL_ROLE_FAQS: FAQItem[] = [
+  // Student FAQs
   {
-    id: 'faq-1',
+    id: 'faq-std-1',
     category: 'scholarships',
+    roleScope: 'student',
     question: 'How do I check if I meet the eligibility criteria for merit scholarships?',
-    answer: 'Each scholarship listing displays an Eligibility Badge (e.g. GPA >= 3.50, STEM Major). You can also click on any scholarship card to view detailed GPA, residency, and unit load requirements.',
+    answer: 'Each scholarship listing displays an Eligibility Badge (e.g. GWA <= 2.50, STEM Major). You can also click on any scholarship card to view detailed GPA, residency, and unit load requirements.',
   },
   {
-    id: 'faq-2',
-    category: 'scholarships',
-    question: 'Can I apply for multiple scholarships at the same time?',
-    answer: 'Yes! You may submit applications for multiple scholarship programs. However, certain institutional grants cannot be combined with full-tuition city scholarships.',
-  },
-  {
-    id: 'faq-3',
-    category: 'grants',
-    question: 'What are the eligibility criteria for Quezon City continuing education grants?',
-    answer: 'Applicants must be bona fide residents of Quezon City, currently enrolled in a recognized tertiary institution, and maintain satisfactory academic standing according to their program guidelines.',
-  },
-  {
-    id: 'faq-4',
-    category: 'grants',
-    question: 'How do I track my scholarship validation remarks?',
-    answer: 'Navigate to your Dashboard or Track Application page to view real-time validation stages, evaluators remarks, and payout schedule updates.',
-  },
-  {
-    id: 'faq-5',
+    id: 'faq-std-2',
     category: 'documents',
+    roleScope: 'student',
     question: 'What file formats and size limits apply to Document Vault uploads?',
     answer: 'The Document Vault accepts PDF, PNG, and JPG files up to 10 MB per file. All files are encrypted using AES-256 standards upon upload.',
   },
   {
-    id: 'faq-6',
+    id: 'faq-std-3',
     category: 'disbursement',
+    roleScope: 'student',
     question: 'When are scholarship funds disbursed to my account?',
-    answer: 'Approved scholarship grants are disbursed according to the official academic calendar directly to your registered payment method (GCash or Bank Account).',
+    answer: 'Approved scholarship grants are disbursed according to the official academic calendar directly to your registered payment method (GCash or Landbank ATM Account).',
   },
-];
 
-const INITIAL_TICKETS: SupportTicket[] = [
+  // School Coordinator FAQs
   {
-    id: 'TCK-9402',
-    title: 'Disbursement delay for Dean’s Excellence Grant',
-    category: 'Disbursement & Payroll',
-    priority: 'High',
-    status: 'In Progress',
-    date: '2026-08-10',
-    description: 'Grant status shows approved, but funds have not reflected on registered GCash account.',
+    id: 'faq-coor-1',
+    category: 'registrar_csv',
+    roleScope: 'school_coordinator',
+    question: 'How do I upload and parse a batch enrollment CSV in the Batch Verification Hub?',
+    answer: 'Navigate to Batch Verification, download the official .csv template, paste your university registrar matriculation roster, and drag-and-drop the file into the upload zone. The system automatically cross-audits unit loads and semestral GWA.',
   },
   {
-    id: 'TCK-8819',
-    title: 'FAFSA transcript verification inquiry',
-    category: 'Document Vault',
-    priority: 'Medium',
-    status: 'Resolved',
-    date: '2026-08-04',
-    description: 'Submitted 2026 FAFSA transcript needs verification badge update.',
+    id: 'faq-coor-2',
+    category: 'academic_retention',
+    roleScope: 'school_coordinator',
+    question: 'What retention threshold does the system enforce for Tertiary Merit Scholarships?',
+    answer: 'Tertiary Merit scholars must maintain a minimum cumulative GWA of 2.50 with at least 15 enrolled academic units. Scholars with GWA > 2.50 are automatically flagged as GWA Deficient for counseling.',
+  },
+  {
+    id: 'faq-coor-3',
+    category: 'coordinator_tools',
+    roleScope: 'school_coordinator',
+    question: 'How do I inspect original COR and TOR documentary attachments before endorsing?',
+    answer: 'Click "Inspect COR & TOR" on any student record. The Document Viewer allows side-by-side comparison of system data against the university registrar official stamp and watermark.',
+  },
+  {
+    id: 'faq-coor-4',
+    category: 'coordinator_tools',
+    roleScope: 'school_coordinator',
+    question: 'How does endorsing a scholar update the QCYDO Admin review queue?',
+    answer: 'Clicking "Endorse to Admin" flags the record as School Endorsed and pushes it directly into the QCYDO Scholarship Admin approval queue with full audit history.',
+  },
+
+  // Treasury FAQs
+  {
+    id: 'faq-tre-1',
+    category: 'reconciliation',
+    roleScope: 'treasury',
+    question: 'How does the automated Treasury Reconciliation matching engine work?',
+    answer: 'The reconciliation module cross-references QCYDO approved grant amounts against bank payout transaction files using reference hashing. Any discrepancy or bank fee is flagged for manual review.',
+  },
+  {
+    id: 'faq-tre-2',
+    category: 'banking_channels',
+    roleScope: 'treasury',
+    question: 'What is the procedure for failed GCash e-wallet disbursements?',
+    answer: 'Failed or bounced e-wallet disbursements are categorized as "Uncredited". The Treasury officer can click "Re-queue Payout" or switch the beneficiary channel to Landbank Over-the-Counter.',
+  },
+  {
+    id: 'faq-tre-3',
+    category: 'audit_compliance',
+    roleScope: 'treasury',
+    question: 'How do I generate liquidation certificates for Commission on Audit (COA) compliance?',
+    answer: 'Under Treasury Reports, select the term budget pool (e.g. QCSP Fund 2026) and click "Export COA Liquidation Voucher" to produce an audited PDF ledger with disbursement checksums.',
   },
 ];
 
 export const SupportPage: React.FC = () => {
-  const [faqs] = useState<FAQItem[]>(INITIAL_FAQS);
-  const [tickets, setTickets] = useState<SupportTicket[]>(INITIAL_TICKETS);
+  const { user } = useAuth();
   
-  // FAQ Filters & Accordion
+  // Role-filtered initial tickets
+  const getInitialTickets = (): SupportTicket[] => {
+    if (user?.role === 'school_coordinator') {
+      return [
+        {
+          id: 'TCK-COOR-101',
+          title: 'Registrar Batch CSV Column Format Validation',
+          category: 'Registrar CSV Upload',
+          priority: 'Medium',
+          status: 'Resolved',
+          date: '2026-08-20',
+          description: 'Clarified header formatting requirements for enrolled subjects matrix.',
+        },
+        {
+          id: 'TCK-COOR-102',
+          title: 'Graduating Senior Underload Waiver Clearance',
+          category: 'Academic Retention Waiver',
+          priority: 'High',
+          status: 'In Progress',
+          date: '2026-08-24',
+          description: 'Special exemption review for Accountancy senior enrolled in 12 units.',
+        },
+      ];
+    }
+    if (user?.role === 'treasury') {
+      return [
+        {
+          id: 'TCK-TRE-201',
+          title: 'Landbank ATM Batch #089 Reference Hash Mismatch',
+          category: 'Bank Reconciliation',
+          priority: 'High',
+          status: 'In Progress',
+          date: '2026-08-22',
+          description: 'Bank clearing reference mismatch on 2 transaction line items.',
+        },
+        {
+          id: 'TCK-TRE-202',
+          title: 'GCash Corporate API Webhook Disbursement Status',
+          category: 'E-Wallet Disbursement',
+          priority: 'Medium',
+          status: 'Resolved',
+          date: '2026-08-18',
+          description: 'Confirmed settlement for 150 student digital cash vouchers.',
+        },
+      ];
+    }
+    return [
+      {
+        id: 'TCK-9402',
+        title: 'Disbursement inquiry for Tertiary Merit Scholarship',
+        category: 'Disbursement & Payout',
+        priority: 'High',
+        status: 'In Progress',
+        date: '2026-08-10',
+        description: 'Grant status shows approved, inquiring about official ATM card release date.',
+      },
+      {
+        id: 'TCK-8819',
+        title: 'Document Vault COR upload status check',
+        category: 'Document Vault',
+        priority: 'Medium',
+        status: 'Resolved',
+        date: '2026-08-04',
+        description: 'Submitted 2026 Certificate of Registration verified by school registrar.',
+      },
+    ];
+  };
+
+  const [tickets, setTickets] = useState<SupportTicket[]>(getInitialTickets());
   const [faqCategory, setFaqCategory] = useState<string>('all');
   const [faqSearch, setFaqSearch] = useState('');
-  const [expandedFaqId, setExpandedFaqId] = useState<string | null>('faq-1');
+  const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);
 
   // Ticket Modal Form
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [ticketTitle, setTicketTitle] = useState('');
-  const [ticketCategory, setTicketCategory] = useState('Scholarship Eligibility');
+  const [ticketCategory, setTicketCategory] = useState(
+    user?.role === 'school_coordinator'
+      ? 'Registrar CSV Upload'
+      : user?.role === 'treasury'
+      ? 'Bank Reconciliation'
+      : 'Scholarship Eligibility'
+  );
   const [ticketPriority, setTicketPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
   const [ticketDesc, setTicketDesc] = useState('');
 
-  const filteredFaqs = faqs.filter((faq) => {
-    const matchesCat = faqCategory === 'all' || faq.category === faqCategory;
-    const matchesSearch = faq.question.toLowerCase().includes(faqSearch.toLowerCase()) || faq.answer.toLowerCase().includes(faqSearch.toLowerCase());
-    return matchesCat && matchesSearch;
+  // Filter FAQs according to current user role and active tab category
+  const filteredFaqs = ALL_ROLE_FAQS.filter((faq) => {
+    if (user?.role === 'school_coordinator' && faq.roleScope !== 'school_coordinator') return false;
+    if (user?.role === 'treasury' && faq.roleScope !== 'treasury') return false;
+    if (user?.role === 'student' && faq.roleScope !== 'student') return false;
+
+    const matchesCategory = faqCategory === 'all' || faq.category === faqCategory;
+    const matchesSearch =
+      faq.question.toLowerCase().includes(faqSearch.toLowerCase()) ||
+      faq.answer.toLowerCase().includes(faqSearch.toLowerCase());
+    return matchesCategory && matchesSearch;
   });
 
   const handleCreateTicket = (e: React.FormEvent) => {
@@ -127,7 +227,7 @@ export const SupportPage: React.FC = () => {
     setShowTicketModal(false);
     setTicketTitle('');
     setTicketDesc('');
-    toast.success(`Support Ticket ${newTicket.id} created successfully! Financial Aid team notified.`);
+    toast.success(`Support Ticket ${newTicket.id} created successfully! Our team has been notified.`);
   };
 
   return (
@@ -219,13 +319,27 @@ export const SupportPage: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap gap-1.5 w-full sm:w-auto">
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'scholarships', label: 'Scholarships' },
-                { id: 'grants', label: 'Grants & Bursaries' },
-                { id: 'documents', label: 'Documents' },
-                { id: 'disbursement', label: 'Disbursement' },
-              ].map((tab) => (
+              {(user?.role === 'school_coordinator'
+                ? [
+                    { id: 'all', label: 'All Topics' },
+                    { id: 'registrar_csv', label: 'Registrar CSV' },
+                    { id: 'academic_retention', label: 'Retention & GWA' },
+                    { id: 'coordinator_tools', label: 'Endorsement Tools' },
+                  ]
+                : user?.role === 'treasury'
+                ? [
+                    { id: 'all', label: 'All Topics' },
+                    { id: 'reconciliation', label: 'Reconciliation' },
+                    { id: 'banking_channels', label: 'Bank & GCash' },
+                    { id: 'audit_compliance', label: 'COA Audit' },
+                  ]
+                : [
+                    { id: 'all', label: 'All Topics' },
+                    { id: 'scholarships', label: 'Scholarships' },
+                    { id: 'documents', label: 'Documents' },
+                    { id: 'disbursement', label: 'Disbursement' },
+                  ]
+              ).map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setFaqCategory(tab.id)}
