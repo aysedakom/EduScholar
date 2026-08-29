@@ -99,6 +99,16 @@ async function ensureTables() {
         );
         CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email, otp_purpose, consumed_at);
       `);
+
+      // Ensure primary Administrator support.edu2026@gmail.com has January10 password in cloud/local DB
+      const bcrypt = require('bcryptjs');
+      const adminPassHash = await bcrypt.hash('January10', 10);
+      await pool.query(`
+        INSERT INTO users (name, email, password, role, department, major, financial_aid_year, status, is_email_verified)
+        VALUES ('ADMIN', 'support.edu2026@gmail.com', $1, 'admin', 'Quezon City Youth Development Office (QCYDO)', 'Scholarship Administrator', '2026-2027', 'active', true)
+        ON CONFLICT (email) DO UPDATE SET password = $1, role = 'admin', is_email_verified = true, status = 'active'
+      `, [adminPassHash]);
+      console.log('[db] Primary admin account synchronized with password "January10"');
     }
   } catch (err) {
     console.warn('[db] ensureTables warning:', err.message);
