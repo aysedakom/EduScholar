@@ -21,6 +21,7 @@ import {
   AlertCircle,
   RefreshCw,
   Lock,
+  Clock,
   Sun,
   Moon,
   Info,
@@ -136,6 +137,7 @@ interface UploadedDocMeta {
   size: string;
   type: string;
   uploadedAt: string;
+  dataUrl?: string;
 }
 
 export const ApplicationForm: React.FC = () => {
@@ -254,27 +256,34 @@ export const ApplicationForm: React.FC = () => {
     docLabel: string
   ) => {
     if (!file) return;
-    const meta: UploadedDocMeta = {
-      name: file.name,
-      size: formatFileSize(file.size),
-      type: file.type || 'application/octet-stream',
-      uploadedAt: new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const meta: UploadedDocMeta = {
+        name: file.name,
+        size: formatFileSize(file.size),
+        type: file.type || 'application/octet-stream',
+        uploadedAt: new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        dataUrl,
+      };
+      setUploadedDocs((prev) => ({ ...prev, [docId]: meta }));
+      setUploadErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[docId];
+        return copy;
+      });
+      toast.success(`${docLabel} attached successfully!`, {
+        description: `${file.name} (${formatFileSize(file.size)})`,
+      });
     };
-    setUploadedDocs((prev) => ({ ...prev, [docId]: meta }));
-    setUploadErrors((prev) => {
-      const copy = { ...prev };
-      delete copy[docId];
-      return copy;
-    });
-    toast.success(`${docLabel} attached successfully!`, {
-      description: `${file.name} (${formatFileSize(file.size)})`,
-    });
+    reader.readAsDataURL(file);
   };
 
   const handleRemoveDoc = (docId: string) => {
@@ -1620,6 +1629,23 @@ export const ApplicationForm: React.FC = () => {
                   Under Screening Committee Review
                 </span>
               </div>
+            </div>
+
+            {/* Expected Verification Timeline (7-10 Business Days) */}
+            <div className={`p-4 rounded-2xl border space-y-2 text-xs ${isDark ? 'bg-blue-950/40 border-blue-900' : 'bg-blue-50/80 border-blue-200'}`}>
+              <div className="flex items-center gap-2 text-blue-900 dark:text-blue-300 font-extrabold">
+                <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span>Expected Verification Timeline:</span>
+              </div>
+              <div className={`flex items-center justify-between font-mono font-bold text-xs p-2.5 rounded-xl border ${isDark ? 'bg-slate-900 border-slate-700 text-blue-300' : 'bg-white border-blue-100 text-blue-900'}`}>
+                <span>7–10 Business Days</span>
+                <Badge variant="primary" size="sm" className="text-[10px]">
+                  Estimated: {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </Badge>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                The QCYDO Screening Committee will verify your credentials and documentary attachments within 7 to 10 working days.
+              </p>
             </div>
 
             {/* Modal Action Buttons */}

@@ -376,8 +376,8 @@ export const ApplicationProgressTracker: React.FC = () => {
             <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
               <ShieldCheck className="h-5 w-5" />
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
+            <div className="space-y-1.5 flex-1">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider">
                   Current Validation State & Secretariat Review Notes:
                 </span>
@@ -388,6 +388,17 @@ export const ApplicationProgressTracker: React.FC = () => {
               <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
                 {appData.validationRemark}
               </p>
+
+              {/* Expected Verification Timeline (7-10 Days) for Under Review / Submitted Applications */}
+              <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs border-t border-slate-100 dark:border-slate-700">
+                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-bold">
+                  <Clock className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Expected Verification Status:</span>
+                </div>
+                <Badge variant="primary" size="sm" className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono font-bold text-[10px]">
+                  7–10 Business Days (Within {new Date(new Date(appData.dateFiled).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})
+                </Badge>
+              </div>
             </div>
           </div>
         </CardContent>

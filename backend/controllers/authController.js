@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
 const otpModel = require('../models/otpModel');
 const emailService = require('../services/emailService');
+const { validateStandardPassword } = require('../utils/passwordValidator');
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -43,25 +44,33 @@ const formatUserResponse = (user) => ({
 const resolveClientUrl = (req) => {
   // 1. Explicitly supplied by client body
   if (req?.body?.clientUrl && typeof req.body.clientUrl === 'string' && req.body.clientUrl.startsWith('http')) {
-    return req.body.clientUrl.replace(/\/$/, '');
+    const rawUrl = req.body.clientUrl.replace(/\/$/, '');
+    if (!rawUrl.includes('localhost') || process.env.NODE_ENV !== 'production') {
+      return rawUrl;
+    }
   }
-  // 2. Origin header from browser request (e.g. https://eduscholar-production.up.railway.app)
-  if (req?.headers?.origin && req.headers.origin !== 'null') {
+  // 2. Proxied Host from reverse proxy (Railway, Vercel, Nginx, iOS devices)
+  if (req?.headers && req.headers['x-forwarded-host']) {
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    return `${proto}://${req.headers['x-forwarded-host']}`.replace(/\/$/, '');
+  }
+  // 3. Origin header from browser request (e.g. https://eduscholar-production.up.railway.app)
+  if (req?.headers?.origin && req.headers.origin !== 'null' && req.headers.origin.startsWith('http')) {
     return req.headers.origin.replace(/\/$/, '');
   }
-  // 3. Referer header from browser request
+  // 4. Referer header from browser request
   if (req?.headers?.referer) {
     try {
       const u = new URL(req.headers.referer);
-      return u.origin;
+      return u.origin.replace(/\/$/, '');
     } catch (_) {}
   }
-  // 4. Proxied Host from reverse proxy (Railway, Vercel, Nginx)
-  if (req?.headers && req.headers['x-forwarded-host']) {
-    const proto = req.headers['x-forwarded-proto'] || 'https';
-    return `${proto}://${req.headers['x-forwarded-host']}`;
+  // 5. Direct Host header (e.g. from mobile / safari requests)
+  if (req?.headers?.host && !req.headers.host.includes('localhost:5000')) {
+    const proto = req.secure || (req.headers && req.headers['x-forwarded-proto'] === 'https') ? 'https' : 'https';
+    return `${proto}://${req.headers.host}`.replace(/\/$/, '');
   }
-  // 5. Environment variables
+  // 6. Environment variables
   if (process.env.CLIENT_URL) {
     return process.env.CLIENT_URL.replace(/\/$/, '');
   }
@@ -74,6 +83,9 @@ const resolveClientUrl = (req) => {
   if (process.env.RAILWAY_STATIC_URL) {
     return `https://${process.env.RAILWAY_STATIC_URL}`;
   }
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://eduscholar-production.up.railway.app';
+  }
   return 'http://localhost:5173';
 };
 
@@ -83,6 +95,11 @@ const register = async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email and password are required' });
+    }
+
+    const pwdValidation = validateStandardPassword(password, { name, email });
+    if (!pwdValidation.isValid) {
+      return res.status(400).json({ message: pwdValidation.message });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -439,8 +456,9 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Verification token and new password are required' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ message: 'Password must be at least 6 characters long' });
+    const pwdValidation = validateStandardPassword(newPassword, { email });
+    if (!pwdValidation.isValid) {
+      return res.status(400).json({ message: pwdValidation.message });
     }
 
     // Validate token against database

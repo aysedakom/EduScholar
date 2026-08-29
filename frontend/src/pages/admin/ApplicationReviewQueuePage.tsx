@@ -89,6 +89,8 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
         uploadedAt: parseDateStr(d.uploadedAt || app.submission_date),
         verified: true,
         category: d.category || d.id || 'general',
+        fileData: d.fileData || d.dataUrl || undefined,
+        mimeType: d.mimeType || undefined,
       }))
     : [];
 

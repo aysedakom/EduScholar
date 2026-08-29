@@ -6,6 +6,8 @@ import { useAuth } from '../../context/AuthContext';
 import { AuthBrandPanel } from '../../components/shared/AuthBrandPanel';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { PasswordStrengthIndicator } from '../../components/common/PasswordStrengthIndicator';
+import { validateStandardPassword } from '../../utils/passwordValidation';
 
 export function RegisterPage() {
   const [searchParams] = useSearchParams();
@@ -25,6 +27,14 @@ export function RegisterPage() {
       setError(form.password !== form.confirm ? 'Passwords do not match.' : 'Please complete all required fields.');
       return;
     }
+
+    const validation = validateStandardPassword(form.password, { name: form.name, email: form.email });
+    if (!validation.isValid) {
+      setError('Please fulfill all standard password security requirements (min 12 characters, uppercase, lowercase, number, symbol).');
+      toast.error('Password does not meet standard security requirements.');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
     try {
@@ -163,6 +173,10 @@ export function RegisterPage() {
                   {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <PasswordStrengthIndicator
+                password={form.password}
+                userContext={{ name: form.name, email: form.email }}
+              />
             </div>
 
             {/* Confirm Password */}

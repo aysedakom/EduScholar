@@ -27,5 +27,7 @@ const authMiddleware = require('../middleware/auth');
 router.get('/', scholarshipController.getScholarships);
 router.get('/:id', scholarshipController.getScholarship);
 router.post('/', authMiddleware, scholarshipController.createScholarship);
+router.patch('/:id/status', authMiddleware, scholarshipController.updateStatus);
+router.put('/:id/status', authMiddleware, scholarshipController.updateStatus);
 
 module.exports = router;

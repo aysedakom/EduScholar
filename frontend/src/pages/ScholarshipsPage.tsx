@@ -32,7 +32,7 @@ import { ConditionalOffersPage } from './admin/ConditionalOffersPage';
 import { ApplicationReviewQueuePage } from './admin/ApplicationReviewQueuePage';
 
 import { getMyApplications } from '../api/applications';
-import { getScholarships } from '../api/scholarships';
+import { getScholarships, updateScholarshipStatus } from '../api/scholarships';
 
 import { ALL_SCHOLARSHIP_PROGRAMS } from '../utils/scholarshipPrograms';
 
@@ -114,36 +114,60 @@ export const ScholarshipsPage: React.FC = () => {
   const [items, setItems] = useState<FeedItem[]>(INITIAL_PROGRAMS);
   const [adminActiveTab, setAdminActiveTab] = useState<'programs' | 'reviews' | 'renewal'>('programs');
   const [selectedProgramFilter, setSelectedProgramFilter] = useState<string | null>(null);
-  const [isPortalOpen, setIsPortalOpen] = useState(true);
+  const [isPortalOpen, setIsPortalOpen] = useState<boolean>(() => {
+    return localStorage.getItem('qc_scholarship_portal_intake_open') !== 'false';
+  });
   const [pendingReviewsCount, setPendingReviewsCount] = useState<number>(0);
   const [dbApplications, setDbApplications] = useState<Application[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 
   // Sync real-time scholarship programs & pending review counts from PostgreSQL database
   useEffect(() => {
+    let localOverrides: Record<string, string> = {};
+    try {
+      localOverrides = JSON.parse(localStorage.getItem('qc_scholarship_status_overrides') || '{}');
+    } catch (_) {}
+
     getScholarships()
       .then((res) => {
         if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-          const dbProgs: FeedItem[] = res.data.map((p: any) => ({
-            id: p.program_code || String(p.id),
-            title: p.title,
-            description: p.summary || p.description || '',
-            eligibility: (p.min_gwa_text || '') + (p.level ? `, ${p.level}` : ''),
-            amount: parseFloat(p.amount) || 10000,
-            deadline: p.deadline || '2026-09-30',
-            category: p.category_id || p.category || 'Need-Based',
-            slots: parseInt(p.slots) || 500,
-            appliedCount: parseInt(p.applied_count) || 0,
-            status: p.status || 'Open',
-            kind: 'scholarship',
-            level: p.level || 'Tertiary',
-            category_title: p.category_title || p.category || 'Scholarship',
-          }));
+          const dbProgs: FeedItem[] = res.data.map((p: any) => {
+            const progId = p.program_code || String(p.id);
+            const status = localOverrides[progId] || p.status || 'Open';
+            return {
+              id: progId,
+              title: p.title,
+              description: p.summary || p.description || '',
+              eligibility: (p.min_gwa_text || '') + (p.level ? `, ${p.level}` : ''),
+              amount: parseFloat(p.amount) || 10000,
+              deadline: p.deadline || '2026-09-30',
+              category: p.category_id || p.category || 'Need-Based',
+              slots: parseInt(p.slots) || 500,
+              appliedCount: parseInt(p.applied_count) || 0,
+              status: status,
+              kind: 'scholarship',
+              level: p.level || 'Tertiary',
+              category_title: p.category_title || p.category || 'Scholarship',
+            };
+          });
           setItems(dbProgs);
+        } else {
+          setItems((prev) =>
+            prev.map((item) => ({
+              ...item,
+              status: localOverrides[item.id] || item.status,
+            }))
+          );
         }
       })
       .catch((err) => {
         console.warn('Failed to fetch scholarships from DB, using default program catalogue:', err);
+        setItems((prev) =>
+          prev.map((item) => ({
+            ...item,
+            status: localOverrides[item.id] || item.status,
+          }))
+        );
       });
 
     if (isAdminOrStaff) {
@@ -264,15 +288,41 @@ export const ScholarshipsPage: React.FC = () => {
     toast.success(`Scholarship Program "${newTitle}" created successfully!`);
   };
 
-  const handleToggleStatus = (id: string) => {
+  const handleToggleStatus = async (id: string) => {
+    const target = items.find((item) => item.id === id);
+    if (!target) return;
+    const newStatus = target.status === 'Closed' ? 'Open' : 'Closed';
+
     setItems((prev) =>
       prev.map((item) =>
-        item.id === id
-          ? { ...item, status: item.status === 'Closed' ? 'Open' : 'Closed' }
-          : item
+        item.id === id ? { ...item, status: newStatus } : item
       )
     );
-    toast.info('Scholarship program status updated.');
+
+    try {
+      await updateScholarshipStatus(id, newStatus);
+      toast.success(`Scholarship program "${target.title}" is now ${newStatus.toUpperCase()} in database.`);
+    } catch (err) {
+      console.warn('DB status update note:', err);
+      toast.info(`Scholarship program "${target.title}" status updated to ${newStatus}.`);
+    }
+
+    try {
+      const overrides = JSON.parse(localStorage.getItem('qc_scholarship_status_overrides') || '{}');
+      overrides[id] = newStatus;
+      localStorage.setItem('qc_scholarship_status_overrides', JSON.stringify(overrides));
+    } catch (_) {}
+  };
+
+  const handlePortalToggle = () => {
+    const nextState = !isPortalOpen;
+    setIsPortalOpen(nextState);
+    localStorage.setItem('qc_scholarship_portal_intake_open', String(nextState));
+    toast.success(
+      nextState
+        ? 'Portal intake OPEN: Accepting student applications'
+        : 'Portal intake CLOSED: Submissions locked'
+    );
   };
 
   const handleDeleteProgram = (id: string) => {
@@ -307,10 +357,7 @@ export const ScholarshipsPage: React.FC = () => {
               {/* Clean Portal Toggle */}
               <button
                 type="button"
-                onClick={() => {
-                  setIsPortalOpen(!isPortalOpen);
-                  toast.success(isPortalOpen ? 'Portal is now closed to new applications' : 'Portal is now accepting applications');
-                }}
+                onClick={handlePortalToggle}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                   isPortalOpen
                     ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60'

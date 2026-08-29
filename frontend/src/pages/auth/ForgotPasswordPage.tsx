@@ -16,6 +16,8 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { LoginPage } from './LoginPage';
+import { PasswordStrengthIndicator } from '../../components/common/PasswordStrengthIndicator';
+import { validateStandardPassword } from '../../utils/passwordValidation';
 
 export function ForgotPasswordPage() {
   const location = useLocation();
@@ -50,8 +52,9 @@ export function ForgotPasswordPage() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setResetError('Password must be at least 6 characters long.');
+    const validation = validateStandardPassword(newPassword, { email: emailFromUrl });
+    if (!validation.isValid) {
+      setResetError('Password must meet standard security requirements (min 12 characters, uppercase, lowercase, number, symbol).');
       return;
     }
 
@@ -177,6 +180,10 @@ export function ForgotPasswordPage() {
                     {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                <PasswordStrengthIndicator
+                  password={newPassword}
+                  userContext={{ email: emailFromUrl }}
+                />
               </div>
 
               {/* Confirm New Password */}

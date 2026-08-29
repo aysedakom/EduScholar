@@ -47,6 +47,22 @@ const findById = async (idOrCode) => {
   }
 };
 
+const updateStatus = async (idOrCode, status) => {
+  try {
+    const isNum = !isNaN(Number(idOrCode));
+    const query = isNum
+      ? 'UPDATE scholarships SET status = $1 WHERE id = $2 OR program_code = $3 RETURNING *'
+      : 'UPDATE scholarships SET status = $1 WHERE program_code = $2 RETURNING *';
+    const params = isNum ? [status, Number(idOrCode), String(idOrCode)] : [status, String(idOrCode)];
+    
+    const result = await pool.query(query, params);
+    return result.rows[0] || null;
+  } catch (err) {
+    console.error('[scholarshipModel] updateStatus DB query failed:', err.message);
+    throw err;
+  }
+};
+
 const create = async (data) => {
   try {
     const result = await pool.query(
@@ -86,4 +102,4 @@ const create = async (data) => {
   }
 };
 
-module.exports = { findAll, findById, create };
+module.exports = { findAll, findById, updateStatus, create };

@@ -98,6 +98,7 @@ async function ensureTables() {
           created_at TIMESTAMPTZ DEFAULT NOW()
         );
         CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email, otp_purpose, consumed_at);
+        ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data TEXT;
       `);
 
       // Ensure primary Administrator support.edu2026@gmail.com has January10 password in cloud/local DB

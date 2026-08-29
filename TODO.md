@@ -1,27 +1,13 @@
-# School Aid CLI Implementation
+>Fix format passwords (standard)
+	-Length: 12-16 character recommended for maximum security.
+	-Avoid using common phrases or dictionary words
+	-Unique passwords every users
+	-Must be mix of character types: Uppercase letters (A–Z), Lowercase letters (a–z), Numbers (0–9), Special symbols (e.g., !, @, #, $, %, &)
 
-The School Aid CLI script has been implemented and moved to: `backend/src/cli/schoolAid.ts`
-The backend has been configured with TypeScript to run these commands.
+>Attachments issues  (applicants are required to upload a their respective files before the system allows them to submit); Also the applicant submits a docs yet in admin it cannot be found, fix fix (this maybe about connection or in database itself)
 
-/*
-Usage Examples:
+>Make the website adaptable, concern is while their device is an ios. The verification links (New register) them back to localhost instead of the current on run website on their device
 
-1. Populate eligible students:
-   npx tsx src/cli/schoolAid.ts populate-eligibles --program "Scholarship2026"
+>Once the applicant done submitting their applications, applicants should see expected day of their verification status (expected that it will takes 7-10 days)
 
-2. Allocate funds:
-   npx tsx src/cli/schoolAid.ts allocate-funds --program "Scholarship2026" --budget 50000
-
-3. Distribute aid and send notifications:
-   npx tsx src/cli/schoolAid.ts distribute --program "Scholarship2026"
-
-4. Generate aid report:
-   npx tsx src/cli/schoolAid.ts report --program "Scholarship2026"
-*/
-
-/* Notes:
-- Backend modules (studentRegistry, aidManager, notificationSystem) should implement proper DB interaction (PostgreSQL, MongoDB, etc.) and business logic.
-- Frontend React (Vite + Tailwind CSS) can consume REST/GraphQL APIs to visualize students, fund allocation, and reports.
-- Tailwind CSS provides responsive UI styling.
-- Typescript ensures type safety across modules.
-*/
+>Setup high security: prevent from exposing the front-end/backend to the users bcos they can access it when they do "Inspect => Network" (Disable inspect element - DevTools in the current website
