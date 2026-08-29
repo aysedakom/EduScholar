@@ -30,6 +30,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// API Rate Limiting & DoS Protection
+const { generalLimiter } = require('./middleware/rateLimiter');
+app.use('/api', generalLimiter);
+
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 

@@ -41,9 +41,31 @@ const formatUserResponse = (user) => ({
   hasCompletedBasicForm: true,
 });
 
+const isSafeClientUrl = (urlStr) => {
+  try {
+    const parsed = new URL(urlStr);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    const host = parsed.hostname.toLowerCase();
+    // Block AWS/GCP metadata & private RFC1918 subnets (SSRF protection)
+    if (
+      host === '169.254.169.254' ||
+      host === 'metadata.google.internal' ||
+      host.startsWith('10.') ||
+      host.startsWith('192.168.') ||
+      host.startsWith('172.16.') ||
+      host === '0.0.0.0'
+    ) {
+      return false;
+    }
+    return true;
+  } catch (_) {
+    return false;
+  }
+};
+
 const resolveClientUrl = (req) => {
-  // 1. Explicitly supplied by client body
-  if (req?.body?.clientUrl && typeof req.body.clientUrl === 'string' && req.body.clientUrl.startsWith('http')) {
+  // 1. Explicitly supplied by client body (with SSRF verification)
+  if (req?.body?.clientUrl && typeof req.body.clientUrl === 'string' && isSafeClientUrl(req.body.clientUrl)) {
     const rawUrl = req.body.clientUrl.replace(/\/$/, '');
     if (!rawUrl.includes('localhost') || process.env.NODE_ENV !== 'production') {
       return rawUrl;
