@@ -162,7 +162,7 @@ export function App() {
               </Route>
 
               {/* School Coordinator Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'admin', 'system_admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'system_admin']} />}>
                 <Route path="/school/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/batch-verification" element={<BatchVerificationPage />} />
                 <Route path="/school/academic" element={<AcademicMonitoringPage />} />
@@ -171,7 +171,7 @@ export function App() {
               </Route>
 
               {/* Treasury Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['treasury', 'admin', 'system_admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['treasury', 'system_admin']} />}>
                 <Route path="/treasury/budget" element={<BudgetPage />} />
                 <Route path="/treasury/reports" element={<ReportsModulePage />} />
                 <Route path="/treasury/reconciliation" element={<ReconciliationPage />} />

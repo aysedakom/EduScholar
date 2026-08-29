@@ -170,9 +170,7 @@ class QcIdService {
     );
   }
 
-  /**
-   * Lookup single resident by QC ID Number
-   */
+
   async lookupById(idNumber) {
     if (!idNumber) return null;
     const cleanId = String(idNumber).trim().toUpperCase();
@@ -181,7 +179,7 @@ class QcIdService {
     );
     if (found) return found;
 
-    // Generate dynamic fallback for mock lookups if query looks like a valid QC ID pattern
+
     if (cleanId.startsWith('QC-') || cleanId.startsWith('QCID-')) {
       return {
         qcitizen_id: cleanId,
@@ -212,9 +210,7 @@ class QcIdService {
     return null;
   }
 
-  /**
-   * Verify applicant eligibility against QCSP residency & voter guidelines
-   */
+
   async verifyApplicant({ qcitizen_id, full_name, barangay, program_type = 'tertiary-economic' }) {
     let matchedResident = null;
 
@@ -235,15 +231,10 @@ class QcIdService {
     }
 
     if (!matchedResident) {
-      // Default verified response for testing applicants
-      matchedResident = QC_CITIZEN_REGISTRY[0]; // Pia Marie Faner
+
+      matchedResident = QC_CITIZEN_REGISTRY[0];
     }
 
-    // Evaluate QCSP Guidelines:
-    // 1. Must be a QC Resident
-    // 2. Minimum 3 years residency
-    // 3. Registered voter or parent voter
-    // 4. Low income if need-based aid
     const checks = {
       is_qc_resident: matchedResident.is_qc_resident,
       min_residency_met: matchedResident.residency_years >= 3,
