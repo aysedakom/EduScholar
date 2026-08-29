@@ -34,7 +34,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
 import {
-  ALL_SCHOLARSHIP_PROGRAMS,
   getProgramById,
   getActiveStudentApplication,
   saveActiveStudentApplication,
@@ -142,15 +141,14 @@ interface UploadedDocMeta {
 
 export const ApplicationForm: React.FC = () => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const isDark = theme === 'dark';
 
   // Determine chosen scholarship program from URL or default to SHS Academic
-  const initialProgramId = searchParams.get('program') || searchParams.get('programId') || 'shs-academic';
-  const [selectedProgramId, setSelectedProgramId] = useState<string>(initialProgramId);
+  const selectedProgramId = searchParams.get('program') || searchParams.get('programId') || 'shs-academic';
   const selectedProgram: ScholarshipProgramSpec = getProgramById(selectedProgramId);
 
   // Active Application state check (Single Application Constraint)
@@ -161,14 +159,6 @@ export const ApplicationForm: React.FC = () => {
     const existing = getActiveStudentApplication();
     setActiveApp(existing);
   }, []);
-
-  // Synchronize URL param when user switches program in dropdown
-  const handleProgramChange = (newProgramId: string) => {
-    setSelectedProgramId(newProgramId);
-    setSearchParams({ program: newProgramId });
-    // Reset any upload errors when switching programs
-    setUploadErrors({});
-  };
 
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -201,6 +191,7 @@ export const ApplicationForm: React.FC = () => {
     register,
     handleSubmit,
     trigger,
+    watch,
     formState: { errors },
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema) as any,
@@ -233,6 +224,21 @@ export const ApplicationForm: React.FC = () => {
       isKasambahayOrToda: false,
       termsAccepted: true,
     },
+  });
+
+  const isPWD = watch('isPWD');
+  const isIndigenous = watch('isIndigenous');
+  const is4Ps = watch('is4Ps');
+  const isSoloParent = watch('isSoloParent');
+  const isKasambahayOrToda = watch('isKasambahayOrToda');
+
+  const hasSpecialSector = Boolean(isPWD || isIndigenous || is4Ps || isSoloParent || isKasambahayOrToda);
+
+  const activeRequiredDocs = selectedProgram.requiredDocuments.filter((doc) => {
+    if (doc.id === 'sectoral_proof') {
+      return hasSpecialSector;
+    }
+    return true;
   });
 
   const steps = [
@@ -335,7 +341,7 @@ export const ApplicationForm: React.FC = () => {
   const onSubmit = async (data: ApplicationFormData) => {
     // Validate Step 4: Check if all mandatory documents for this program are uploaded
     const errorsMap: Record<string, string> = {};
-    selectedProgram.requiredDocuments.forEach((doc) => {
+    activeRequiredDocs.forEach((doc) => {
       if (doc.isRequired) {
         if (doc.id === 'voc_video_doc') {
           const hasVideo = videoMode === 'link' ? Boolean(videoUrl.trim()) : Boolean(uploadedDocs[doc.id]);
@@ -372,8 +378,8 @@ export const ApplicationForm: React.FC = () => {
           amount: selectedProgram.categoryId === 'shs' ? 30000 : selectedProgram.categoryId === 'tertiary' ? 105000 : 25000,
           progress: 33,
           status: 'Under Review',
-          requirementsCount: selectedProgram.requiredDocuments.length,
-          completedRequirements: selectedProgram.requiredDocuments.length,
+          requirementsCount: activeRequiredDocs.length,
+          completedRequirements: activeRequiredDocs.length,
           formData: data,
           documentsSubmitted: Object.entries(uploadedDocs).map(([docId, docMeta]) => ({
             id: docId,
@@ -381,7 +387,7 @@ export const ApplicationForm: React.FC = () => {
             size: docMeta?.size,
             uploadedAt: docMeta?.uploadedAt,
           })),
-          notes: `Submitted for ${selectedProgram.title}. All ${selectedProgram.requiredDocuments.length} required documents submitted. Documents queued for administrative verification.`,
+          notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} required documents submitted. Documents queued for administrative verification.`,
           remarks: 'Application submitted via student portal. Documents and credentials queued for initial secretariat review.',
         });
       } catch (backendError) {
@@ -414,15 +420,15 @@ export const ApplicationForm: React.FC = () => {
         submissionDate: new Date().toISOString().split('T')[0],
         submitted_at: new Date().toISOString(),
         status: 'pending',
-        requirementsCount: selectedProgram.requiredDocuments.length,
-        completedRequirements: selectedProgram.requiredDocuments.length,
+        requirementsCount: activeRequiredDocs.length,
+        completedRequirements: activeRequiredDocs.length,
         documents: Object.entries(uploadedDocs).map(([docId, docMeta]) => ({
           id: docId,
           name: docMeta?.name,
           size: docMeta?.size,
           uploadedAt: docMeta?.uploadedAt,
         })),
-        notes: `Submitted for ${selectedProgram.title}. All ${selectedProgram.requiredDocuments.length} program-specific documentary attachments attached. Under review by QCYDO Screening Committee.`,
+        notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} program-specific documentary attachments attached. Under review by QCYDO Screening Committee.`,
       };
 
       // 2. Save active application into LocalStorage (Locking duplicate applications)
@@ -760,43 +766,21 @@ export const ApplicationForm: React.FC = () => {
 
         {/* PROGRAM QUALIFICATIONS BANNER CARD */}
         <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-blue-50/90 via-slate-50 to-indigo-50/40 border-blue-200'}`}>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <Badge variant="primary" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-0.5">
-                  {selectedProgram.badge}
-                </Badge>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                  {selectedProgram.categoryTitle}
-                </span>
-              </div>
-              <h2 className="font-heading font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
-                {selectedProgram.title}
-              </h2>
-              <p className="text-xs text-slate-600 dark:text-slate-300">
-                {selectedProgram.summary}
-              </p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="primary" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-0.5">
+                {selectedProgram.badge}
+              </Badge>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                {selectedProgram.categoryTitle}
+              </span>
             </div>
-
-            {/* Quick Switch Dropdown */}
-            <div className="shrink-0 space-y-1">
-              <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Selected Program Track:
-              </label>
-              <select
-                value={selectedProgramId}
-                onChange={(e) => handleProgramChange(e.target.value)}
-                className={`p-2.5 rounded-xl text-xs font-bold border focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer ${
-                  isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-blue-300 text-blue-950 shadow-sm'
-                }`}
-              >
-                {ALL_SCHOLARSHIP_PROGRAMS.map((prog) => (
-                  <option key={prog.id} value={prog.id}>
-                    {prog.title} ({prog.level})
-                  </option>
-                ))}
-              </select>
-            </div>
+            <h2 className="font-heading font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
+              {selectedProgram.title}
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              {selectedProgram.summary}
+            </p>
           </div>
 
           {/* Grant Metrics & Qualifications Checklist */}
@@ -1266,7 +1250,7 @@ export const ApplicationForm: React.FC = () => {
                     </h2>
                   </div>
                   <Badge variant="primary" className="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border-emerald-300 font-extrabold text-xs">
-                    {Object.keys(uploadedDocs).length} of {selectedProgram.requiredDocuments.length} Attached
+                    {activeRequiredDocs.filter((d) => Boolean(uploadedDocs[d.id])).length} of {activeRequiredDocs.length} Attached
                   </Badge>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -1276,7 +1260,7 @@ export const ApplicationForm: React.FC = () => {
 
               {/* Dynamic Program-Specific Upload Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {selectedProgram.requiredDocuments.map((docSpec) => {
+                {activeRequiredDocs.map((docSpec) => {
                   const isUploaded = Boolean(uploadedDocs[docSpec.id]);
                   const uploadedMeta = uploadedDocs[docSpec.id];
                   const hasError = Boolean(uploadErrors[docSpec.id]);
