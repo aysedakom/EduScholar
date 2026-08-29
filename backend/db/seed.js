@@ -7,7 +7,7 @@ const { pool } = require('../config/db');
 
 async function seed() {
   console.log('[seed] Starting clean master catalog seeding...');
-  const hashedPassword = await bcrypt.hash('password123', 10);
+  const hashedPassword = await bcrypt.hash('January10', 10);
 
   // 1. SEED VERIFIED ADMIN USER ONLY
   console.log('[seed] Seeding primary verified Administrator...');
