@@ -77,12 +77,12 @@ export const BasicFormPage: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Section 1: Personal & Identification */}
-        <Card>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-900">
-              <User className="h-5 w-5 text-blue-600" /> Personal Details
+            <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <User className="h-5 w-5 text-blue-600 dark:text-blue-400" /> Personal Details
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-500 dark:text-slate-400">
               Your legal name and contact details as registered in the university system.
             </CardDescription>
           </CardHeader>
@@ -126,26 +126,26 @@ export const BasicFormPage: React.FC = () => {
         </Card>
 
         {/* Section 2: Academic Record */}
-        <Card>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-900">
-              <GraduationCap className="h-5 w-5 text-indigo-600" /> Academic Details
+            <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <GraduationCap className="h-5 w-5 text-indigo-600 dark:text-indigo-400" /> Academic Details
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-500 dark:text-slate-400">
               Your current course, department, and academic standing.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">Beneficiary College / Department *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Beneficiary College / Department *</label>
                 <select
                   value={form.department}
                   onChange={(e) => update('department', e.target.value)}
-                  className="w-full h-11 px-4 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white cursor-pointer"
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 cursor-pointer"
                 >
                   {INSTALLED_DEPARTMENTS.map((dept) => (
-                    <option key={dept} value={dept}>
+                    <option key={dept} value={dept} className="dark:bg-slate-900 dark:text-white">
                       {dept}
                     </option>
                   ))}
@@ -160,17 +160,17 @@ export const BasicFormPage: React.FC = () => {
                 required
               />
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">Year Level</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Year Level</label>
                 <select
                   value={form.yearLevel}
                   onChange={(e) => update('yearLevel', e.target.value)}
-                  className="w-full h-11 px-4 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white"
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                 >
-                  <option value="1st Year">1st Year (Freshman)</option>
-                  <option value="2nd Year">2nd Year (Sophomore)</option>
-                  <option value="3rd Year">3rd Year (Junior)</option>
-                  <option value="4th Year">4th Year (Senior)</option>
-                  <option value="Graduate / Post-Grad">Graduate / Post-Grad</option>
+                  <option value="1st Year" className="dark:bg-slate-900 dark:text-white">1st Year (Freshman)</option>
+                  <option value="2nd Year" className="dark:bg-slate-900 dark:text-white">2nd Year (Sophomore)</option>
+                  <option value="3rd Year" className="dark:bg-slate-900 dark:text-white">3rd Year (Junior)</option>
+                  <option value="4th Year" className="dark:bg-slate-900 dark:text-white">4th Year (Senior)</option>
+                  <option value="Graduate / Post-Grad" className="dark:bg-slate-900 dark:text-white">Graduate / Post-Grad</option>
                 </select>
               </div>
               <Input
@@ -186,12 +186,12 @@ export const BasicFormPage: React.FC = () => {
         </Card>
 
         {/* Section 3: Socioeconomic & Emergency */}
-        <Card>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-slate-900">
-              <MapPin className="h-5 w-5 text-emerald-600" /> Residency & Emergency Contact
+            <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
+              <MapPin className="h-5 w-5 text-emerald-600 dark:text-emerald-400" /> Residency & Emergency Contact
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-slate-500 dark:text-slate-400">
               Barangay residency details for Quezon City school aid distribution.
             </CardDescription>
           </CardHeader>
@@ -206,16 +206,16 @@ export const BasicFormPage: React.FC = () => {
                 required
               />
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">Household Annual Income</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Household Annual Income</label>
                 <select
                   value={form.householdIncome}
                   onChange={(e) => update('householdIncome', e.target.value)}
-                  className="w-full h-11 px-4 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white"
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                 >
-                  <option value="Under ₱150,000 / year">Under ₱150,000 / year (Priority Need)</option>
-                  <option value="₱150,000 - ₱300,000 / year">₱150,000 - ₱300,000 / year</option>
-                  <option value="₱300,000 - ₱500,000 / year">₱300,000 - ₱500,000 / year</option>
-                  <option value="Above ₱500,000 / year">Above ₱500,000 / year</option>
+                  <option value="Under ₱150,000 / year" className="dark:bg-slate-900 dark:text-white">Under ₱150,000 / year (Priority Need)</option>
+                  <option value="₱150,000 - ₱300,000 / year" className="dark:bg-slate-900 dark:text-white">₱150,000 - ₱300,000 / year</option>
+                  <option value="₱300,000 - ₱500,000 / year" className="dark:bg-slate-900 dark:text-white">₱300,000 - ₱500,000 / year</option>
+                  <option value="Above ₱500,000 / year" className="dark:bg-slate-900 dark:text-white">Above ₱500,000 / year</option>
                 </select>
               </div>
             </div>

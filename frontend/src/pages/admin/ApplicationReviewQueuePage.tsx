@@ -334,15 +334,15 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="font-heading font-extrabold text-2xl text-foreground">Application Review Queue</h1>
+            <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Application Review Queue</h1>
             <Badge variant="warning">
               {applications.filter((a) => a.status !== 'Approved' && a.status !== 'Rejected').length} Total Pending
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
             Review student eligibility credentials, verify document compliance flags, and render approval decisions.
           </p>
         </div>
@@ -352,7 +352,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
             variant="outline"
             size="sm"
             onClick={onBackToPrograms}
-            className="self-start md:self-auto font-bold text-xs flex items-center gap-1.5 border-slate-300 hover:bg-slate-50 cursor-pointer"
+            className="self-start md:self-auto font-bold text-xs flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
             leftIcon={<ArrowLeft className="h-4 w-4" />}
           >
             Back to Programs Catalog
@@ -362,17 +362,17 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
       {/* Filtered Program Active Banner (when viewing a specific program queue) */}
       {programFilter !== 'all' && (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-blue-50/90 border border-blue-200/90 rounded-2xl text-xs shadow-xs animate-in fade-in">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-blue-50/90 dark:bg-blue-950/60 border border-blue-200/90 dark:border-blue-800/80 rounded-2xl text-xs shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="h-7 w-7 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
               🎓
             </div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-extrabold text-blue-950">Filtered Program:</span>
+              <span className="font-extrabold text-blue-950 dark:text-blue-200">Filtered Program:</span>
               <span className="bg-blue-600 text-white font-extrabold px-3 py-1 rounded-full text-xs shadow-xs flex items-center gap-1.5">
                 {getActiveProgramLabel(programFilter)}
               </span>
-              <span className="text-blue-700 font-bold bg-blue-100/80 px-2.5 py-0.5 rounded-lg border border-blue-200">
+              <span className="text-blue-700 dark:text-blue-300 font-bold bg-blue-100/80 dark:bg-blue-900/60 px-2.5 py-0.5 rounded-lg border border-blue-200 dark:border-blue-800">
                 {filteredApps.length} {filteredApps.length === 1 ? 'Applicant' : 'Applicants'} Found
               </span>
             </div>
@@ -380,7 +380,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           
           <button
             onClick={clearProgramFilter}
-            className="text-xs font-extrabold text-blue-700 hover:text-blue-900 bg-white border border-blue-200 hover:bg-blue-100/60 px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-xs shrink-0"
+            className="text-xs font-extrabold text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-white bg-white dark:bg-slate-800 border border-blue-200 dark:border-slate-700 hover:bg-blue-100/60 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1 shadow-xs shrink-0"
           >
             <span>Show All Programs</span>
             <X className="h-3.5 w-3.5" />
@@ -390,7 +390,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
       {/* Review Table Controls */}
       <Card>
-        <CardHeader className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border pb-4">
+        <CardHeader className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border dark:border-slate-800 pb-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
             {/* Search Input */}
             <div className="relative flex-1 sm:w-60">
@@ -400,24 +400,24 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                 placeholder="Search student, ID, school..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary shadow-xs"
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-primary shadow-xs placeholder:text-slate-400"
               />
             </div>
 
             {/* Program Track Selector Dropdown */}
-            <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 rounded-xl px-2.5 h-9 text-xs">
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 h-9 text-xs">
               <Layers className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               <select
                 value={programFilter}
                 onChange={(e) => setProgramFilter(e.target.value)}
                 aria-label="Filter by scholarship program"
-                className="bg-transparent font-bold text-slate-700 focus:outline-none cursor-pointer pr-1 truncate max-w-[220px]"
+                className="bg-transparent font-bold text-slate-700 dark:text-slate-200 focus:outline-none cursor-pointer pr-1 truncate max-w-[220px]"
               >
-                <option value="all">All Scholarship Programs ({applications.length})</option>
+                <option value="all" className="dark:bg-slate-900 dark:text-white">All Scholarship Programs ({applications.length})</option>
                 {ALL_SCHOLARSHIP_PROGRAMS.map((prog) => {
                   const count = applications.filter(a => matchesProgram(a, prog.id) || matchesProgram(a, prog.title)).length;
                   return (
-                    <option key={prog.id} value={prog.title}>
+                    <option key={prog.id} value={prog.title} className="dark:bg-slate-900 dark:text-white">
                       {prog.shortTitle} ({count})
                     </option>
                   );
@@ -442,7 +442,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   statusFilter === tab.id
                     ? 'bg-primary text-white shadow-xs border border-transparent font-bold'
-                    : 'bg-white text-slate-700 border border-slate-200 shadow-xs hover:bg-slate-50'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
                 {tab.label}
@@ -454,7 +454,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
         <CardContent className="pt-4">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase group-label border-b border-border">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase group-label border-b border-border dark:border-slate-800">
                 <tr>
                   <th className="p-3">App ID & Student</th>
                   <th className="p-3">Applied Program Track</th>
@@ -464,18 +464,18 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                   <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-sans">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
                 {filteredApps.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-10 text-center text-muted-foreground">
                       <div className="max-w-md mx-auto space-y-2">
-                        <Inbox className="h-10 w-10 mx-auto text-slate-300" />
-                        <p className="font-extrabold text-slate-800 text-sm">
+                        <Inbox className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-600" />
+                        <p className="font-extrabold text-slate-800 dark:text-slate-200 text-sm">
                           {programFilter !== 'all'
                             ? `No applicants found for "${getActiveProgramLabel(programFilter)}"`
                             : 'No applications pending evaluation in this filter.'}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-400 dark:text-slate-500">
                           {programFilter !== 'all'
                             ? 'No student applicants have submitted applications for this specific program yet.'
                             : 'Try adjusting your search keywords or switching status filters.'}
@@ -485,7 +485,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                             variant="outline"
                             size="sm"
                             onClick={clearProgramFilter}
-                            className="mt-2 font-bold text-xs text-blue-600 border-blue-200 hover:bg-blue-50"
+                            className="mt-2 font-bold text-xs text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800 hover:bg-blue-50 dark:hover:bg-blue-950/50"
                           >
                             View All Program Applications ({applications.length})
                           </Button>
@@ -495,55 +495,55 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                   </tr>
                 ) : (
                   filteredApps.map((app) => (
-                    <tr key={app.id} className="hover:bg-slate-50/70 transition-colors">
+                    <tr key={app.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/60 transition-colors">
                       <td className="p-3">
                         <div>
                           <span className="font-mono font-bold text-primary block">{app.id}</span>
-                          <span className="font-bold text-slate-900">{app.studentName}</span>
-                          <span className="text-[11px] text-slate-400 block">{app.studentId}</span>
+                          <span className="font-bold text-slate-900 dark:text-slate-100">{app.studentName}</span>
+                          <span className="text-[11px] text-slate-400 dark:text-slate-500 block">{app.studentId}</span>
                         </div>
                       </td>
                       <td className="p-3">
-                        <span className="font-bold text-slate-800 block">{app.scholarshipTitle}</span>
-                        <span className="text-[10px] text-slate-500">{app.school}</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-200 block">{app.scholarshipTitle}</span>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400">{app.school}</span>
                         <div className="mt-0.5 flex flex-wrap gap-1 items-center">
                           <span className={`inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-md ${
-                            app.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                            app.status === 'Rejected' ? 'bg-rose-100 text-rose-800' :
-                            app.status === 'Under Review' ? 'bg-amber-100 text-amber-800' :
-                            'bg-blue-100 text-blue-800'
+                            app.status === 'Approved' ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300' :
+                            app.status === 'Rejected' ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-800 dark:text-rose-300' :
+                            app.status === 'Under Review' ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300' :
+                            'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300'
                           }`}>
                             {app.status}
                           </span>
                           {app.schoolEndorsed && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600" /> School Endorsed
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" /> School Endorsed
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="p-3">
-                        <span className={`font-bold ${app.gpa <= 2.5 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                        <span className={`font-bold ${app.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-300'}`}>
                           GWA: {app.gpa.toFixed(2)}
                         </span>
-                        <span className="text-[11px] text-slate-500 block truncate max-w-[150px]">{app.program}</span>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate max-w-[150px]">{app.program}</span>
                       </td>
-                      <td className="p-3 font-extrabold text-emerald-600">{formatCurrency(app.amount)}</td>
+                      <td className="p-3 font-extrabold text-emerald-600 dark:text-emerald-400">{formatCurrency(app.amount)}</td>
                       <td className="p-3">
                         <div className="space-y-1">
                           {app.complianceFlags.length > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200">
-                              <AlertTriangle className="h-3 w-3 shrink-0 text-rose-600" /> Flagged ({app.complianceFlags.length})
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2 py-0.5 rounded-md border border-rose-200 dark:border-rose-800">
+                              <AlertTriangle className="h-3 w-3 shrink-0 text-rose-600 dark:text-rose-400" /> Flagged ({app.complianceFlags.length})
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                              <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600" /> Verified Clean
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800">
+                              <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-600 dark:text-emerald-400" /> Verified Clean
                             </span>
                           )}
                           <div>
                             <button
                               onClick={() => setDocViewerApp(app)}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer"
                             >
                               <FileText className="h-3.5 w-3.5" />
                               <span>{app.documentsUploaded.length} Attachments (View)</span>
@@ -672,33 +672,33 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           }
         >
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Student ID</span>
-                <span className="font-bold text-slate-800">{selectedApp.studentId}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Student ID</span>
+                <span className="font-bold text-slate-800 dark:text-slate-200">{selectedApp.studentId}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">General GWA</span>
-                <span className={`font-bold ${selectedApp.gpa <= 2.5 ? 'text-emerald-600' : 'text-slate-800'}`}>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">General GWA</span>
+                <span className={`font-bold ${selectedApp.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}`}>
                   {selectedApp.gpa.toFixed(2)}
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Award Value</span>
-                <span className="font-bold text-emerald-600">{formatCurrency(selectedApp.amount)}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Award Value</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedApp.amount)}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold block">Current Status</span>
-                <span className="font-bold text-blue-600">{selectedApp.status}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Current Status</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">{selectedApp.status}</span>
               </div>
             </div>
 
             {selectedApp.complianceFlags.length > 0 && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl space-y-1">
-                <span className="font-bold text-rose-900 flex items-center gap-1.5">
-                  <ShieldAlert className="h-4 w-4 text-rose-600" /> Compliance Flags Detected:
+              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl space-y-1">
+                <span className="font-bold text-rose-900 dark:text-rose-200 flex items-center gap-1.5">
+                  <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400" /> Compliance Flags Detected:
                 </span>
-                <ul className="list-disc pl-5 text-rose-800 space-y-0.5">
+                <ul className="list-disc pl-5 text-rose-800 dark:text-rose-300 space-y-0.5">
                   {selectedApp.complianceFlags.map((flag, idx) => (
                     <li key={idx}>{flag}</li>
                   ))}
@@ -707,13 +707,13 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
             )}
 
             <div className="space-y-1.5">
-              <label className="font-bold text-slate-800 block">Evaluator Notes & Committee Resolution:</label>
+              <label className="font-bold text-slate-800 dark:text-slate-200 block">Evaluator Notes & Committee Resolution:</label>
               <textarea
                 rows={3}
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
                 placeholder="Enter evaluation justification, verified grades, or reason for action..."
-                className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-600 resize-none text-xs"
+                className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 resize-none text-xs placeholder:text-slate-400"
               />
             </div>
           </div>
