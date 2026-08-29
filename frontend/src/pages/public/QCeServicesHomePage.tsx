@@ -15,7 +15,8 @@ import {
   Moon,
   ChevronDown,
   Sparkles,
-  BookOpen
+  BookOpen,
+  Menu
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -32,6 +33,7 @@ export const QCeServicesHomePage: React.FC = () => {
   const { t, isTagalog } = useLanguage();
   const navigate = useNavigate();
   const [eservicesOpen, setEservicesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const isDark = theme === 'dark';
@@ -151,20 +153,29 @@ export const QCeServicesHomePage: React.FC = () => {
 
   return (
     <div className={`min-h-screen font-sans selection:bg-primary/20 transition-colors duration-300 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-white text-slate-900'}`}>
-      {/* Top Navbar with Elevation Shadow instead of Border */}
+      {/* Top Navbar with Elevation Shadow */}
       <header className={`w-full shadow-lg relative z-30 transition-colors duration-300 ${isDark ? 'bg-slate-900' : 'bg-white'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className={`h-9 w-9 object-contain p-1 rounded-xl shadow-sm ${isDark ? 'bg-slate-800' : 'bg-blue-50'}`} />
-              <div>
-                <span className={`font-heading font-extrabold text-lg leading-none block ${isDark ? 'text-white' : 'text-slate-900'}`}>GovServe</span>
-                <span className={`text-[10px] font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>QC eServices Hub</span>
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              title="Toggle Menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <img src="/logo-system.png" alt="GovServe Logo" className={`h-9 w-9 object-contain p-1 rounded-xl shadow-sm shrink-0 ${isDark ? 'bg-slate-800' : 'bg-blue-50'}`} />
+              <div className="min-w-0">
+                <span className={`font-heading font-extrabold text-base sm:text-lg leading-none block truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>GovServe</span>
+                <span className={`text-[10px] font-semibold truncate block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>QC eServices Hub</span>
               </div>
             </Link>
 
-            {/* Header Navigation: HOME, eSERVICES, CITIZEN'S CHARTER, CONTACT US */}
-            <nav className="flex items-center gap-1 sm:gap-2">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-1 sm:gap-2">
               <Link
                 to="/"
                 className={`flex items-center px-3 py-2 rounded-xl text-xs font-extrabold shadow-sm transition-all ${isDark ? 'bg-blue-950/80 text-blue-300' : 'bg-blue-50 text-blue-600'}`}
@@ -380,6 +391,74 @@ export const QCeServicesHomePage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 space-y-3 animate-in slide-in-from-top-2 duration-150 shadow-xl">
+            <div className="flex flex-col space-y-1">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60"
+              >
+                🏠 {t('nav.home')}
+              </Link>
+              <Link
+                to="/education-scholarship"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
+              >
+                <span>🎓 {t('nav.eduScholarTitle')}</span>
+                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
+              </Link>
+              <Link
+                to="/scholar-prog-available"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📚 {t('nav.programs')}
+              </Link>
+              <Link
+                to="/scholar-eguide"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📖 {t('nav.eguide')}
+              </Link>
+              <a
+                href="/citizens_charter.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📋 {t('nav.charter')}
+              </a>
+              <Link
+                to="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📞 {t('nav.contact')}
+              </Link>
+            </div>
+
+            {!user && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <Button variant="primary" size="sm" className="w-full font-bold">
+                    {t('nav.signin')}
+                  </Button>
+                </Link>
+                <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <Button variant="outline" size="sm" className="w-full font-bold border-slate-300 dark:border-slate-700">
+                    {t('nav.signup')}
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Hero Section: umaga.png in Light Mode, gabi.png in Dark Mode */}

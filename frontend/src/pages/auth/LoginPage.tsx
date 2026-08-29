@@ -1,21 +1,29 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, ArrowRight, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
+import * as authApi from '../../api/auth';
 import { AuthBrandPanel } from '../../components/shared/AuthBrandPanel';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import type { UserRole } from '../../types';
 
-export function LoginPage() {
+interface LoginPageProps {
+  defaultView?: 'credentials' | 'forgot-password';
+}
+
+export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get('redirect');
   const registeredParam = searchParams.get('registered') === 'true';
   const emailParam = searchParams.get('email') || '';
+  const viewParam = searchParams.get('view');
 
-  // Stages: 'credentials' | 'otp'
-  const [stage, setStage] = useState<'credentials' | 'otp'>('credentials');
+  // Stages: 'credentials' | 'otp' | 'forgot-password' | 'forgot-success'
+  const [stage, setStage] = useState<'credentials' | 'otp' | 'forgot-password' | 'forgot-success'>(
+    defaultView || (viewParam === 'forgot-password' ? 'forgot-password' : 'credentials')
+  );
   
   const [email, setEmail] = useState(emailParam || '');
   const [password, setPassword] = useState('');
@@ -41,6 +49,12 @@ export function LoginPage() {
       handleEmailChange(emailParam);
     }
   }, [emailParam]);
+
+  useEffect(() => {
+    if (viewParam === 'forgot-password' || defaultView === 'forgot-password') {
+      setStage('forgot-password');
+    }
+  }, [viewParam, defaultView]);
 
   // Countdown timer for Resend OTP
   useEffect(() => {
@@ -209,6 +223,29 @@ export function LoginPage() {
     otpInputRefs.current[nextFocusIndex]?.focus();
   };
 
+  // Submit Forgot Password
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      setError('Please enter your registered email address.');
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      await authApi.forgotPassword(email.toLowerCase().trim());
+      toast.success('Password reset link has been dispatched to your email.');
+      setStage('forgot-success');
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to send reset link. Please verify your email.';
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Submit OTP Verification
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -263,7 +300,7 @@ export function LoginPage() {
       <AuthBrandPanel />
       
       {/* Right Side Container */}
-      <div className="flex w-full flex-col items-center justify-center p-4 md:w-1/2 md:p-10">
+      <div className="flex w-full flex-col items-center justify-center p-4 sm:p-6 md:w-1/2 md:p-10">
         
         {/* Top Back to Home Navigation */}
         <div className="w-full max-w-md mb-3 flex items-center justify-between">
@@ -277,7 +314,7 @@ export function LoginPage() {
         </div>
 
         {/* Card */}
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 md:p-10 shadow-xl border border-slate-100/50 space-y-6">
+        <div className="w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 md:p-10 shadow-xl border border-slate-100/50 space-y-6">
           
           {/* Post-Registration Banner */}
           {registeredParam && stage === 'credentials' && (
@@ -348,9 +385,16 @@ export function LoginPage() {
                     <label htmlFor="password" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
                       Password
                     </label>
-                    <Link to="/forgot-password" className="text-[11px] font-bold text-blue-600 hover:text-blue-750 hover:underline">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStage('forgot-password');
+                        setError('');
+                      }}
+                      className="text-[11px] font-bold text-blue-600 hover:text-blue-750 hover:underline cursor-pointer"
+                    >
                       Forgot password?
-                    </Link>
+                    </button>
                   </div>
                   <div className="relative">
                     <Input
@@ -393,7 +437,103 @@ export function LoginPage() {
           )}
 
           {/* ========================================================================= */}
-          {/* STAGE 2: 6-DIGIT EMAIL OTP VERIFICATION */}
+          {/* STAGE 2: INLINE FORGOT PASSWORD VIEW */}
+          {/* ========================================================================= */}
+          {stage === 'forgot-password' && (
+            <>
+              {/* Header */}
+              <div className="space-y-1">
+                <div className="h-11 w-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200/60 shadow-xs mb-2">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <h2 className="font-heading text-2xl font-bold text-slate-900">Reset Password</h2>
+                <p className="text-xs text-slate-500">
+                  Enter your account email and we will send a password reset link to your inbox.
+                </p>
+              </div>
+
+              {error && (
+                <div className="p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700">
+                  {error}
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="forgot_email" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    Registered Email Address
+                  </label>
+                  <Input
+                    id="forgot_email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    placeholder="e.g. yourname@example.com"
+                    leftIcon={<Mail className="h-4 w-4 text-slate-400" />}
+                    className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="pt-2 space-y-3">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <span>Send Password Reset Link</span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage('credentials');
+                      setError('');
+                    }}
+                    className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline cursor-pointer py-1 block"
+                  >
+                    ← Return to Sign In
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STAGE 3: FORGOT PASSWORD SUCCESS VIEW */}
+          {/* ========================================================================= */}
+          {stage === 'forgot-success' && (
+            <div className="space-y-5 text-center py-2">
+              <div className="h-14 w-14 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200/60 shadow-xs">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <div className="space-y-1.5">
+                <h2 className="font-heading text-2xl font-bold text-slate-900">Check Your Email</h2>
+                <p className="text-xs text-slate-600 max-w-xs mx-auto leading-relaxed">
+                  We've dispatched a password reset link to <strong className="text-slate-900">{email}</strong>. Please check your inbox (and spam folder) to set your new password.
+                </p>
+              </div>
+
+              <div className="pt-3">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setStage('credentials');
+                    setError('');
+                  }}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer"
+                >
+                  ← Return to Sign In
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STAGE 4: 6-DIGIT EMAIL OTP VERIFICATION */}
           {/* ========================================================================= */}
           {stage === 'otp' && (
             <>
@@ -458,12 +598,16 @@ export function LoginPage() {
                     )}
                   </div>
 
-                  <Link
-                    to={`/forgot-password?email=${encodeURIComponent(email)}`}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage('forgot-password');
+                      setError('');
+                    }}
                     className="text-blue-600 hover:text-blue-750 text-xs font-bold hover:underline cursor-pointer"
                   >
                     Forgot password?
-                  </Link>
+                  </button>
 
                   <button
                     type="button"
@@ -509,3 +653,4 @@ export function LoginPage() {
     </div>
   );
 }
+

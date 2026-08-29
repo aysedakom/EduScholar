@@ -14,7 +14,8 @@ import {
   ArrowUpRight,
   Compass,
   ShieldAlert,
-  ExternalLink
+  ExternalLink,
+  Menu
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
@@ -29,6 +30,7 @@ export const LandingPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
   const [eservicesOpen, setEservicesOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   // Automatically direct logged-in administrators and staff to their command center dashboard
@@ -105,16 +107,26 @@ export const LandingPage: React.FC = () => {
       {/* Top Navbar */}
       <header className="w-full bg-white dark:bg-slate-900 shadow-sm border-b border-slate-200/80 dark:border-slate-800/80 sticky top-0 z-40 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4 sm:gap-8">
-            <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-xs" />
-              <div>
-                <span className="font-heading font-extrabold text-lg text-slate-900 dark:text-white leading-none block">GovServe</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Campus Aid Hub Portal</span>
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
+            {/* Mobile Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
+              title="Toggle Menu"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-xs shrink-0" />
+              <div className="min-w-0">
+                <span className="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-none block truncate">GovServe</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate block">Campus Aid Hub Portal</span>
               </div>
             </Link>
 
-            <nav className="flex items-center gap-1 sm:gap-2">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-1 sm:gap-2">
               <Link
                 to="/"
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer"
@@ -282,6 +294,74 @@ export const LandingPage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-4 space-y-3 animate-in slide-in-from-top-2 duration-150 shadow-xl">
+            <div className="flex flex-col space-y-1">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                🏠 {t('nav.home')}
+              </Link>
+              <Link
+                to="/education-scholarship"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 flex items-center justify-between"
+              >
+                <span>🎓 {t('nav.eduScholarTitle')}</span>
+                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
+              </Link>
+              <Link
+                to="/scholar-prog-available"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📚 {t('nav.programs')}
+              </Link>
+              <Link
+                to="/scholar-eguide"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📖 {t('nav.eguide')}
+              </Link>
+              <a
+                href="/citizens_charter.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📋 {t('nav.charter')}
+              </a>
+              <Link
+                to="/contact"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                📞 {t('nav.contact')}
+              </Link>
+            </div>
+
+            {!user && (
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <button className="w-full py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-extrabold text-white shadow-sm transition-all cursor-pointer">
+                    {t('nav.signin')}
+                  </button>
+                </Link>
+                <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <button className="w-full py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer">
+                    {t('nav.signup')}
+                  </button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Hero Section matching design photo */}
