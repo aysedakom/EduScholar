@@ -32,7 +32,10 @@ export interface RegisterPayload {
 }
 
 export const register = (payload: RegisterPayload) => {
-  return api.post<RegisterResponse>('/auth/register', payload);
+  return api.post<RegisterResponse>('/auth/register', {
+    ...payload,
+    clientUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
+  });
 };
 
 export const login = (email: string, password: string) => {
@@ -52,11 +55,17 @@ export const verifyEmail = (token: string, email?: string) => {
 };
 
 export const resendVerification = (email: string) => {
-  return api.post<{ success: boolean; message: string; devVerifyUrl?: string }>('/auth/resend-verification', { email });
+  return api.post<{ success: boolean; message: string; devVerifyUrl?: string }>('/auth/resend-verification', {
+    email,
+    clientUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
+  });
 };
 
 export const forgotPassword = (email: string) => {
-  return api.post<{ success: boolean; message: string; devResetUrl?: string }>('/auth/forgot-password', { email });
+  return api.post<{ success: boolean; message: string; devResetUrl?: string }>('/auth/forgot-password', {
+    email,
+    clientUrl: typeof window !== 'undefined' ? window.location.origin : undefined,
+  });
 };
 
 export const resetPassword = (token: string, newPassword: string, email?: string) => {

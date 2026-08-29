@@ -40,6 +40,43 @@ const formatUserResponse = (user) => ({
   hasCompletedBasicForm: true,
 });
 
+const resolveClientUrl = (req) => {
+  // 1. Explicitly supplied by client body
+  if (req?.body?.clientUrl && typeof req.body.clientUrl === 'string' && req.body.clientUrl.startsWith('http')) {
+    return req.body.clientUrl.replace(/\/$/, '');
+  }
+  // 2. Origin header from browser request (e.g. https://eduscholar-production.up.railway.app)
+  if (req?.headers?.origin && req.headers.origin !== 'null') {
+    return req.headers.origin.replace(/\/$/, '');
+  }
+  // 3. Referer header from browser request
+  if (req?.headers?.referer) {
+    try {
+      const u = new URL(req.headers.referer);
+      return u.origin;
+    } catch (_) {}
+  }
+  // 4. Proxied Host from reverse proxy (Railway, Vercel, Nginx)
+  if (req?.headers && req.headers['x-forwarded-host']) {
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    return `${proto}://${req.headers['x-forwarded-host']}`;
+  }
+  // 5. Environment variables
+  if (process.env.CLIENT_URL) {
+    return process.env.CLIENT_URL.replace(/\/$/, '');
+  }
+  if (process.env.FRONTEND_URL) {
+    return process.env.FRONTEND_URL.replace(/\/$/, '');
+  }
+  if (process.env.RAILWAY_PUBLIC_DOMAIN) {
+    return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
+  }
+  if (process.env.RAILWAY_STATIC_URL) {
+    return `https://${process.env.RAILWAY_STATIC_URL}`;
+  }
+  return 'http://localhost:5173';
+};
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -76,7 +113,7 @@ const register = async (req, res) => {
       expiresInMinutes: 60,
     });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = resolveClientUrl(req);
     const verifyUrl = `${clientUrl}/verify-email?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
 
@@ -160,7 +197,7 @@ const resendVerification = async (req, res) => {
       expiresInMinutes: 60,
     });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = resolveClientUrl(req);
     const verifyUrl = `${clientUrl}/verify-email?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
     emailService.sendVerificationLinkEmail({
@@ -371,7 +408,7 @@ const forgotPassword = async (req, res) => {
       expiresInMinutes: 30,
     });
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = resolveClientUrl(req);
     const resetUrl = `${clientUrl}/forgot-password?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
     // Dispatch verification link email

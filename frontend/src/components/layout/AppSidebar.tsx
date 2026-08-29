@@ -199,25 +199,25 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
   return (
     <aside
       className={cn(
-        'flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 font-sans shadow-xl transition-all duration-300 ease-in-out z-40 shrink-0',
-        'fixed inset-y-0 left-0 h-screen lg:sticky lg:top-0 lg:h-screen',
+        'flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 font-sans shadow-xl transition-all duration-300 ease-in-out z-40 shrink-0 h-full',
+        'fixed inset-y-0 left-0 lg:static lg:h-full',
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
         collapsed ? 'w-20' : 'w-64'
       )}
     >
       {/* Brand Header */}
-      <div className="flex h-18 shrink-0 items-center border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md px-4 gap-3">
+      <div className="flex h-16 shrink-0 items-center border-b border-slate-800/80 bg-slate-900 px-4 gap-3">
         <img
           src="/logo-system.png"
           alt="GovServe Logo"
-          className="h-11 w-11 min-w-[44px] min-h-[44px] object-contain bg-blue-600/25 p-0.5 rounded-full border border-blue-500/40 shadow-md shrink-0 transition-transform hover:scale-105"
+          className="h-10 w-10 min-w-[40px] min-h-[40px] object-contain bg-blue-600/25 p-0.5 rounded-full border border-blue-500/40 shadow-md shrink-0 transition-transform hover:scale-105"
         />
         {!collapsed && (
           <div className="flex flex-col min-w-0 truncate">
-            <span className="font-heading font-black text-lg text-white tracking-tight leading-none truncate">
+            <span className="font-heading font-black text-base text-white tracking-tight leading-none truncate">
               GovServe
             </span>
-            <span className="text-[11px] text-blue-400 font-bold tracking-wider uppercase mt-1 truncate">
+            <span className="text-[10px] text-blue-400 font-bold tracking-wider uppercase mt-1 truncate">
               Campus Aid Hub
             </span>
           </div>
