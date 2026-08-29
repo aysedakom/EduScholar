@@ -20,18 +20,18 @@ router.get('/monitoring', async (req, res) => {
        FROM treasury_budgets`
     );
 
-    const stats = statsResult.rows[0] || { total_active_scholars: 1248, average_gpa: 1.62 };
-    const budget = budgetResult.rows[0] || { total_allocated: 260000000, total_disbursed: 79000000 };
+    const stats = statsResult.rows[0] || { total_active_scholars: 0, average_gpa: 0 };
+    const budget = budgetResult.rows[0] || { total_allocated: 0, total_disbursed: 0 };
 
     res.json({
-      totalActiveScholars: Number(stats.total_active_scholars) || 1248,
-      averageGpa: Number(stats.average_gpa) || 1.62,
-      retentionRate: '96.4%',
-      onTimeGraduationRate: '94.8%',
+      totalActiveScholars: Number(stats.total_active_scholars) || 0,
+      averageGpa: Number(stats.average_gpa) || 0,
+      retentionRate: stats.total_active_scholars > 0 ? '100%' : '0%',
+      onTimeGraduationRate: stats.total_active_scholars > 0 ? '100%' : '0%',
       fundDisbursementSummary: {
-        totalAllocated: Number(budget.total_allocated) || 260000000,
-        totalDisbursed: Number(budget.total_disbursed) || 79000000,
-        utilizationPercent: budget.total_allocated > 0 ? Math.round((budget.total_disbursed / budget.total_allocated) * 100) : 84
+        totalAllocated: Number(budget.total_allocated) || 0,
+        totalDisbursed: Number(budget.total_disbursed) || 0,
+        utilizationPercent: Number(budget.total_allocated) > 0 ? Math.round((Number(budget.total_disbursed) / Number(budget.total_allocated)) * 100) : 0
       },
       audits: auditsResult.rows
     });

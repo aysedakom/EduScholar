@@ -46,6 +46,7 @@ export interface StudentProfile {
 }
 
 import { getScholars } from '../../api/registry';
+import { useWebSocket } from '../../context/WebSocketContext';
 
 export const StudentProfilesSearchPage: React.FC = () => {
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -59,43 +60,58 @@ export const StudentProfilesSearchPage: React.FC = () => {
   const [selectedCertStudent, setSelectedCertStudent] = useState<StudentProfile | null>(null);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
 
+  const { subscribeToTable } = useWebSocket();
+
   useEffect(() => {
     let isMounted = true;
     const fetchRegistry = async () => {
       try {
         const res = await getScholars();
-        if (res.data && res.data.length > 0 && isMounted) {
-          const mapped: StudentProfile[] = res.data.map(s => ({
-            id: `STU-${s.id}`,
-            studentId: s.student_id,
-            name: s.full_name,
-            email: s.email,
-            gpa: Number(s.gwa) || 1.75,
-            department: 'College of Computer Studies (CCS)',
-            major: s.program_name,
-            yearLevel: s.scholarship_age.includes('Year 2') ? '2nd Year' : s.scholarship_age.includes('Year 3') ? '3rd Year' : '1st Year',
-            school: s.school,
-            barangay: 'Quezon City',
-            scholarshipTitle: s.program_name,
-            currentTerm: s.current_term,
-            applicationNumber: `APP-QC-2026-${s.student_id}`,
-            scholarshipAge: s.scholarship_age,
-            scholarshipStatus: (s.status.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
-            disbursementAmount: s.grant_amount || 10000,
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-          }));
-          setStudents(mapped);
-          if (mapped.length > 0) {
-            setExpandedStudentId(mapped[0].id);
+        if (isMounted) {
+          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+            const mapped: StudentProfile[] = res.data.map((s: any) => ({
+              id: `STU-${s.id}`,
+              studentId: s.student_id,
+              name: s.full_name,
+              email: s.email,
+              gpa: Number(s.gwa) || 1.75,
+              department: 'College of Computer Studies (CCS)',
+              major: s.program_name,
+              yearLevel: (s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year',
+              school: s.school,
+              barangay: 'Quezon City',
+              scholarshipTitle: s.program_name,
+              currentTerm: s.current_term,
+              applicationNumber: `APP-QC-2026-${s.student_id}`,
+              scholarshipAge: s.scholarship_age,
+              scholarshipStatus: (s.status?.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
+              disbursementAmount: Number(s.grant_amount) || 10000,
+              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+            }));
+            setStudents(mapped);
+            setExpandedStudentId(mapped[0]?.id || null);
+          } else {
+            setStudents([]);
+            setExpandedStudentId(null);
           }
         }
       } catch {
-        // fallback
+        if (isMounted) setStudents([]);
       }
     };
+
     fetchRegistry();
-    return () => { isMounted = false; };
-  }, []);
+
+    // Real-time PostgreSQL -> WebSocket subscription
+    const unsubscribe = subscribeToTable('student_registry', () => {
+      fetchRegistry();
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [subscribeToTable]);
 
   const filteredStudents = students.filter((stu) => {
     const matchesSearch =

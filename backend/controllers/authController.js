@@ -1,4 +1,4 @@
-// backend/controllers/authController.js
+
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const userModel = require('../models/userModel');
@@ -40,8 +40,6 @@ const formatUserResponse = (user) => ({
   hasCompletedBasicForm: true,
 });
 
-// @desc   Register a new user (Dispatches Email Authorization Code)
-// @route  POST /api/auth/register
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -66,13 +64,13 @@ const register = async (req, res) => {
       }
     }
 
-    // All public account registrations are strictly assigned the student (applicant) role
+
     const assignedRole = 'student';
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await userModel.create({ name, email, hashedPassword, role: assignedRole });
 
-    // Generate email verification link token (valid for 60 minutes)
+
     const tokenRecord = await otpModel.createVerificationToken({
       email: user.email,
       expiresInMinutes: 60,
@@ -81,7 +79,7 @@ const register = async (req, res) => {
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const verifyUrl = `${clientUrl}/verify-email?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
-    // Dispatch verification link email (asynchronously)
+
     emailService.sendVerificationLinkEmail({
       to: user.email,
       name: user.name,
@@ -101,8 +99,7 @@ const register = async (req, res) => {
   }
 };
 
-// @desc   Authorize & Verify Email Address via Verification Link
-// @route  POST /api/auth/verify-email
+
 const verifyEmail = async (req, res) => {
   try {
     const { email, token, code } = req.body;
@@ -112,7 +109,7 @@ const verifyEmail = async (req, res) => {
       return res.status(400).json({ message: 'Verification token is required.' });
     }
 
-    // Verify token against database
+
     const verification = await otpModel.verifyToken({
       email,
       token: verificationToken,
@@ -128,7 +125,7 @@ const verifyEmail = async (req, res) => {
       return res.status(404).json({ message: 'User account not found.' });
     }
 
-    // Activate user account & mark email as verified
+
     await userModel.verifyEmail(user.email);
 
     res.json({
@@ -142,8 +139,6 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-// @desc   Resend Email Verification Link
-// @route  POST /api/auth/resend-verification
 const resendVerification = async (req, res) => {
   try {
     const { email } = req.body;

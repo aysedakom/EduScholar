@@ -216,6 +216,7 @@ CREATE TABLE documents (
   status VARCHAR(30) DEFAULT 'verified' CHECK (status IN ('verified', 'pending', 'rejected')),
   size VARCHAR(30) DEFAULT '1.2 MB',
   file_path TEXT,
+  mime_type VARCHAR(100) DEFAULT 'application/pdf',
   expiry_date DATE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -356,4 +357,54 @@ CREATE TABLE system_logs (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ============================================================
+-- 15. REAL-TIME EVENT STREAMING (PostgreSQL NOTIFY TRIGGERS)
+-- ============================================================
+CREATE OR REPLACE FUNCTION notify_eduscholar_events()
+RETURNS trigger AS $$
+DECLARE
+  payload JSONB;
+BEGIN
+  payload = jsonb_build_object(
+    'table', TG_TABLE_NAME,
+    'action', TG_OP,
+    'record', CASE WHEN TG_OP = 'DELETE' THEN row_to_json(OLD) ELSE row_to_json(NEW) END,
+    'timestamp', CURRENT_TIMESTAMP
+  );
+  PERFORM pg_notify('eduscholar_events', payload::text);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_applications_realtime ON applications;
+CREATE TRIGGER trg_applications_realtime
+AFTER INSERT OR UPDATE OR DELETE ON applications
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
+DROP TRIGGER IF EXISTS trg_registry_realtime ON student_registry;
+CREATE TRIGGER trg_registry_realtime
+AFTER INSERT OR UPDATE OR DELETE ON student_registry
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
+DROP TRIGGER IF EXISTS trg_documents_realtime ON documents;
+CREATE TRIGGER trg_documents_realtime
+AFTER INSERT OR UPDATE OR DELETE ON documents
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
+DROP TRIGGER IF EXISTS trg_notifications_realtime ON notifications;
+CREATE TRIGGER trg_notifications_realtime
+AFTER INSERT OR UPDATE OR DELETE ON notifications
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
+DROP TRIGGER IF EXISTS trg_distributions_realtime ON school_aid_distributions;
+CREATE TRIGGER trg_distributions_realtime
+AFTER INSERT OR UPDATE OR DELETE ON school_aid_distributions
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
+DROP TRIGGER IF EXISTS trg_users_realtime ON users;
+CREATE TRIGGER trg_users_realtime
+AFTER INSERT OR UPDATE OR DELETE ON users
+FOR EACH ROW EXECUTE FUNCTION notify_eduscholar_events();
+
 COMMIT;
+
