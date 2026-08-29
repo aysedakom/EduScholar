@@ -189,47 +189,47 @@ export const DocumentVaultPage: React.FC = () => {
 
       {/* Storage Indicator & Category Quick Filter Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card className="bg-white border border-slate-200 text-slate-900 shadow-soft">
+        <Card className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-soft">
           <CardContent className="p-5 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <HardDrive className="h-5 w-5 text-blue-600" />
-                <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-700">Vault Storage</span>
+                <HardDrive className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <span className="font-heading text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">Vault Storage</span>
               </div>
-              <span className="text-xs font-bold text-blue-600">{usedPercent}% Used</span>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400">{usedPercent}% Used</span>
             </div>
-            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200">
+            <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
               <div className="bg-primary h-full rounded-full transition-all duration-500" style={{ width: `${usedPercent}%` }} />
             </div>
-            <p className="text-[11px] text-slate-500">
-              Used <span className="font-bold text-slate-900">{usedMB} MB</span> of <span className="font-bold text-slate-900">{totalMB} MB</span> allocated storage.
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Used <span className="font-bold text-slate-900 dark:text-white">{usedMB} MB</span> of <span className="font-bold text-slate-900 dark:text-white">{totalMB} MB</span> allocated storage.
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground">Total Documents</p>
-              <p className="font-heading font-extrabold text-2xl text-foreground mt-0.5">{documents.length}</p>
-              <p className="text-[11px] text-slate-500 mt-1">Encrypted with AES-256</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Documents</p>
+              <p className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-0.5">{documents.length}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Encrypted with AES-256</p>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-200 dark:border-blue-800">
               <FileText className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground">Verification Rate</p>
-              <p className="font-heading font-extrabold text-2xl text-emerald-600 mt-0.5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Verification Rate</p>
+              <p className="font-heading font-extrabold text-2xl text-emerald-600 dark:text-emerald-400 mt-0.5">
                 {documents.filter((d) => d.status === 'verified').length} / {documents.length} Verified
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">Reviewed by Financial Aid</p>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">Reviewed by Financial Aid</p>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-800">
               <CheckCircle2 className="h-5 w-5" />
             </div>
           </CardContent>
@@ -237,23 +237,23 @@ export const DocumentVaultPage: React.FC = () => {
       </div>
 
       {/* Main Document Table & Filter Controls */}
-      <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <CardTitle>Vault File Repository</CardTitle>
-            <CardDescription>Search, filter, preview, or download verified documents.</CardDescription>
+            <CardTitle className="text-slate-900 dark:text-white">Vault File Repository</CardTitle>
+            <CardDescription className="text-slate-500 dark:text-slate-400">Search, filter, preview, or download verified documents.</CardDescription>
           </div>
           
           <div className="flex flex-col sm:flex-row items-center gap-3">
             {/* Search Input */}
             <div className="relative w-full sm:w-60">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search file name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 border border-border rounded-xl focus:outline-none focus:border-primary"
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600"
               />
             </div>
 
@@ -261,62 +261,62 @@ export const DocumentVaultPage: React.FC = () => {
             <select
               value={selectedCategoryFilter}
               onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-              className="w-full sm:w-auto h-9 px-3 text-xs bg-slate-50 border border-border rounded-xl focus:outline-none focus:border-primary"
+              className="w-full sm:w-auto h-9 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600"
             >
-              <option value="all">All Categories</option>
-              <option value="FAFSA">FAFSA</option>
-              <option value="Tax Form">Tax Form</option>
-              <option value="Transcript">Transcript</option>
-              <option value="Recommendation">Recommendation</option>
-              <option value="ID Verification">ID Verification</option>
+              <option value="all" className="dark:bg-slate-900 dark:text-white">All Categories</option>
+              <option value="FAFSA" className="dark:bg-slate-900 dark:text-white">FAFSA</option>
+              <option value="Tax Form" className="dark:bg-slate-900 dark:text-white">Tax Form</option>
+              <option value="Transcript" className="dark:bg-slate-900 dark:text-white">Transcript</option>
+              <option value="Recommendation" className="dark:bg-slate-900 dark:text-white">Recommendation</option>
+              <option value="ID Verification" className="dark:bg-slate-900 dark:text-white">ID Verification</option>
             </select>
           </div>
         </CardHeader>
 
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase group-label border-b border-border">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase group-label border-b border-slate-200 dark:border-slate-700 font-bold text-[10px] tracking-wider">
                 <tr>
-                  <th className="p-3">Document Name</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Upload Date</th>
-                  <th className="p-3">File Size</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Actions</th>
+                  <th className="p-3.5">Document Name</th>
+                  <th className="p-3.5">Category</th>
+                  <th className="p-3.5">Upload Date</th>
+                  <th className="p-3.5">File Size</th>
+                  <th className="p-3.5">Status</th>
+                  <th className="p-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-sans">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
                 {filteredDocs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-slate-400">
                       No documents found matching query.
                     </td>
                   </tr>
                 ) : (
                   filteredDocs.map((doc) => (
-                    <tr key={doc.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-3">
+                    <tr key={doc.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="p-3.5">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                          <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
                             <FileText className="h-4 w-4" />
                           </div>
-                          <span className="font-bold text-slate-900 truncate max-w-xs">{doc.name}</span>
+                          <span className="font-bold text-slate-900 dark:text-white truncate max-w-xs">{doc.name}</span>
                         </div>
                       </td>
-                      <td className="p-3">
-                        <span className="px-2 py-1 rounded-md bg-slate-100 text-slate-700 font-medium text-[11px]">{doc.category}</span>
+                      <td className="p-3.5">
+                        <span className="px-2 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-[11px] border border-slate-200 dark:border-slate-700">{doc.category}</span>
                       </td>
-                      <td className="p-3 text-slate-600">{formatDate(doc.uploadDate)}</td>
-                      <td className="p-3 text-slate-500">{doc.size}</td>
-                      <td className="p-3">
+                      <td className="p-3.5 text-slate-600 dark:text-slate-400">{formatDate(doc.uploadDate)}</td>
+                      <td className="p-3.5 text-slate-500 dark:text-slate-400">{doc.size}</td>
+                      <td className="p-3.5">
                         <Badge
                           variant={doc.status === 'verified' ? 'success' : doc.status === 'pending' ? 'warning' : 'destructive'}
                         >
                           {doc.status === 'verified' ? 'Verified' : doc.status === 'pending' ? 'Pending Review' : 'Rejected'}
                         </Badge>
                       </td>
-                      <td className="p-3 text-right space-x-1">
+                      <td className="p-3.5 text-right space-x-1">
                         <button
                           onClick={() => {
                             if (doc.category === 'award_certificate' || doc.name.toLowerCase().includes('official_scholar_award_certificate') || doc.name.toLowerCase().includes('scholar_award')) {
@@ -326,21 +326,21 @@ export const DocumentVaultPage: React.FC = () => {
                             }
                           }}
                           title="Preview Document"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-blue-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleDownload(doc)}
                           title="Download Document"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         >
                           <Download className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => setDeleteTargetId(doc.id)}
                           title="Delete Document"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

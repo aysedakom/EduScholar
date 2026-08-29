@@ -233,10 +233,10 @@ export const SupportPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-border shadow-soft">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
-          <h1 className="font-heading font-extrabold text-2xl text-foreground">Support & Knowledge Center</h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Support & Knowledge Center</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
             Search financial aid FAQs, interact with AI assistant, or submit a support ticket to officers.
           </p>
         </div>
@@ -256,42 +256,42 @@ export const SupportPage: React.FC = () => {
 
       {/* Quick Access Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <Card hoverEffect className="bg-white border border-slate-200 text-slate-900 shadow-soft">
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-soft">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <p className="font-heading font-extrabold text-lg text-slate-900">AI Assistant Chat</p>
-              <p className="text-xs text-slate-500">Instant automated help 24/7</p>
-              <span className="inline-block mt-2 text-[11px] font-bold text-primary underline cursor-pointer">
+              <p className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">AI Assistant Chat</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Instant automated help 24/7</p>
+              <span className="inline-block mt-2 text-[11px] font-bold text-blue-600 dark:text-blue-400 underline cursor-pointer">
                 Click widget at bottom-right →
               </span>
             </div>
-            <Bot className="h-10 w-10 text-primary shrink-0" />
+            <Bot className="h-10 w-10 text-blue-600 dark:text-blue-400 shrink-0" />
           </CardContent>
         </Card>
 
-        <Card hoverEffect>
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground">Financial Aid Office</p>
-              <p className="font-heading font-extrabold text-lg text-foreground mt-0.5">Live Desk Support</p>
-              <p className="text-[11px] text-slate-500 mt-1">Mon–Fri 8:00 AM – 5:00 PM</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Financial Aid Office</p>
+              <p className="font-heading font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">Live Desk Support</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Mon–Fri 8:00 AM – 5:00 PM</p>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
               <PhoneCall className="h-5 w-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card hoverEffect>
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground">Active Tickets</p>
-              <p className="font-heading font-extrabold text-lg text-foreground mt-0.5">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active Tickets</p>
+              <p className="font-heading font-extrabold text-lg text-slate-900 dark:text-white mt-0.5">
                 {tickets.filter((t) => t.status !== 'Resolved' && t.status !== 'Closed').length} Pending
               </p>
-              <p className="text-[11px] text-slate-500 mt-1">{tickets.length} total tickets submitted</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">{tickets.length} total tickets submitted</p>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
               <Ticket className="h-5 w-5" />
             </div>
           </CardContent>
@@ -299,22 +299,22 @@ export const SupportPage: React.FC = () => {
       </div>
 
       {/* Knowledge Base FAQs Section */}
-      <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
-            <CardTitle>Knowledge Base & FAQ Search</CardTitle>
-            <CardDescription>Browse verified guides for scholarships, bursaries, grants, and disbursement.</CardDescription>
+            <CardTitle className="text-slate-900 dark:text-white">Knowledge Base & FAQ Search</CardTitle>
+            <CardDescription className="text-slate-500 dark:text-slate-400">Browse verified guides for scholarships, bursaries, grants, and disbursement.</CardDescription>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search FAQs..."
                 value={faqSearch}
                 onChange={(e) => setFaqSearch(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary shadow-xs"
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400 font-medium"
               />
             </div>
 
@@ -343,10 +343,10 @@ export const SupportPage: React.FC = () => {
                 <button
                   key={tab.id}
                   onClick={() => setFaqCategory(tab.id)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                     faqCategory === tab.id
-                      ? 'bg-primary text-white shadow-md border border-transparent font-bold'
-                      : 'bg-white text-slate-700 border border-slate-200 shadow-xs hover:bg-slate-50'
+                      ? 'bg-blue-600 text-white shadow-md border border-transparent font-bold'
+                      : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700'
                   }`}
                 >
                   {tab.label}
@@ -358,7 +358,7 @@ export const SupportPage: React.FC = () => {
 
         <CardContent className="pt-4 space-y-3">
           {filteredFaqs.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-xs">
+            <div className="p-8 text-center text-slate-400 text-xs">
               No matching FAQ articles found. Try raising a support ticket below.
             </div>
           ) : (
@@ -367,21 +367,21 @@ export const SupportPage: React.FC = () => {
               return (
                 <div
                   key={faq.id}
-                  className="border border-border rounded-2xl overflow-hidden transition-all bg-white hover:border-slate-300"
+                  className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden transition-all bg-white dark:bg-slate-900 hover:border-slate-300 dark:hover:border-slate-700"
                 >
                   <button
                     onClick={() => setExpandedFaqId(isExpanded ? null : faq.id)}
-                    className="w-full p-4 text-left flex items-center justify-between gap-4 font-bold text-xs text-slate-900 bg-slate-50/50 hover:bg-slate-100/50 transition-colors"
+                    className="w-full p-4 text-left flex items-center justify-between gap-4 font-bold text-xs text-slate-900 dark:text-white bg-slate-50/50 dark:bg-slate-800/60 hover:bg-slate-100/50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                   >
                     <span className="flex items-center gap-2.5">
-                      <HelpCircle className="h-4 w-4 text-primary shrink-0" />
+                      <HelpCircle className="h-4 w-4 text-blue-600 dark:text-blue-400 shrink-0" />
                       {faq.question}
                     </span>
                     {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />}
                   </button>
 
                   {isExpanded && (
-                    <div className="p-4 pt-2 text-xs text-slate-600 border-t border-border/50 leading-relaxed bg-white">
+                    <div className="p-4 pt-3 text-xs text-slate-600 dark:text-slate-300 border-t border-slate-100 dark:border-slate-800 leading-relaxed bg-white dark:bg-slate-900/90 font-medium">
                       {faq.answer}
                     </div>
                   )}
@@ -393,45 +393,45 @@ export const SupportPage: React.FC = () => {
       </Card>
 
       {/* Support Ticket History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>My Support Tickets</CardTitle>
-          <CardDescription>Track status and officer responses for submitted inquiries</CardDescription>
+      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
+          <CardTitle className="text-slate-900 dark:text-white">My Support Tickets</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-slate-400">Track status and officer responses for submitted inquiries</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-500 uppercase group-label border-b border-border">
+              <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase group-label border-b border-slate-200 dark:border-slate-700 font-bold text-[10px] tracking-wider">
                 <tr>
-                  <th className="p-3">Ticket ID</th>
-                  <th className="p-3">Subject Title</th>
-                  <th className="p-3">Category</th>
-                  <th className="p-3">Priority</th>
-                  <th className="p-3">Submitted</th>
-                  <th className="p-3 text-right">Status</th>
+                  <th className="p-3.5">Ticket ID</th>
+                  <th className="p-3.5">Subject Title</th>
+                  <th className="p-3.5">Category</th>
+                  <th className="p-3.5">Priority</th>
+                  <th className="p-3.5">Submitted</th>
+                  <th className="p-3.5 text-right">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-sans">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
                 {tickets.map((t) => (
-                  <tr key={t.id} className="hover:bg-slate-50/70">
-                    <td className="p-3 font-mono font-bold text-slate-900">{t.id}</td>
-                    <td className="p-3 font-semibold text-slate-900">{t.title}</td>
-                    <td className="p-3 text-slate-600">{t.category}</td>
-                    <td className="p-3">
+                  <tr key={t.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{t.id}</td>
+                    <td className="p-3.5 font-semibold text-slate-900 dark:text-white">{t.title}</td>
+                    <td className="p-3.5 text-slate-600 dark:text-slate-400">{t.category}</td>
+                    <td className="p-3.5">
                       <span
                         className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
                           t.priority === 'High'
-                            ? 'bg-rose-100 text-rose-700'
+                            ? 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                             : t.priority === 'Medium'
-                            ? 'bg-amber-100 text-amber-700'
-                            : 'bg-slate-100 text-slate-700'
+                            ? 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                         }`}
                       >
                         {t.priority}
                       </span>
                     </td>
-                    <td className="p-3 text-slate-500">{formatDate(t.date)}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3.5 text-slate-500 dark:text-slate-400">{formatDate(t.date)}</td>
+                    <td className="p-3.5 text-right">
                       <Badge
                         variant={t.status === 'Resolved' ? 'success' : t.status === 'In Progress' ? 'warning' : 'info'}
                       >
@@ -466,56 +466,56 @@ export const SupportPage: React.FC = () => {
         >
           <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
             <div>
-              <label className="block font-bold text-foreground mb-1">Inquiry Title / Subject</label>
+              <label className="block font-bold text-slate-900 dark:text-white mb-1">Inquiry Title / Subject</label>
               <input
                 type="text"
                 placeholder="Brief summary of issue..."
                 value={ticketTitle}
                 onChange={(e) => setTicketTitle(e.target.value)}
                 required
-                className="w-full h-10 px-3 bg-white border border-border rounded-xl text-xs focus:outline-none focus:border-primary"
+                className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl text-xs focus:outline-none focus:border-blue-600 placeholder:text-slate-400 font-medium"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-foreground mb-1">Category</label>
+                <label className="block font-bold text-slate-900 dark:text-white mb-1">Category</label>
                 <select
                   value={ticketCategory}
                   onChange={(e) => setTicketCategory(e.target.value)}
-                  className="w-full h-10 px-3 bg-white border border-border rounded-xl text-xs focus:outline-none focus:border-primary"
+                  className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
                 >
-                  <option value="Scholarship Eligibility">Scholarship Eligibility</option>
-                  <option value="Grants & Bursaries">Grants & Bursaries</option>
-                  <option value="Document Vault">Document Vault</option>
-                  <option value="Disbursement & Payroll">Disbursement & Payouts</option>
-                  <option value="Technical Issue">Technical / Login Issue</option>
+                  <option value="Scholarship Eligibility" className="dark:bg-slate-900 dark:text-white">Scholarship Eligibility</option>
+                  <option value="Grants & Bursaries" className="dark:bg-slate-900 dark:text-white">Grants & Bursaries</option>
+                  <option value="Document Vault" className="dark:bg-slate-900 dark:text-white">Document Vault</option>
+                  <option value="Disbursement & Payroll" className="dark:bg-slate-900 dark:text-white">Disbursement & Payouts</option>
+                  <option value="Technical Issue" className="dark:bg-slate-900 dark:text-white">Technical / Login Issue</option>
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-foreground mb-1">Priority Level</label>
+                <label className="block font-bold text-slate-900 dark:text-white mb-1">Priority Level</label>
                 <select
                   value={ticketPriority}
                   onChange={(e) => setTicketPriority(e.target.value as any)}
-                  className="w-full h-10 px-3 bg-white border border-border rounded-xl text-xs focus:outline-none focus:border-primary"
+                  className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
                 >
-                  <option value="Low">Low Priority</option>
-                  <option value="Medium">Medium Priority</option>
-                  <option value="High">High Priority</option>
+                  <option value="Low" className="dark:bg-slate-900 dark:text-white">Low Priority</option>
+                  <option value="Medium" className="dark:bg-slate-900 dark:text-white">Medium Priority</option>
+                  <option value="High" className="dark:bg-slate-900 dark:text-white">High Priority</option>
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block font-bold text-foreground mb-1">Detailed Description</label>
+              <label className="block font-bold text-slate-900 dark:text-white mb-1">Detailed Description</label>
               <textarea
                 rows={4}
                 value={ticketDesc}
                 onChange={(e) => setTicketDesc(e.target.value)}
                 placeholder="Describe your inquiry or technical issue..."
                 required
-                className="w-full p-3 bg-white border border-border rounded-xl text-xs focus:outline-none focus:border-primary resize-none"
+                className="w-full p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl text-xs focus:outline-none focus:border-blue-600 resize-none placeholder:text-slate-400 font-medium"
               />
             </div>
           </form>

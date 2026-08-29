@@ -277,49 +277,61 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-blue-100 dark:border-blue-900 bg-blue-50/30 dark:bg-blue-950/30">
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-300">Total Institutions</span>
-              <h3 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">{schools.length}</h3>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Institutions</p>
+              <h3 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-0.5">{schools.length}</h3>
+              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1">Accredited HEIs</p>
             </div>
-            <Building2 className="h-8 w-8 text-blue-600 opacity-80" />
+            <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
+              <Building2 className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-emerald-100 dark:border-emerald-900 bg-emerald-50/30 dark:bg-emerald-950/30">
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Active MOU Partnerships</span>
-              <h3 className="font-heading font-extrabold text-2xl text-emerald-950 dark:text-emerald-200">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active MOU Partnerships</p>
+              <h3 className="font-heading font-extrabold text-2xl text-emerald-600 dark:text-emerald-400 mt-0.5">
                 {schools.filter((s) => s.partnershipStatus === 'Active').length}
               </h3>
+              <p className="text-[11px] text-emerald-600 font-semibold mt-1">Certified Campuses</p>
             </div>
-            <CheckCircle2 className="h-8 w-8 text-emerald-600 opacity-80" />
+            <div className="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-indigo-100 dark:border-indigo-900 bg-indigo-50/30 dark:bg-indigo-950/30">
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Total Quota Slots</span>
-              <h3 className="font-heading font-extrabold text-2xl text-indigo-950 dark:text-indigo-200">
-                {schools.reduce((sum, s) => sum + s.scholarshipSlots, 0)}
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Quota Slots</p>
+              <h3 className="font-heading font-extrabold text-2xl text-indigo-600 dark:text-indigo-400 mt-0.5">
+                {schools.reduce((sum, s) => sum + s.scholarshipSlots, 0).toLocaleString()}
               </h3>
+              <p className="text-[11px] text-indigo-600 font-semibold mt-1">Enrolled Capacity</p>
             </div>
-            <GraduationCap className="h-8 w-8 text-indigo-600 opacity-80" />
+            <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
+              <GraduationCap className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="border-amber-100 dark:border-amber-900 bg-amber-50/30 dark:bg-amber-950/30">
+        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300">Pending / Expired</span>
-              <h3 className="font-heading font-extrabold text-2xl text-amber-950 dark:text-amber-200">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pending / Expired</p>
+              <h3 className="font-heading font-extrabold text-2xl text-amber-600 dark:text-amber-400 mt-0.5">
                 {schools.filter((s) => s.partnershipStatus === 'Pending' || s.partnershipStatus === 'Expired').length}
               </h3>
+              <p className="text-[11px] text-amber-600 font-semibold mt-1">Review Required</p>
             </div>
-            <Clock className="h-8 w-8 text-amber-600 opacity-80" />
+            <div className="h-10 w-10 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
+              <Clock className="h-5 w-5" />
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -334,39 +346,39 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
               placeholder="Search partner school by name, ID, contact coordinator, or eligible programs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 shadow-xs"
+              className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400"
             />
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-500">MOU:</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">MOU:</span>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 px-3 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
+                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
               >
-                <option value="All">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Pending">Pending</option>
-                <option value="Expired">Expired</option>
+                <option value="All" className="dark:bg-slate-900 dark:text-white">All Statuses</option>
+                <option value="Active" className="dark:bg-slate-900 dark:text-white">Active</option>
+                <option value="Pending" className="dark:bg-slate-900 dark:text-white">Pending</option>
+                <option value="Expired" className="dark:bg-slate-900 dark:text-white">Expired</option>
               </select>
             </div>
 
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-500">Type:</span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Type:</span>
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="h-10 px-3 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
+                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
               >
-                <option value="All">All Types</option>
-                <option value="LGU State University">LGU State University</option>
-                <option value="State University">State University</option>
-                <option value="National University">National University</option>
-                <option value="Private HEI">Private HEI</option>
-                <option value="Private Medical HEI">Private Medical HEI</option>
-                <option value="Private University">Private University</option>
+                <option value="All" className="dark:bg-slate-900 dark:text-white">All Types</option>
+                <option value="LGU State University" className="dark:bg-slate-900 dark:text-white">LGU State University</option>
+                <option value="State University" className="dark:bg-slate-900 dark:text-white">State University</option>
+                <option value="National University" className="dark:bg-slate-900 dark:text-white">National University</option>
+                <option value="Private HEI" className="dark:bg-slate-900 dark:text-white">Private HEI</option>
+                <option value="Private Medical HEI" className="dark:bg-slate-900 dark:text-white">Private Medical HEI</option>
+                <option value="Private University" className="dark:bg-slate-900 dark:text-white">Private University</option>
               </select>
             </div>
           </div>

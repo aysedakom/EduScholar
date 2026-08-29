@@ -453,7 +453,7 @@ export const MessagesPage: React.FC = () => {
               placeholder={isAdminOrStaff ? 'Search student name or ID...' : 'Search messages...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-8 pl-8 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-medium"
+              className="w-full h-8 pl-8 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
             />
           </div>
 
@@ -598,7 +598,7 @@ export const MessagesPage: React.FC = () => {
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendDirectMessage()}
-              className="flex-1 h-10 px-3.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-medium"
+              className="flex-1 h-10 px-3.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
             />
             <Button
               variant="primary"
@@ -640,7 +640,7 @@ export const MessagesPage: React.FC = () => {
                 placeholder="e.g. Schedule of 1st Semester Allowance Disbursement..."
                 value={annTitle}
                 onChange={(e) => setAnnTitle(e.target.value)}
-                className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+                className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-semibold placeholder:text-slate-400"
               />
             </div>
 
@@ -650,13 +650,13 @@ export const MessagesPage: React.FC = () => {
                 <select
                   value={targetGroup}
                   onChange={(e) => setTargetGroup(e.target.value)}
-                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
                 >
-                  <option value="All Students">All Students & Applicants</option>
-                  <option value="All Qualified Scholars">All Qualified Active Scholars</option>
-                  <option value="Senior High School">Senior High School Level (SHS)</option>
-                  <option value="Tertiary College">Tertiary College Undergraduates</option>
-                  <option value="Pending Applicants">Pending Review Applicants</option>
+                  <option value="All Students" className="dark:bg-slate-900 dark:text-white">All Students & Applicants</option>
+                  <option value="All Qualified Scholars" className="dark:bg-slate-900 dark:text-white">All Qualified Active Scholars</option>
+                  <option value="Senior High School" className="dark:bg-slate-900 dark:text-white">Senior High School Level (SHS)</option>
+                  <option value="Tertiary College" className="dark:bg-slate-900 dark:text-white">Tertiary College Undergraduates</option>
+                  <option value="Pending Applicants" className="dark:bg-slate-900 dark:text-white">Pending Review Applicants</option>
                 </select>
               </div>
 
@@ -665,11 +665,11 @@ export const MessagesPage: React.FC = () => {
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as any)}
-                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
                 >
-                  <option value="normal">Normal Announcement</option>
-                  <option value="high">High Priority</option>
-                  <option value="urgent">Urgent Notice (Red Alert)</option>
+                  <option value="normal" className="dark:bg-slate-900 dark:text-white">Normal Announcement</option>
+                  <option value="high" className="dark:bg-slate-900 dark:text-white">High Priority</option>
+                  <option value="urgent" className="dark:bg-slate-900 dark:text-white">Urgent Notice (Red Alert)</option>
                 </select>
               </div>
             </div>
@@ -681,7 +681,7 @@ export const MessagesPage: React.FC = () => {
                 placeholder="Write the official notification message for scholars..."
                 value={annMessage}
                 onChange={(e) => setAnnMessage(e.target.value)}
-                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 font-medium"
+                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
               />
             </div>
 

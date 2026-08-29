@@ -389,8 +389,8 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
       )}
 
       {/* Review Table Controls */}
-      <Card>
-        <CardHeader className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-border dark:border-slate-800 pb-4">
+      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
             {/* Search Input */}
             <div className="relative flex-1 sm:w-60">

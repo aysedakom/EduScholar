@@ -126,20 +126,20 @@ export const BursariesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-border shadow-soft">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
-          <h1 className="font-heading font-extrabold text-2xl text-foreground">Bursaries</h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Bursaries & Emergency Aid</h1>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
             Need-based financial assistance designed to reduce barriers and support students facing financial hardship.
           </p>
         </div>
-<Badge variant="info" size="md">
+        <Badge variant="info" size="md">
           {filtered.length} Bursaries Available
         </Badge>
       </div>
 
       {/* Nested Tabs: Federal Bursaries, Institutional Hardship Funds, Emergency Aid */}
-      <div className="flex gap-2 border-b border-slate-200 pb-3">
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
         {[
           { id: 'federal', label: 'Federal Bursaries' },
           { id: 'hardship', label: 'Institutional Hardship Funds' },
@@ -148,10 +148,10 @@ export const BursariesPage: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
               activeTab === tab.id
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-white border-slate-200 text-slate-700 shadow-xs hover:bg-slate-50'
+                ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -159,7 +159,7 @@ export const BursariesPage: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white p-4 rounded-2xl border border-border shadow-soft">
+      <div className="flex flex-col sm:flex-row items-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
           <input
@@ -167,7 +167,7 @@ export const BursariesPage: React.FC = () => {
             placeholder="Search bursaries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary transition-all"
+            className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 transition-all placeholder:text-slate-400 font-medium"
           />
         </div>
         <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
@@ -175,10 +175,10 @@ export const BursariesPage: React.FC = () => {
             <button
               key={t}
               onClick={() => setSelectedType(t)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border cursor-pointer ${
                 selectedType === t
-                  ? 'bg-primary border-transparent text-white shadow-md font-bold'
-                  : 'bg-white border-slate-200 text-slate-700 shadow-xs hover:bg-slate-50 font-semibold'
+                  ? 'bg-blue-600 border-transparent text-white shadow-md font-bold'
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-800 font-semibold'
               }`}
             >
               {t}
@@ -187,38 +187,38 @@ export const BursariesPage: React.FC = () => {
         </div>
       </div>
 
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {filtered.map((b) => {
           const isApplied = appliedIds.includes(b.id);
           return (
-            <Card key={b.id} hoverEffect className="flex flex-col justify-between">
+            <Card key={b.id} hoverEffect className="flex flex-col justify-between bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardHeader className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Badge variant={b.status === 'Closing Soon' ? 'warning' : 'info'} size="sm">
                     {b.status}
                   </Badge>
-                  <span className="text-xs font-extrabold text-slate-700">{b.type}</span>
+                  <span className="text-xs font-extrabold text-slate-700 dark:text-slate-300">{b.type}</span>
                 </div>
-                <CardTitle className="text-base">{b.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{b.description}</CardDescription>
+                <CardTitle className="text-base text-slate-900 dark:text-white">{b.title}</CardTitle>
+                <CardDescription className="line-clamp-2 text-slate-500 dark:text-slate-400">{b.description}</CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-3">
-                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-xl p-3">
-                  <Coins className="h-4 w-4 shrink-0" />
+                <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-800 rounded-xl p-3">
+                  <Coins className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                   <div>
-                    <span className="text-[10px] uppercase tracking-wider block">Award Value</span>
-                    <span className="font-heading font-extrabold text-lg">{formatCurrency(b.amount)}</span>
+                    <span className="text-[10px] uppercase tracking-wider block text-emerald-600/80 dark:text-emerald-400/80">Award Value</span>
+                    <span className="font-heading font-extrabold text-lg text-emerald-700 dark:text-emerald-300">{formatCurrency(b.amount)}</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-medium">
                   <span>Deadline: {b.deadline ? formatDate(b.deadline) : 'Rolling'}</span>
                   {typeof b.funds_available === 'number' && (
-                    <span className="text-sky-700 font-semibold">{b.funds_available} slots</span>
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">{b.funds_available} slots</span>
                   )}
                 </div>
-                <p className="text-[11px] text-slate-600 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
-                  <span className="font-bold text-slate-800">Eligibility:</span> {b.eligibility}
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Eligibility:</span> {b.eligibility}
                 </p>
               </CardContent>
 
@@ -245,7 +245,7 @@ export const BursariesPage: React.FC = () => {
           title={selected.title}
           description={`${selected.type} | ${formatCurrency(selected.amount)}`}
           maxWidth="lg"
-footer={
+          footer={
             <>
               <Button variant="outline" size="sm" onClick={() => setSelected(null)}>
                 Cancel
@@ -264,42 +264,42 @@ footer={
         >
           <div className="space-y-4 text-xs">
             <div>
-              <h4 className="font-bold text-foreground mb-1">Bursary Overview</h4>
-              <p className="text-muted-foreground leading-relaxed">{selected.description}</p>
+              <h4 className="font-bold text-slate-900 dark:text-white mb-1">Bursary Overview</h4>
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed">{selected.description}</p>
             </div>
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 gap-3">
+            <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Type</span>
-                <span className="font-semibold text-slate-800">{selected.type}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Type</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{selected.type}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Award Amount</span>
-                <span className="font-semibold text-slate-800">{formatCurrency(selected.amount)}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Award Amount</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(selected.amount)}</span>
               </div>
               <div>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Deadline</span>
-                <span className="font-semibold text-slate-800">
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Deadline</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">
                   {selected.deadline ? formatDate(selected.deadline) : 'Rolling'}
                 </span>
               </div>
               {typeof selected.funds_available === 'number' && (
                 <div>
-                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider block">Available Slots</span>
-                  <span className="font-semibold text-slate-800">{selected.funds_available}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block font-semibold">Available Slots</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{selected.funds_available}</span>
                 </div>
               )}
             </div>
-            <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200">
-              <h4 className="font-bold text-blue-900 mb-1">Eligibility</h4>
-              <p className="text-blue-800 font-medium">{selected.eligibility}</p>
+            <div className="p-3 bg-blue-50/60 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800">
+              <h4 className="font-bold text-blue-900 dark:text-blue-200 mb-1">Eligibility</h4>
+              <p className="text-blue-800 dark:text-blue-300 font-medium">{selected.eligibility}</p>
             </div>
           </div>
         </Modal>
       )}
 
-      <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-border shadow-soft">
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <WalletCards className="h-4 w-4 text-primary" />
+      <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-soft">
+        <div className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400">
+          <WalletCards className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>Need guidance on which bursary fits your situation?</span>
         </div>
         <Button variant="outline" size="sm" onClick={() => navigate('/apply/scholarship')}>

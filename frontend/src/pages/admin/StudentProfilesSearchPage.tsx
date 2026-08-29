@@ -188,7 +188,7 @@ export const StudentProfilesSearchPage: React.FC = () => {
                 placeholder="Search student name, ID (e.g. 2024-00192), school, scholarship program, or application #..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 shadow-xs"
+                className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400"
               />
             </div>
 
@@ -196,11 +196,11 @@ export const StudentProfilesSearchPage: React.FC = () => {
               <select
                 value={selectedSchool}
                 onChange={(e) => setSelectedSchool(e.target.value)}
-                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-blue-600 cursor-pointer min-w-[200px]"
+                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-blue-600 cursor-pointer min-w-[200px]"
               >
-                <option value="All">All Partner Schools</option>
+                <option value="All" className="dark:bg-slate-900 dark:text-white">All Partner Schools</option>
                 {uniqueSchools.map((sch) => (
-                  <option key={sch} value={sch}>
+                  <option key={sch} value={sch} className="dark:bg-slate-900 dark:text-white">
                     {sch}
                   </option>
                 ))}
@@ -209,11 +209,11 @@ export const StudentProfilesSearchPage: React.FC = () => {
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-200 font-bold focus:outline-none focus:border-blue-600 cursor-pointer min-w-[190px]"
+                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 font-bold focus:outline-none focus:border-blue-600 cursor-pointer min-w-[190px]"
               >
-                <option value="All">All Departments</option>
+                <option value="All" className="dark:bg-slate-900 dark:text-white">All Departments</option>
                 {INSTALLED_DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>
+                  <option key={dept} value={dept} className="dark:bg-slate-900 dark:text-white">
                     {dept}
                   </option>
                 ))}
@@ -224,7 +224,7 @@ export const StudentProfilesSearchPage: React.FC = () => {
 
         <CardContent className="pt-4 p-0 overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 uppercase group-label border-b border-slate-200 dark:border-slate-700 font-bold text-[10px] tracking-wider">
+            <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase group-label border-b border-slate-200 dark:border-slate-700 font-bold text-[10px] tracking-wider">
               <tr>
                 <th className="p-3.5">Student & ID</th>
                 <th className="p-3.5">School & Degree Program</th>

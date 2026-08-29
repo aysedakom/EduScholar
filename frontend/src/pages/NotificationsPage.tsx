@@ -103,17 +103,17 @@ export const NotificationsPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-border shadow-soft">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-heading font-extrabold text-2xl text-foreground">Notification Center</h1>
+            <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Notification Center</h1>
             {unreadCount > 0 && (
-              <span className="bg-primary/10 text-primary font-bold text-xs px-2.5 py-0.5 rounded-full">
+              <span className="bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-bold text-xs px-2.5 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
                 {unreadCount} Unread
               </span>
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Real-time status updates on scholarship applications, disbursements, document verifications, and deadline reminders.
           </p>
         </div>
@@ -141,8 +141,8 @@ export const NotificationsPage: React.FC = () => {
       </div>
 
       {/* Filter Tabs & Search Controls */}
-      <Card>
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-4">
+      <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex flex-wrap gap-1.5">
             {[
               { id: 'all', label: 'All Updates' },
@@ -154,10 +154,10 @@ export const NotificationsPage: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveCategory(tab.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   activeCategory === tab.id
-                    ? 'bg-primary text-white shadow-md border border-transparent font-bold'
-                    : 'bg-white text-slate-700 border border-slate-200 shadow-xs hover:bg-slate-50'
+                    ? 'bg-blue-600 text-white shadow-md border border-transparent font-bold'
+                    : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700'
                 }`}
               >
                 {tab.label}
@@ -167,24 +167,24 @@ export const NotificationsPage: React.FC = () => {
 
           <div className="flex items-center gap-3">
             <div className="relative w-full sm:w-56">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search notifications..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary shadow-xs"
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400 font-medium"
               />
             </div>
 
             <select
               value={readFilter}
               onChange={(e) => setReadFilter(e.target.value as any)}
-              className="h-9 px-3 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-primary shadow-xs"
+              className="h-9 px-3 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 shadow-xs cursor-pointer"
             >
-              <option value="all">All Statuses</option>
-              <option value="unread">Unread Only</option>
-              <option value="read">Read Only</option>
+              <option value="all" className="dark:bg-slate-900 dark:text-white">All Statuses</option>
+              <option value="unread" className="dark:bg-slate-900 dark:text-white">Unread Only</option>
+              <option value="read" className="dark:bg-slate-900 dark:text-white">Read Only</option>
             </select>
           </div>
         </CardHeader>
@@ -192,9 +192,9 @@ export const NotificationsPage: React.FC = () => {
         <CardContent className="pt-4">
           <div className="space-y-3">
             {filteredNotifs.length === 0 ? (
-              <div className="p-12 text-center text-muted-foreground">
-                <Bell className="h-10 w-10 text-slate-300 mx-auto mb-2" />
-                <p className="font-semibold text-slate-700">No notifications found</p>
+              <div className="p-12 text-center text-slate-400">
+                <Bell className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <p className="font-semibold text-slate-700 dark:text-slate-300">No notifications found</p>
                 <p className="text-xs text-slate-400 mt-0.5">Try selecting a different filter category or search term.</p>
               </div>
             ) : (
@@ -246,7 +246,7 @@ export const NotificationsPage: React.FC = () => {
                     <button
                       onClick={() => handleToggleRead(item.id)}
                       title={item.read ? 'Mark as Unread' : 'Mark as Read'}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <CheckCheck className={`h-4 w-4 ${item.read ? 'text-slate-300 dark:text-slate-600' : 'text-blue-600 font-bold'}`} />
                     </button>
@@ -279,67 +279,67 @@ export const NotificationsPage: React.FC = () => {
           }
         >
           <div className="space-y-4 text-xs">
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-blue-600" />
+                <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <div>
-                  <p className="font-bold text-slate-900">Email Notifications</p>
-                  <p className="text-[11px] text-slate-500">Receive application & disbursement summaries via email</p>
+                  <p className="font-bold text-slate-900 dark:text-white">Email Notifications</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Receive application & disbursement summaries via email</p>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={emailAlerts}
                 onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="h-4 w-4 rounded text-primary focus:ring-primary"
+                className="h-4 w-4 rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <MessageSquare className="h-5 w-5 text-emerald-600" />
+                <MessageSquare className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 <div>
-                  <p className="font-bold text-slate-900">SMS / Mobile Alerts</p>
-                  <p className="text-[11px] text-slate-500">Urgent text messages for payment disbursement</p>
+                  <p className="font-bold text-slate-900 dark:text-white">SMS / Mobile Alerts</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Urgent text messages for payment disbursement</p>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={smsAlerts}
                 onChange={(e) => setSmsAlerts(e.target.checked)}
-                className="h-4 w-4 rounded text-primary focus:ring-primary"
+                className="h-4 w-4 rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-indigo-600" />
+                <Bell className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                 <div>
-                  <p className="font-bold text-slate-900">In-App Push Badges</p>
-                  <p className="text-[11px] text-slate-500">Live notifications in top header bell</p>
+                  <p className="font-bold text-slate-900 dark:text-white">In-App Push Badges</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Live notifications in top header bell</p>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={inAppAlerts}
                 onChange={(e) => setInAppAlerts(e.target.checked)}
-                className="h-4 w-4 rounded text-primary focus:ring-primary"
+                className="h-4 w-4 rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-border">
+            <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
               <div className="flex items-center gap-3">
-                <Moon className="h-5 w-5 text-slate-700" />
+                <Moon className="h-5 w-5 text-slate-700 dark:text-slate-300" />
                 <div>
-                  <p className="font-bold text-slate-900">Quiet Hours (10:00 PM – 06:00 AM)</p>
-                  <p className="text-[11px] text-slate-500">Pause non-essential alerts overnight</p>
+                  <p className="font-bold text-slate-900 dark:text-white">Quiet Hours (10:00 PM – 06:00 AM)</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Pause non-essential alerts overnight</p>
                 </div>
               </div>
               <input
                 type="checkbox"
                 checked={quietHours}
                 onChange={(e) => setQuietHours(e.target.checked)}
-                className="h-4 w-4 rounded text-primary focus:ring-primary"
+                className="h-4 w-4 rounded text-blue-600 focus:ring-blue-600 cursor-pointer"
               />
             </div>
           </div>
@@ -364,7 +364,7 @@ export const NotificationsPage: React.FC = () => {
             </>
           }
         >
-          <div className="p-3 bg-slate-50 rounded-xl text-xs text-slate-600">
+          <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl text-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
             This item will be permanently removed from your Notification Center.
           </div>
         </Modal>
