@@ -73,9 +73,9 @@ function getSmtpTransporter() {
       secure: port === 465,
       family: 4,
       auth: { user, pass },
-      connectionTimeout: 4000,
-      greetingTimeout: 4000,
-      socketTimeout: 4000,
+      connectionTimeout: 12000,
+      greetingTimeout: 12000,
+      socketTimeout: 12000,
       tls: {
         rejectUnauthorized: false,
       },
@@ -92,16 +92,17 @@ async function sendViaBrevoApi({ to, toName, subject, htmlContent, textContent }
   const apiKey = getBrevoApiKey();
   if (!apiKey) return null;
 
+  const cleanTo = String(to || '').toLowerCase().trim();
   const payload = {
     sender: { name: SENDER_NAME, email: SENDER_EMAIL },
-    to: [{ email: to, name: toName || to.split('@')[0] }],
+    to: [{ email: cleanTo, name: toName || cleanTo.split('@')[0] }],
     subject,
     htmlContent,
     textContent: textContent || subject,
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4000);
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
 
   try {
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
