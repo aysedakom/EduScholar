@@ -55,6 +55,8 @@ const schoolSyncRoutes = require('./routes/schoolSync');
 const fundRoutes = require('./routes/funds');
 const communicationRoutes = require('./routes/communication');
 const calendarRoutes = require('./routes/calendar');
+const ticketRoutes = require('./routes/tickets');
+const portalSettingsRoutes = require('./routes/portalSettings');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/opportunities', opportunityRoutes);
@@ -73,6 +75,8 @@ app.use('/api/schools-sync', schoolSyncRoutes);
 app.use('/api/funds', fundRoutes);
 app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/api/tickets', ticketRoutes);
+app.use('/api/portal-settings', portalSettingsRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

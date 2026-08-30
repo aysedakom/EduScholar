@@ -8,6 +8,8 @@ import {
   ChevronUp,
   ShieldCheck,
   RefreshCw,
+  Ticket,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
@@ -26,6 +28,7 @@ import {
   type ConversationThread,
   type ChatMessageItem,
 } from '../api/communication';
+import { createTicket, closeTicket, updateTicketStatus } from '../api/tickets';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -47,9 +50,23 @@ export const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'tickets' | 'open' | 'closed'>('all');
   const [isSending, setIsSending] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Raise Ticket Modal State
+  const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketCategory, setTicketCategory] = useState('Application Verification');
+  const [ticketPriority, setTicketPriority] = useState<'Low' | 'Medium' | 'High' | 'Urgent'>('Medium');
+  const [ticketDesc, setTicketDesc] = useState('');
+  const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
+
+  // Close Ticket Modal State (Admin)
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [resolutionRemarks, setResolutionRemarks] = useState('');
+  const [isClosingTicket, setIsClosingTicket] = useState(false);
 
   // Auto scroll to bottom of chat
   const scrollToBottom = () => {
@@ -72,91 +89,11 @@ export const MessagesPage: React.FC = () => {
     }
   };
 
-  // Load conversation threads with role-based channel isolation
+  // Load conversation threads
   const loadConversations = async (autoSelectFirst = false) => {
     try {
       const res = await getConversations();
-      let threads = res.data?.data || [];
-
-      // If no threads returned from server, inject role-tailored initial channels
-      if (threads.length === 0) {
-        if (user?.role === 'school_coordinator') {
-          threads = [
-            {
-              conversation_id: 'conv_qcu_admin_desk',
-              participant_id: 99,
-              participant_name: 'QCYDO Scholarship Admin Desk',
-              participant_role: 'admin',
-              avatar: '',
-              status: 'active',
-              last_message: 'Received endorsement for Batch QCU-2026-Term1. Verification verified.',
-              last_message_time: new Date().toISOString(),
-              unread_count: 1,
-            },
-            {
-              conversation_id: 'conv_alexandra_chen',
-              participant_id: 101,
-              participant_name: 'Alexandra Chen (QCU IT Scholar)',
-              participant_role: 'student',
-              student_id: '2024-QC-884920',
-              avatar: '',
-              status: 'active',
-              last_message: 'Good day Maam, I submitted my official stamped COR and grade slip.',
-              last_message_time: new Date(Date.now() - 3600000).toISOString(),
-              unread_count: 0,
-            },
-            {
-              conversation_id: 'conv_julian_alvarez',
-              participant_id: 102,
-              participant_name: 'Julian Alvarez (PUP QC Scholar)',
-              participant_role: 'student',
-              student_id: '2023-QC-492810',
-              avatar: '',
-              status: 'active',
-              last_message: 'Regarding my GWA retention evaluation for the 2nd semester.',
-              last_message_time: new Date(Date.now() - 86400000).toISOString(),
-              unread_count: 0,
-            },
-          ];
-        } else if (user?.role === 'treasury') {
-          threads = [
-            {
-              conversation_id: 'conv_treasury_admin_desk',
-              participant_id: 99,
-              participant_name: 'QCYDO Scholarship Admin Desk',
-              participant_role: 'admin',
-              avatar: '',
-              status: 'active',
-              last_message: 'Endorsed payroll voucher Batch #089 for Landbank ATM release.',
-              last_message_time: new Date().toISOString(),
-              unread_count: 1,
-            },
-            {
-              conversation_id: 'conv_landbank_ops',
-              participant_id: 201,
-              participant_name: 'Landbank ATM Disbursement Operations',
-              participant_role: 'partner',
-              avatar: '',
-              status: 'active',
-              last_message: 'Batch credit reference #LB-2026-8891 transmitted successfully.',
-              last_message_time: new Date(Date.now() - 7200000).toISOString(),
-              unread_count: 0,
-            },
-            {
-              conversation_id: 'conv_gcash_settlement',
-              participant_id: 202,
-              participant_name: 'GCash Corporate Payout Support',
-              participant_role: 'partner',
-              avatar: '',
-              status: 'active',
-              last_message: 'E-Wallet payout reconciliation report for August 2026 attached.',
-              last_message_time: new Date(Date.now() - 172800000).toISOString(),
-              unread_count: 0,
-            },
-          ];
-        }
-      }
-
+      const threads = res.data?.data || [];
       setConversations(threads);
       if (threads.length > 0) {
         if (autoSelectFirst || !selectedConv) {
@@ -179,22 +116,20 @@ export const MessagesPage: React.FC = () => {
       if (res.data?.data && res.data.data.length > 0) {
         setMessages(res.data.data);
       } else {
-        // Fallback default message history for role desks
-        if (convId === 'conv_qcu_admin_desk') {
-          setMessages([
-            { id: 1, conversation_id: convId, sender_id: 99, sender_name: 'QCYDO Scholarship Admin', sender_role: 'admin', message: 'Hello School Coordinator, please verify the pending candidate list for QCU Main.', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString() },
-            { id: 2, conversation_id: convId, sender_id: 1, sender_name: 'School Coordinator', sender_role: 'school_coordinator', message: 'All documents inspected. Endorsed qualified scholars to your admin queue.', is_read: true, created_at: new Date().toISOString() },
-          ]);
-        } else if (convId === 'conv_treasury_admin_desk') {
-          setMessages([
-            { id: 1, conversation_id: convId, sender_id: 99, sender_name: 'QCYDO Scholarship Admin', sender_role: 'admin', message: 'Treasury Officer, Batch 2026-Term1 aid distribution is cleared for reconciliation.', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString() },
-            { id: 2, conversation_id: convId, sender_id: 1, sender_name: 'City Treasury Officer', sender_role: 'treasury', message: 'Audited and verified against Landbank and GCash ledger references.', is_read: true, created_at: new Date().toISOString() },
-          ]);
-        } else {
-          setMessages([
-            { id: 1, conversation_id: convId, sender_id: 99, sender_name: selectedConv?.participant_name || 'Officer', sender_role: selectedConv?.participant_role || 'staff', message: 'Welcome to the official communication channel.', is_read: true, created_at: new Date().toISOString() }
-          ]);
-        }
+        setMessages([
+          {
+            id: 1,
+            conversation_id: convId,
+            sender_id: 99,
+            sender_name: selectedConv?.participant_name || 'Officer',
+            sender_role: selectedConv?.participant_role || 'staff',
+            message: selectedConv?.is_ticket
+              ? `[Ticket #${selectedConv.ticket_code}] ${selectedConv.ticket_subject || 'Inquiry'}\nCategory: ${selectedConv.ticket_category || 'General'}\n\nOur financial aid desk has received your ticket and is reviewing it.`
+              : 'Welcome to the official communication channel.',
+            is_read: true,
+            created_at: new Date().toISOString(),
+          },
+        ]);
       }
     } catch (err) {
       console.error('Failed to load chat messages:', err);
@@ -216,7 +151,7 @@ export const MessagesPage: React.FC = () => {
     }
   }, [selectedConv?.conversation_id]);
 
-  // Periodic poll for real-time messages every 4 seconds
+  // Periodic poll for real-time messages
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedConv) {
@@ -238,7 +173,6 @@ export const MessagesPage: React.FC = () => {
     setMessageInput('');
     setIsSending(true);
 
-    // Optimistic message append
     const optimisticMsg: ChatMessageItem = {
       id: Date.now(),
       conversation_id: selectedConv.conversation_id,
@@ -269,6 +203,111 @@ export const MessagesPage: React.FC = () => {
       toast.error('Could not send message. Please try again.');
     } finally {
       setIsSending(false);
+    }
+  };
+
+  // Handler: Student creates a new Support Ticket
+  const handleCreateTicketSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ticketSubject.trim() || !ticketDesc.trim()) {
+      toast.error('Please enter a ticket subject and inquiry description');
+      return;
+    }
+
+    setIsSubmittingTicket(true);
+    try {
+      const res = await createTicket({
+        subject: ticketSubject.trim(),
+        category: ticketCategory,
+        priority: ticketPriority,
+        description: ticketDesc.trim(),
+        applicant_name: user?.name,
+        applicant_email: user?.email,
+      });
+
+      if (res.data?.data) {
+        toast.success(`Support Ticket #${res.data.data.ticket_code} created successfully! Our team has been notified.`);
+        setShowNewTicketModal(false);
+        setTicketSubject('');
+        setTicketDesc('');
+        setTicketPriority('Medium');
+        await loadConversations(false);
+        const createdThread = conversations.find(
+          (c) => c.ticket_code === res.data.data.ticket_code || c.conversation_id === res.data.data.conversation_id
+        );
+        if (createdThread) {
+          setSelectedConv(createdThread);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to create ticket:', err);
+      toast.error(err.response?.data?.message || 'Failed to submit ticket. Please try again.');
+    } finally {
+      setIsSubmittingTicket(false);
+    }
+  };
+
+  // Handler: Admin closes the selected Support Ticket
+  const handleCloseTicketSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedConv?.ticket_id) return;
+
+    setIsClosingTicket(true);
+    try {
+      const res = await closeTicket(selectedConv.ticket_id, {
+        resolutionRemarks: resolutionRemarks.trim() || 'Inquiry addressed and verified by administrator.',
+      });
+
+      if (res.data?.data) {
+        toast.success(`Ticket #${selectedConv.ticket_code} successfully CLOSED!`);
+        setShowCloseModal(false);
+        setResolutionRemarks('');
+        
+        // Update selectedConv state immediately
+        setSelectedConv((prev) =>
+          prev
+            ? {
+                ...prev,
+                ticket_status: 'Closed',
+                status: 'Closed',
+                resolution_remarks: res.data.data.resolution_remarks,
+              }
+            : null
+        );
+        loadConversations(false);
+        if (selectedConv.conversation_id) {
+          loadMessagesForSelected(selectedConv.conversation_id);
+        }
+      }
+    } catch (err: any) {
+      console.error('Failed to close ticket:', err);
+      toast.error(err.response?.data?.message || 'Failed to close ticket');
+    } finally {
+      setIsClosingTicket(false);
+    }
+  };
+
+  // Handler: Admin quick update status
+  const handleQuickStatusChange = async (newStatus: 'Open' | 'In Progress' | 'Resolved' | 'Closed') => {
+    if (!selectedConv?.ticket_id) return;
+    if (newStatus === 'Closed') {
+      setShowCloseModal(true);
+      return;
+    }
+
+    try {
+      const res = await updateTicketStatus(selectedConv.ticket_id, {
+        status: newStatus,
+        resolutionRemarks: `Status updated to ${newStatus}`,
+      });
+
+      if (res.data?.data) {
+        toast.success(`Ticket #${selectedConv.ticket_code} status updated to ${newStatus}`);
+        setSelectedConv((prev) => (prev ? { ...prev, ticket_status: newStatus, status: `Ticket ${newStatus}` } : null));
+        loadConversations(false);
+      }
+    } catch (err: any) {
+      toast.error('Failed to update ticket status');
     }
   };
 
@@ -306,14 +345,26 @@ export const MessagesPage: React.FC = () => {
     }
   };
 
+  // Filter conversations
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       c.participant_name.toLowerCase().includes(q) ||
       (c.student_id && c.student_id.toLowerCase().includes(q)) ||
-      c.last_message.toLowerCase().includes(q)
-    );
+      (c.ticket_code && c.ticket_code.toLowerCase().includes(q)) ||
+      (c.ticket_subject && c.ticket_subject.toLowerCase().includes(q)) ||
+      c.last_message.toLowerCase().includes(q);
+
+    if (!matchesSearch) return false;
+
+    if (activeTabFilter === 'tickets') return c.is_ticket === true;
+    if (activeTabFilter === 'open') return c.is_ticket === true && c.ticket_status !== 'Closed';
+    if (activeTabFilter === 'closed') return c.is_ticket === true && c.ticket_status === 'Closed';
+
+    return true;
   });
+
+  const totalOpenTickets = conversations.filter((c) => c.is_ticket && c.ticket_status !== 'Closed').length;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -322,20 +373,32 @@ export const MessagesPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-              Official Communication Center
+              Official Communication Center & Support Tickets
             </h1>
             <Badge variant="primary" size="sm">
-              Live Helpdesk & Broadcasts
+              Live Helpdesk
             </Badge>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isAdminOrStaff
-              ? 'Broadcast citywide scholarship advisories and provide live assistance to applicant inquiries.'
-              : 'Direct hotline with the Quezon City Scholarship Helpdesk and view official program announcements.'}
+              ? 'Manage applicant inquiries, resolve and close support tickets, and broadcast citywide scholarship advisories.'
+              : 'Direct communication hotline with the Quezon City Scholarship Helpdesk and track support ticket resolutions.'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {!isAdminOrStaff && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowNewTicketModal(true)}
+              className="bg-blue-600 hover:bg-blue-700 font-bold text-xs shadow-xs"
+              leftIcon={<Ticket className="h-4 w-4" />}
+            >
+              Raise Support Ticket
+            </Button>
+          )}
+
           {isAdminOrStaff && (
             <Button
               variant="primary"
@@ -344,9 +407,10 @@ export const MessagesPage: React.FC = () => {
               className="bg-blue-600 hover:bg-blue-700 font-bold text-xs shadow-xs"
               leftIcon={<Megaphone className="h-4 w-4" />}
             >
-              Post Official Announcement
+              Post Announcement
             </Button>
           )}
+
           <Button
             variant="outline"
             size="sm"
@@ -433,24 +497,78 @@ export const MessagesPage: React.FC = () => {
         )}
       </Card>
 
-      {/* Direct Messaging Interface */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[520px]">
-        {/* Left Sidebar: Conversations List */}
+      {/* Main Direct Messaging & Ticket Interface */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[580px]">
+        {/* Left Sidebar: Conversations & Tickets List */}
         <Card className="p-3.5 space-y-3 flex flex-col border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              {isAdminOrStaff ? 'Student Inquiries Desk' : 'Helpdesk Channel'}
+              {isAdminOrStaff ? 'Student Inquiries & Tickets' : 'My Support Channels'}
             </span>
             <Badge variant="primary" size="sm">
-              {conversations.length} {isAdminOrStaff ? 'Students' : 'Desk'}
+              {conversations.length} Threads
             </Badge>
+          </div>
+
+          {/* Quick Filter Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => setActiveTabFilter('all')}
+              className={`flex-1 py-1 rounded-lg transition-all ${
+                activeTabFilter === 'all'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabFilter('tickets')}
+              className={`flex-1 py-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
+                activeTabFilter === 'tickets'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <Ticket className="h-3 w-3" />
+              <span>Tickets</span>
+              {totalOpenTickets > 0 && (
+                <span className="bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold">
+                  {totalOpenTickets}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabFilter('open')}
+              className={`flex-1 py-1 rounded-lg transition-all ${
+                activeTabFilter === 'open'
+                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTabFilter('closed')}
+              className={`flex-1 py-1 rounded-lg transition-all ${
+                activeTabFilter === 'closed'
+                  ? 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              Closed
+            </button>
           </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
-              placeholder={isAdminOrStaff ? 'Search student name or ID...' : 'Search messages...'}
+              placeholder={isAdminOrStaff ? 'Search student, ID, or ticket #...' : 'Search messages & tickets...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-8 pl-8 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
@@ -458,91 +576,208 @@ export const MessagesPage: React.FC = () => {
           </div>
 
           <div className="space-y-1.5 flex-1 overflow-y-auto pr-1">
-            {filteredConversations.map((c) => {
-              const isSelected = selectedConv?.conversation_id === c.conversation_id;
-              const badgeVar = c.status_badge_variant === 'danger' ? 'destructive' : (c.status_badge_variant as any) || 'outline';
-              return (
-                <div
-                  key={c.conversation_id}
-                  onClick={() => setSelectedConv(c)}
-                  className={`p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-all border ${
-                    isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 shadow-xs'
-                      : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent text-slate-600 dark:text-slate-400'
-                  }`}
-                >
+            {filteredConversations.length === 0 ? (
+              <div className="p-6 text-center text-xs text-slate-400 space-y-2">
+                <Ticket className="h-6 w-6 mx-auto text-slate-300 opacity-60" />
+                <p>No conversations or tickets match the filter.</p>
+                {!isAdminOrStaff && (
+                  <button
+                    onClick={() => setShowNewTicketModal(true)}
+                    className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                  >
+                    + Raise New Support Ticket
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredConversations.map((c) => {
+                const isSelected = selectedConv?.conversation_id === c.conversation_id;
+                const isClosedTicket = c.is_ticket && c.ticket_status === 'Closed';
+
+                return (
                   <div
-                    className={`h-9 w-9 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
-                      isSelected ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                    key={c.conversation_id}
+                    onClick={() => setSelectedConv(c)}
+                    className={`p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-all border ${
+                      isSelected
+                        ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 shadow-xs'
+                        : isClosedTicket
+                        ? 'opacity-65 hover:opacity-100 hover:bg-slate-50 dark:hover:bg-slate-800/40 border-slate-100 dark:border-slate-800'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 border-transparent text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    {c.avatar}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between items-center mb-0.5">
-                      <p
-                        className={`text-xs font-bold truncate ${
-                          isSelected ? 'text-blue-950 dark:text-blue-200' : 'text-slate-900 dark:text-white'
-                        }`}
-                      >
-                        {c.participant_name}
-                      </p>
-                      {c.unread_count > 0 && (
-                        <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
-                          {c.unread_count}
-                        </span>
-                      )}
+                    <div
+                      className={`h-9 w-9 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
+                        c.is_ticket
+                          ? isClosedTicket
+                            ? 'bg-slate-200 dark:bg-slate-800 text-slate-500'
+                            : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700'
+                          : isSelected
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                      }`}
+                    >
+                      {c.avatar}
                     </div>
-                    {c.academic_status && (
-                      <div className="mb-1">
-                        <Badge variant={badgeVar} size="sm" className="text-[9px] py-0 px-1.5">
-                          {c.academic_status}
-                        </Badge>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center mb-0.5">
+                        <p
+                          className={`text-xs font-bold truncate ${
+                            isSelected ? 'text-blue-950 dark:text-blue-200' : 'text-slate-900 dark:text-white'
+                          }`}
+                        >
+                          {c.participant_name}
+                        </p>
+                        {c.unread_count > 0 && (
+                          <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                            {c.unread_count}
+                          </span>
+                        )}
                       </div>
-                    )}
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-medium">
-                      {c.last_message}
-                    </p>
+
+                      <div className="flex items-center gap-1.5 mb-1">
+                        {c.is_ticket ? (
+                          <Badge
+                            variant={isClosedTicket ? 'secondary' : c.ticket_status === 'Open' ? 'destructive' : 'warning'}
+                            size="sm"
+                            className="text-[9px] py-0 px-1.5"
+                          >
+                            {c.ticket_status === 'Closed' ? 'Closed' : `Ticket ${c.ticket_status || 'Open'}`}
+                          </Badge>
+                        ) : (
+                          c.academic_status && (
+                            <Badge
+                              variant={c.status_badge_variant === 'danger' ? 'destructive' : (c.status_badge_variant as any) || 'outline'}
+                              size="sm"
+                              className="text-[9px] py-0 px-1.5"
+                            >
+                              {c.academic_status}
+                            </Badge>
+                          )
+                        )}
+                        {c.ticket_priority && (
+                          <span className="text-[9px] font-bold text-slate-400 uppercase">
+                            {c.ticket_priority}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate font-medium">
+                        {c.last_message}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </Card>
 
         {/* Right Main Chat Window */}
         <Card className="md:col-span-2 p-4 flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           {/* Top Chat Header */}
-          <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
+          <div className="border-b border-slate-100 dark:border-slate-800 pb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div
+                className={`h-10 w-10 rounded-full font-bold flex items-center justify-center text-sm shadow-xs shrink-0 ${
+                  selectedConv?.is_ticket
+                    ? selectedConv.ticket_status === 'Closed'
+                      ? 'bg-slate-200 dark:bg-slate-800 text-slate-600'
+                      : 'bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-300'
+                    : 'bg-blue-600 text-white'
+                }`}
+              >
                 {selectedConv?.avatar || 'FA'}
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">
                     {selectedConv?.participant_name || 'Financial Aid Desk'}
                   </h3>
-                  {selectedConv?.academic_status && (
-                    <Badge variant={selectedConv.status_badge_variant === 'danger' ? 'destructive' : (selectedConv.status_badge_variant as any) || 'primary'} size="sm" className="text-[10px]">
-                      {selectedConv.academic_status}
+                  {selectedConv?.is_ticket ? (
+                    <Badge
+                      variant={selectedConv.ticket_status === 'Closed' ? 'secondary' : selectedConv.ticket_status === 'Open' ? 'destructive' : 'warning'}
+                      size="sm"
+                      className="text-[10px]"
+                    >
+                      {selectedConv.ticket_status === 'Closed' ? 'Closed' : `Ticket ${selectedConv.ticket_status || 'Open'}`}
                     </Badge>
+                  ) : (
+                    selectedConv?.academic_status && (
+                      <Badge variant="primary" size="sm" className="text-[10px]">
+                        {selectedConv.academic_status}
+                      </Badge>
+                    )
+                  )}
+                  {selectedConv?.ticket_priority && (
+                    <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                      {selectedConv.ticket_priority} Priority
+                    </span>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  {selectedConv?.participant_role} • {selectedConv?.status || 'Online Helpdesk'}
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1 mt-0.5 truncate">
+                  <span className={`h-1.5 w-1.5 rounded-full ${selectedConv?.ticket_status === 'Closed' ? 'bg-slate-400' : 'bg-emerald-500'}`} />
+                  {selectedConv?.participant_role}
                 </p>
               </div>
             </div>
 
-            {selectedConv?.student_id && (
-              <Badge variant="outline" size="sm" className="font-mono text-[10px]">
-                {selectedConv.student_id}
-              </Badge>
-            )}
+            {/* Admin Ticket Controls or Student Ticket Badge */}
+            <div className="flex items-center gap-2 shrink-0">
+              {selectedConv?.is_ticket && isAdminOrStaff && (
+                <>
+                  {selectedConv.ticket_status !== 'Closed' ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCloseModal(true)}
+                      className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800 font-bold text-xs cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <span>Close Ticket</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleQuickStatusChange('In Progress')}
+                      className="border-slate-200 text-slate-600 dark:text-slate-300 font-bold text-xs cursor-pointer"
+                    >
+                      Reopen Ticket
+                    </Button>
+                  )}
+                </>
+              )}
+
+              {selectedConv?.student_id && (
+                <Badge variant="outline" size="sm" className="font-mono text-[10px] hidden sm:inline-flex">
+                  {selectedConv.student_id}
+                </Badge>
+              )}
+            </div>
           </div>
+
+          {/* Ticket Information Bar (if viewing a ticket) */}
+          {selectedConv?.is_ticket && (
+            <div className="mt-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <Ticket className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <span className="font-mono font-bold text-slate-900 dark:text-white">
+                  {selectedConv.ticket_code}
+                </span>
+                <span className="text-slate-400">•</span>
+                <span className="font-medium text-slate-600 dark:text-slate-300 truncate max-w-xs">
+                  {selectedConv.ticket_subject || selectedConv.participant_role}
+                </span>
+              </div>
+              {selectedConv.ticket_status === 'Closed' && selectedConv.resolution_remarks && (
+                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 truncate max-w-xs">
+                  Resolution: {selectedConv.resolution_remarks}
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Chat Messages Log */}
           <div className="flex-1 p-3 space-y-3 overflow-y-auto text-xs my-2">
@@ -561,6 +796,15 @@ export const MessagesPage: React.FC = () => {
             ) : (
               messages.map((c) => {
                 const isMe = String(c.sender_id) === String(user?.id) || (isAdminOrStaff && c.sender_role === 'admin') || (!isAdminOrStaff && c.sender_role === 'student');
+                const isSystem = c.sender_role === 'system';
+
+                if (isSystem) {
+                  return (
+                    <div key={c.id} className="p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] font-medium text-amber-900 dark:text-amber-200 text-center my-1">
+                      <p className="whitespace-pre-line">{c.message}</p>
+                    </div>
+                  );
+                }
 
                 return (
                   <div
@@ -571,7 +815,7 @@ export const MessagesPage: React.FC = () => {
                       {c.sender_name} • {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <div
-                      className={`p-3 rounded-2xl max-w-sm font-medium leading-relaxed shadow-xs ${
+                      className={`p-3 rounded-2xl max-w-sm font-medium leading-relaxed shadow-xs whitespace-pre-line ${
                         isMe
                           ? 'bg-blue-600 text-white rounded-tr-none'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 rounded-tl-none'
@@ -591,9 +835,11 @@ export const MessagesPage: React.FC = () => {
             <input
               type="text"
               placeholder={
-                isAdminOrStaff
+                selectedConv?.ticket_status === 'Closed'
+                  ? 'Ticket is closed. Send a message to reopen the thread...'
+                  : isAdminOrStaff
                   ? `Reply to ${selectedConv?.participant_name || 'student'}...`
-                  : 'Type your inquiry to Financial Aid Desk...'
+                  : 'Type your message or inquiry...'
               }
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
@@ -613,6 +859,147 @@ export const MessagesPage: React.FC = () => {
           </div>
         </Card>
       </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL: RAISE NEW SUPPORT TICKET (APPLICANT)                               */}
+      {/* ========================================================================= */}
+      {showNewTicketModal && (
+        <Modal
+          isOpen={showNewTicketModal}
+          onClose={() => setShowNewTicketModal(false)}
+          title="Raise a Support Ticket to Financial Aid Officers"
+          maxWidth="md"
+        >
+          <form onSubmit={handleCreateTicketSubmit} className="space-y-4 text-xs">
+            <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl text-blue-950 dark:text-blue-200">
+              <span className="font-bold block mb-0.5">Direct Helpdesk Escalation</span>
+              <p className="text-[11px] leading-relaxed">
+                Submitting this ticket creates an active support thread linked directly to the Quezon City Scholarship Secretariat.
+              </p>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Subject / Inquiry Title:</label>
+              <input
+                type="text"
+                placeholder="e.g. Discrepancy in GWA record / Disbursement status inquiry..."
+                value={ticketSubject}
+                onChange={(e) => setTicketSubject(e.target.value)}
+                required
+                className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Category:</label>
+                <select
+                  value={ticketCategory}
+                  onChange={(e) => setTicketCategory(e.target.value)}
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+                >
+                  <option value="Application Verification">Application Verification</option>
+                  <option value="Disbursement & Payout">Disbursement & Payout</option>
+                  <option value="Document Resubmission">Document Resubmission</option>
+                  <option value="Eligibility Inquiry">Eligibility Inquiry</option>
+                  <option value="System & Account">System & Account</option>
+                  <option value="General Support">General Support</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Priority:</label>
+                <select
+                  value={ticketPriority}
+                  onChange={(e) => setTicketPriority(e.target.value as any)}
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
+                >
+                  <option value="Low">Low Priority</option>
+                  <option value="Medium">Medium Priority</option>
+                  <option value="High">High Priority</option>
+                  <option value="Urgent">Urgent Priority</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Description / Details:</label>
+              <textarea
+                rows={4}
+                placeholder="Explain the issue or inquiry in detail..."
+                value={ticketDesc}
+                onChange={(e) => setTicketDesc(e.target.value)}
+                required
+                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="outline" size="sm" type="button" onClick={() => setShowNewTicketModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                disabled={isSubmittingTicket}
+                leftIcon={<Ticket className="h-4 w-4" />}
+                className="font-bold bg-blue-600 text-white"
+              >
+                {isSubmittingTicket ? 'Filing Ticket...' : 'Submit Support Ticket'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: CLOSE TICKET WITH RESOLUTION REMARKS (ADMIN)                        */}
+      {/* ========================================================================= */}
+      {showCloseModal && (
+        <Modal
+          isOpen={showCloseModal}
+          onClose={() => setShowCloseModal(false)}
+          title={`Close Support Ticket #${selectedConv?.ticket_code || ''}`}
+          maxWidth="md"
+        >
+          <form onSubmit={handleCloseTicketSubmit} className="space-y-4 text-xs">
+            <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200">
+              <span className="font-bold block mb-0.5">Official Ticket Resolution</span>
+              <p className="text-[11px] leading-relaxed">
+                Closing this ticket will mark the applicant's issue as resolved, timestamp the closure, and send an in-app notification to the applicant.
+              </p>
+            </div>
+
+            <div>
+              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Resolution Remarks / Notes for Student:</label>
+              <textarea
+                rows={3}
+                placeholder="e.g. Document verified and updated in database. Disbursement scheduled for Batch #4."
+                value={resolutionRemarks}
+                onChange={(e) => setResolutionRemarks(e.target.value)}
+                className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <Button variant="outline" size="sm" type="button" onClick={() => setShowCloseModal(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                type="submit"
+                disabled={isClosingTicket}
+                leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                className="font-bold bg-rose-600 hover:bg-rose-700 text-white"
+              >
+                {isClosingTicket ? 'Closing Ticket...' : 'Confirm & Close Ticket'}
+              </Button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       {/* ========================================================================= */}
       {/* MODAL: CREATE BULK ANNOUNCEMENT                                           */}

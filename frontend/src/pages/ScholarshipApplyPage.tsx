@@ -19,6 +19,7 @@ import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { createApplication } from '../api/applications';
+import { getPortalSettings, type PortalSettingsData } from '../api/portalSettings';
 import { toast } from 'sonner';
 
 interface RequiredDocItem {
@@ -78,6 +79,23 @@ export const ScholarshipApplyPage: React.FC = () => {
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState<any | null>(null);
+  const [portalSettings, setPortalSettings] = useState<PortalSettingsData | null>(null);
+  const [isCheckingPortal, setIsCheckingPortal] = useState(true);
+
+  React.useEffect(() => {
+    getPortalSettings()
+      .then((res: any) => {
+        if (res.data?.data) {
+          setPortalSettings(res.data.data);
+        }
+      })
+      .catch((err: any) => {
+        console.warn('Failed to load portal settings in apply page:', err);
+      })
+      .finally(() => {
+        setIsCheckingPortal(false);
+      });
+  }, []);
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -219,6 +237,72 @@ export const ScholarshipApplyPage: React.FC = () => {
 
   const attachedCount = Object.keys(uploadedFiles).length;
   const isAllDocsAttached = attachedCount >= MANDATORY_DOCS.length;
+
+  if (!isCheckingPortal && portalSettings?.isOpen === false && user?.role === 'student') {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6 animate-in fade-in duration-300 py-8">
+        <button
+          onClick={() => navigate('/scholarships')}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Scholarships
+        </button>
+
+        <Card className="border-amber-200 dark:border-amber-800/80 bg-white dark:bg-slate-900 shadow-soft overflow-hidden">
+          <div className="h-2 bg-gradient-to-r from-amber-400 to-amber-600" />
+          <CardContent className="p-8 text-center space-y-5">
+            <div className="h-16 w-16 rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-sm">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+
+            <div className="space-y-2">
+              <Badge variant="warning" size="md">
+                Application Intake Closed
+              </Badge>
+              <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+                Application Submissions Are Currently Locked
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed max-w-md mx-auto">
+                {portalSettings.closedMessage ||
+                  'The Quezon City Scholarship Application Portal is currently closed for new candidate submissions.'}
+              </p>
+            </div>
+
+            {portalSettings.nextCycleOpening && (
+              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200 inline-block text-left w-full max-w-md">
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Calendar className="h-4 w-4 text-amber-600" />
+                  <span>Upcoming Application Cycle</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-300">
+                  Target Opening: <strong>{portalSettings.nextCycleOpening}</strong> ({portalSettings.academicYear} • {portalSettings.term})
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center gap-3 pt-3">
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => navigate('/scholarships')}
+                className="font-bold"
+              >
+                Browse Scholarships Catalog
+              </Button>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => navigate('/messages')}
+                className="bg-blue-600 font-bold"
+              >
+                Inquire via Helpdesk
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 animate-in fade-in duration-300 py-4">

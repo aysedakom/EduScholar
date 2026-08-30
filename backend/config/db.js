@@ -99,6 +99,42 @@ async function ensureTables() {
         );
         CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email, otp_purpose, consumed_at);
         ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data TEXT;
+
+        -- 1. Support Tickets Table
+        CREATE TABLE IF NOT EXISTS support_tickets (
+          id SERIAL PRIMARY KEY,
+          ticket_code VARCHAR(50) UNIQUE NOT NULL,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          applicant_name VARCHAR(150),
+          applicant_email VARCHAR(200),
+          subject VARCHAR(255) NOT NULL,
+          category VARCHAR(100) NOT NULL DEFAULT 'General Inquiry',
+          priority VARCHAR(30) DEFAULT 'Medium',
+          status VARCHAR(30) DEFAULT 'Open',
+          description TEXT NOT NULL,
+          conversation_id VARCHAR(100),
+          admin_notes TEXT,
+          resolution_remarks TEXT,
+          closed_at TIMESTAMPTZ,
+          closed_by INTEGER REFERENCES users(id),
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id, status);
+        CREATE INDEX IF NOT EXISTS idx_support_tickets_code ON support_tickets(ticket_code);
+
+        -- 2. Portal Settings Table
+        CREATE TABLE IF NOT EXISTS portal_settings (
+          id SERIAL PRIMARY KEY,
+          setting_key VARCHAR(100) UNIQUE NOT NULL,
+          setting_value JSONB NOT NULL,
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- Seed default portal settings if not present
+        INSERT INTO portal_settings (setting_key, setting_value)
+        VALUES ('application_portal', '{"isOpen": true, "academicYear": "AY 2026-2027", "term": "1st Semester", "openingDate": "2026-08-01", "closingDate": "2026-09-30", "closedMessage": "The Quezon City Scholarship Application Portal is currently closed for new submissions. Evaluators are processing active candidate queues.", "nextCycleOpening": "October 15, 2026"}'::jsonb)
+        ON CONFLICT (setting_key) DO NOTHING;
       `);
 
       // Ensure primary Administrator support.edu2026@gmail.com has January10 password in cloud/local DB

@@ -33,6 +33,7 @@ import { ApplicationReviewQueuePage } from './admin/ApplicationReviewQueuePage';
 
 import { getMyApplications } from '../api/applications';
 import { getScholarships, updateScholarshipStatus } from '../api/scholarships';
+import { getPortalSettings, updatePortalSettings, type PortalSettingsData } from '../api/portalSettings';
 
 import { ALL_SCHOLARSHIP_PROGRAMS } from '../utils/scholarshipPrograms';
 
@@ -114,15 +115,25 @@ export const ScholarshipsPage: React.FC = () => {
   const [items, setItems] = useState<FeedItem[]>(INITIAL_PROGRAMS);
   const [adminActiveTab, setAdminActiveTab] = useState<'programs' | 'reviews' | 'renewal'>('programs');
   const [selectedProgramFilter, setSelectedProgramFilter] = useState<string | null>(null);
-  const [isPortalOpen, setIsPortalOpen] = useState<boolean>(() => {
-    return localStorage.getItem('qc_scholarship_portal_intake_open') !== 'false';
-  });
+  const [portalSettings, setPortalSettings] = useState<PortalSettingsData | null>(null);
+  const [isPortalOpen, setIsPortalOpen] = useState<boolean>(true);
   const [pendingReviewsCount, setPendingReviewsCount] = useState<number>(0);
   const [dbApplications, setDbApplications] = useState<Application[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
 
-  // Sync real-time scholarship programs & pending review counts from PostgreSQL database
+  // Sync real-time scholarship programs & portal intake settings
   useEffect(() => {
+    getPortalSettings()
+      .then((res: any) => {
+        if (res.data?.data) {
+          setPortalSettings(res.data.data);
+          setIsPortalOpen(res.data.data.isOpen);
+        }
+      })
+      .catch((err: any) => {
+        console.warn('Failed to fetch portal settings:', err);
+      });
+
     let localOverrides: Record<string, string> = {};
     try {
       localOverrides = JSON.parse(localStorage.getItem('qc_scholarship_status_overrides') || '{}');
@@ -248,6 +259,10 @@ export const ScholarshipsPage: React.FC = () => {
   });
 
   const handleStartApplication = (sch: Scholarship) => {
+    if (!isPortalOpen && !isAdminOrStaff) {
+      toast.error('Application portal intake is currently closed for new submissions.');
+      return;
+    }
     navigate('/apply/scholarship', {
       state: {
         scholarshipId: sch.id,
@@ -314,15 +329,23 @@ export const ScholarshipsPage: React.FC = () => {
     } catch (_) {}
   };
 
-  const handlePortalToggle = () => {
+  const handlePortalToggle = async () => {
     const nextState = !isPortalOpen;
     setIsPortalOpen(nextState);
-    localStorage.setItem('qc_scholarship_portal_intake_open', String(nextState));
-    toast.success(
-      nextState
-        ? 'Portal intake OPEN: Accepting student applications'
-        : 'Portal intake CLOSED: Submissions locked'
-    );
+    try {
+      const res = await updatePortalSettings({ isOpen: nextState });
+      if (res.data?.data) {
+        setPortalSettings(res.data.data);
+      }
+      toast.success(
+        nextState
+          ? 'Portal intake OPEN: Accepting student applications'
+          : 'Portal intake CLOSED: Submissions locked in database'
+      );
+    } catch (err: any) {
+      console.error('Failed to update portal settings:', err);
+      toast.error('Failed to update portal status: ' + err.message);
+    }
   };
 
   const handleDeleteProgram = (id: string) => {
@@ -444,6 +467,31 @@ export const ScholarshipsPage: React.FC = () => {
       {(!isAdminOrStaff || adminActiveTab === 'programs') && (
         <>
           {/* Student AI Pre-fill Info Callout */}
+          {!isPortalOpen && !isAdminOrStaff && (
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-start gap-3 text-xs text-amber-950 dark:text-amber-200 shadow-sm">
+              <div className="h-8 w-8 rounded-xl bg-amber-500/20 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                ⚠️
+              </div>
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="font-extrabold text-sm text-amber-900 dark:text-amber-200">Application Intake Currently Closed</p>
+                  <span className="text-[10px] font-bold bg-amber-200/60 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-md">
+                    Portal Locked
+                  </span>
+                </div>
+                <p className="text-amber-800 dark:text-amber-300/90 leading-relaxed font-medium">
+                  {portalSettings?.closedMessage ||
+                    'The Quezon City Scholarship Application Portal is currently closed for new submissions. Evaluators are processing active candidate queues.'}
+                </p>
+                {portalSettings?.nextCycleOpening && (
+                  <p className="text-[11px] font-bold text-amber-900 dark:text-amber-200 pt-0.5">
+                    Expected Next Intake Cycle: <strong>{portalSettings.nextCycleOpening}</strong> ({portalSettings.academicYear} • {portalSettings.term})
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {!isAdminOrStaff && (
             <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 flex items-start gap-3 text-xs text-blue-900 dark:text-blue-300">
               <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />

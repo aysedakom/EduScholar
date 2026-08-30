@@ -42,6 +42,19 @@ const getApplicationById = async (req, res) => {
 // @route  POST /api/applications
 const createApplication = async (req, res) => {
   try {
+    // Validate portal open status for student submissions
+    if (req.user?.role === 'student') {
+      const portalSettingsModel = require('../models/portalSettingsModel');
+      const portalSettings = await portalSettingsModel.getPortalSettings();
+      if (!portalSettings.isOpen) {
+        return res.status(403).json({
+          success: false,
+          message: portalSettings.closedMessage || 'The Scholarship Application Portal is currently closed for new submissions.',
+          portalSettings,
+        });
+      }
+    }
+
     const {
       type, programId, programName, referenceId, title, amount,
       progress, requirementsCount, completedRequirements, jobId, notes,

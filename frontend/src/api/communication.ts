@@ -26,6 +26,15 @@ export interface ConversationThread {
   status: string;
   academic_status?: string;
   status_badge_variant?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info' | 'outline';
+  is_ticket?: boolean;
+  ticket_id?: number;
+  ticket_code?: string;
+  ticket_status?: 'Open' | 'In Progress' | 'Resolved' | 'Closed';
+  ticket_priority?: 'Low' | 'Medium' | 'High' | 'Urgent';
+  ticket_category?: string;
+  ticket_subject?: string;
+  resolution_remarks?: string;
+  closed_at?: string;
 }
 
 export interface ChatMessageItem {

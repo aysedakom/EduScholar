@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/cn';
+import { createTicket } from '../api/tickets';
 
 interface FAQItem {
   id: string;
@@ -206,28 +207,43 @@ export const SupportPage: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const handleCreateTicket = (e: React.FormEvent) => {
+  const handleCreateTicket = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketTitle || !ticketDesc) {
       toast.error('Please fill in title and ticket description');
       return;
     }
 
-    const newTicket: SupportTicket = {
-      id: `TCK-${Math.floor(1000 + Math.random() * 9000)}`,
-      title: ticketTitle,
-      category: ticketCategory,
-      priority: ticketPriority,
-      status: 'Open',
-      date: new Date().toISOString().split('T')[0],
-      description: ticketDesc,
-    };
+    try {
+      const res = await createTicket({
+        subject: ticketTitle,
+        category: ticketCategory,
+        priority: ticketPriority as any,
+        description: ticketDesc,
+        applicant_name: user?.name,
+        applicant_email: user?.email,
+      });
 
-    setTickets([newTicket, ...tickets]);
-    setShowTicketModal(false);
-    setTicketTitle('');
-    setTicketDesc('');
-    toast.success(`Support Ticket ${newTicket.id} created successfully! Our team has been notified.`);
+      if (res.data?.data) {
+        const created = res.data.data;
+        const newTicket: SupportTicket = {
+          id: created.ticket_code,
+          title: created.subject,
+          category: created.category,
+          priority: created.priority as any,
+          status: created.status as any,
+          date: created.created_at.split('T')[0],
+          description: created.description,
+        };
+        setTickets([newTicket, ...tickets]);
+        setShowTicketModal(false);
+        setTicketTitle('');
+        setTicketDesc('');
+        toast.success(`Support Ticket #${created.ticket_code} created successfully! You can track and converse with officers in the Messages Center.`);
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to submit ticket');
+    }
   };
 
   return (

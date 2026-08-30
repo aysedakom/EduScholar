@@ -1,12 +1,24 @@
-import React, { useState } from 'react';
-import { Sliders, Save, ShieldCheck, ToggleLeft, ToggleRight, Key } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Sliders, Save, ShieldCheck, ToggleLeft, ToggleRight, Key, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
+import { getPortalSettings, updatePortalSettings, type PortalSettingsData } from '../../api/portalSettings';
 
 export const SystemConfigPage: React.FC = () => {
   const [appName, setAppName] = useState('GovServe | EduScholar Portal');
   const [supportEmail, setSupportEmail] = useState('support@eduscholar.qc.edu.ph');
+  
+  // Portal Intake Settings (Synced with PostgreSQL database)
+  const [portalSettings, setPortalSettings] = useState<PortalSettingsData>({
+    isOpen: true,
+    academicYear: 'AY 2026-2027',
+    term: '1st Semester',
+    openingDate: '2026-08-01',
+    closingDate: '2026-09-30',
+    closedMessage: 'The Quezon City Scholarship Application Portal is currently closed for new submissions. Evaluators are processing active candidate review queues.',
+    nextCycleOpening: 'October 15, 2026',
+  });
   
   // Feature Flags
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -18,9 +30,44 @@ export const SystemConfigPage: React.FC = () => {
   const [gcashApiKey, setGcashApiKey] = useState('pk_live_gcash_904281902489102');
   const [sendgridKey, setSendgridKey] = useState('SG.live_9042189042810924');
 
-  const handleSaveConfig = (e: React.FormEvent) => {
+  useEffect(() => {
+    getPortalSettings()
+      .then((res: any) => {
+        if (res.data?.data) {
+          setPortalSettings(res.data.data);
+        }
+      })
+      .catch((err: any) => {
+        console.warn('Failed to load portal settings in config:', err);
+      });
+  }, []);
+
+  const handleTogglePortalIntake = async () => {
+    const nextState = !portalSettings.isOpen;
+    setPortalSettings((prev) => ({ ...prev, isOpen: nextState }));
+    try {
+      const res = await updatePortalSettings({ isOpen: nextState });
+      if (res.data?.data) {
+        setPortalSettings(res.data.data);
+      }
+      toast.success(
+        nextState
+          ? 'Application Portal Intake is now OPEN (Accepting Applications)'
+          : 'Application Portal Intake is now CLOSED (Submissions Locked in DB)'
+      );
+    } catch (err: any) {
+      toast.error('Failed to update portal setting: ' + err.message);
+    }
+  };
+
+  const handleSaveConfig = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success('System Configuration & Feature Toggles saved successfully!');
+    try {
+      await updatePortalSettings(portalSettings);
+      toast.success('System Configuration & Portal Settings saved successfully in database!');
+    } catch (err: any) {
+      toast.error('Failed to save configuration: ' + err.message);
+    }
   };
 
   return (
@@ -40,6 +87,78 @@ export const SystemConfigPage: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Application Portal Intake Enforcer */}
+        <Card className="border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/40 via-white to-white dark:from-slate-900 dark:to-slate-900">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center justify-between">
+              <span className="flex items-center gap-2">
+                <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                Application Portal Intake Control
+              </span>
+              <button
+                type="button"
+                onClick={handleTogglePortalIntake}
+                className="cursor-pointer"
+                title="Toggle Application Intake"
+              >
+                {portalSettings.isOpen ? (
+                  <ToggleRight className="h-8 w-8 text-emerald-600" />
+                ) : (
+                  <ToggleLeft className="h-8 w-8 text-rose-500" />
+                )}
+              </button>
+            </CardTitle>
+            <CardDescription>
+              Status: <strong className={portalSettings.isOpen ? 'text-emerald-600' : 'text-rose-600'}>
+                {portalSettings.isOpen ? 'OPEN (Accepting Applications)' : 'CLOSED (Submissions Locked)'}
+              </strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-xs">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Academic Year</label>
+                <input
+                  type="text"
+                  value={portalSettings.academicYear}
+                  onChange={(e) => setPortalSettings({ ...portalSettings, academicYear: e.target.value })}
+                  className="w-full h-9 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Academic Term</label>
+                <input
+                  type="text"
+                  value={portalSettings.term}
+                  onChange={(e) => setPortalSettings({ ...portalSettings, term: e.target.value })}
+                  className="w-full h-9 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Next Cycle Expected Opening Date</label>
+              <input
+                type="text"
+                value={portalSettings.nextCycleOpening}
+                onChange={(e) => setPortalSettings({ ...portalSettings, nextCycleOpening: e.target.value })}
+                placeholder="e.g. October 15, 2026"
+                className="w-full h-9 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium"
+              />
+            </div>
+
+            <div>
+              <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Intake Closed Notice to Students</label>
+              <textarea
+                rows={2}
+                value={portalSettings.closedMessage}
+                onChange={(e) => setPortalSettings({ ...portalSettings, closedMessage: e.target.value })}
+                className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-medium"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Portal Branding & General */}
         <Card>
           <CardHeader>
@@ -73,7 +192,7 @@ export const SystemConfigPage: React.FC = () => {
         </Card>
 
         {/* Feature Toggles */}
-        <Card>
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-emerald-600" />

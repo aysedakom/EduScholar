@@ -39,6 +39,7 @@ import {
   saveActiveStudentApplication,
   type ScholarshipProgramSpec,
 } from '../../utils/scholarshipPrograms';
+import { getPortalSettings, type PortalSettingsData } from '../../api/portalSettings';
 import { sendSystemScholarshipNotice } from '../../utils/systemNotifications';
 
 // List of accredited Quezon City Universities, Colleges & HEIs
@@ -155,10 +156,25 @@ export const ApplicationForm: React.FC = () => {
   // Active Application state check (Single Application Constraint)
   const [activeApp, setActiveApp] = useState<any | null>(null);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [portalSettings, setPortalSettings] = useState<PortalSettingsData | null>(null);
+  const [isCheckingPortal, setIsCheckingPortal] = useState(true);
 
   useEffect(() => {
     const existing = getActiveStudentApplication();
     setActiveApp(existing);
+
+    getPortalSettings()
+      .then((res: any) => {
+        if (res.data?.data) {
+          setPortalSettings(res.data.data);
+        }
+      })
+      .catch((err: any) => {
+        console.warn('Failed to load portal settings in ApplicationForm:', err);
+      })
+      .finally(() => {
+        setIsCheckingPortal(false);
+      });
   }, []);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -576,6 +592,87 @@ export const ApplicationForm: React.FC = () => {
                 className="w-full sm:w-auto font-bold text-xs text-slate-500"
               >
                 Browse Other Programs
+              </Button>
+            </div>
+          </Card>
+        </main>
+
+        <footer className={`py-6 px-4 text-center text-xs border-t ${isDark ? 'bg-slate-900 border-slate-800 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
+          © 2026 Local Government Unit of Quezon City • Youth Development Office
+        </footer>
+      </div>
+    );
+  }
+
+  // If application portal intake is closed by Administrator
+  if (!isCheckingPortal && portalSettings?.isOpen === false && user?.role === 'student') {
+    return (
+      <div className={`min-h-screen font-sans selection:bg-primary/20 flex flex-col justify-between transition-colors duration-200 ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
+        <header className={`w-full shadow-md border-b relative z-30 transition-colors ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900" />
+              <div>
+                <span className="font-heading font-extrabold text-lg leading-none block">GovServe</span>
+                <span className="text-[10px] text-slate-500 font-semibold">Scholarship Portal</span>
+              </div>
+            </Link>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              <Button variant="ghost" size="sm" onClick={toggleTheme} className="p-2">
+                {isDark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-600" />}
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-3xl mx-auto w-full px-4 py-12 space-y-6 animate-in fade-in duration-300">
+          <Card className={`p-8 rounded-3xl border shadow-xl space-y-6 text-center ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+            <div className="h-16 w-16 rounded-3xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto shadow-sm">
+              <AlertCircle className="h-8 w-8" />
+            </div>
+
+            <div className="space-y-2">
+              <Badge variant="warning" size="md">
+                Application Intake Closed
+              </Badge>
+              <h1 className="font-heading font-black text-2xl text-slate-900 dark:text-white">
+                Application Intake Is Currently Closed
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-lg mx-auto">
+                {portalSettings.closedMessage ||
+                  'The Quezon City Scholarship Application Portal is currently closed for new candidate submissions.'}
+              </p>
+            </div>
+
+            {portalSettings.nextCycleOpening && (
+              <div className={`p-4 rounded-2xl border text-xs inline-block text-left w-full max-w-md ${isDark ? 'bg-slate-950 border-slate-800 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+                <div className="flex items-center gap-2 font-bold mb-1">
+                  <Clock className="h-4 w-4 text-amber-600" />
+                  <span>Upcoming Application Cycle</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-300">
+                  Target Opening: <strong>{portalSettings.nextCycleOpening}</strong> ({portalSettings.academicYear} • {portalSettings.term})
+                </p>
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/scholarships')}
+                className="w-full sm:w-auto font-bold bg-blue-600 text-white"
+              >
+                Browse Scholarships Catalog
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/messages')}
+                className="w-full sm:w-auto font-bold"
+              >
+                Contact Helpdesk
               </Button>
             </div>
           </Card>
