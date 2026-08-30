@@ -37,5 +37,6 @@ router.get('/:id', authMiddleware, applicationController.getApplicationById);
 router.post('/', authMiddleware, applicationController.createApplication);
 router.patch('/:id/status', authMiddleware, applicationController.updateStatus);
 router.post('/:id/send-certificate', authMiddleware, applicationController.sendAwardCertificate);
+router.post('/:id/resubmit-document', authMiddleware, applicationController.resubmitDocument);
 
 module.exports = router;

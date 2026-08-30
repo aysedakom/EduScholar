@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Trash2,
   AlertCircle,
+  AlertTriangle,
   RefreshCw,
   Lock,
   Clock,
@@ -75,7 +76,7 @@ export const QC_SCHOOLS = [
   'Eulogio "Amang" Rodriguez Institute of Tech (EARIST QC)',
   'Asian College of Science and Technology (ACSAT QC)',
   'Quezon City High School (Public / Private SHS)',
-  'Other Accredited QC School / University / Institution',
+  'Other / School Not Listed (Exception Flow - Requires Certificate of Enrollment)',
 ];
 
 // Dynamic Validation Schema
@@ -102,6 +103,8 @@ const applicationSchema = z.object({
   // Step 2: Academic Information
   studentId: z.string().min(1, 'Student ID or LRN is required'),
   school: z.string().min(1, 'School is required'),
+  unlistedSchoolName: z.string().optional(),
+  unlistedSchoolAddress: z.string().optional(),
   schoolType: z.enum(['Private', 'Public', 'SUC', 'LUC']),
   department: z.string().min(1, 'Beneficiary department / college is required'),
   course: z.string().min(1, 'Course / Strand is required'),
@@ -1146,6 +1149,37 @@ export const ApplicationForm: React.FC = () => {
                     ))}
                   </select>
                 </div>
+
+                {/* Phase 1: School Validation Exception Flow Callout */}
+                {watch('school')?.includes('Other') && (
+                  <div className="md:col-span-3 p-4 bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 rounded-2xl space-y-3 animate-in fade-in">
+                    <div className="flex items-center gap-2 text-xs font-extrabold text-amber-900 dark:text-amber-200">
+                      <AlertTriangle className="h-4 w-4 text-amber-600" />
+                      <span>🏫 School Validation Exception Flow Triggered</span>
+                    </div>
+                    <p className="text-[11px] text-amber-800 dark:text-amber-300">
+                      Your institution is not currently listed in the pre-accredited DepEd/CHED database. Please input your school's exact details below and attach a <strong>Certificate of Enrollment / Transcript</strong> in Step 4. Your application will be routed to the <strong>Special Eligibility Review Queue</strong>.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold mb-1">Official School / Institution Name *</label>
+                        <input
+                          {...register('unlistedSchoolName')}
+                          className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                          placeholder="e.g. Quezon City Polytechnic Institute"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold mb-1">Campus / Institution Address *</label>
+                        <input
+                          {...register('unlistedSchoolAddress')}
+                          className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                          placeholder="e.g. Commonwealth Avenue, Quezon City"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-bold mb-1">School Institution Type *</label>
                   <select

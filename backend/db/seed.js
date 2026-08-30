@@ -9,15 +9,51 @@ async function seed() {
   console.log('[seed] Starting clean master catalog seeding...');
   const hashedPassword = await bcrypt.hash('January10', 10);
 
-  // 1. SEED VERIFIED ADMIN USER ONLY
-  console.log('[seed] Seeding primary verified Administrator...');
-  await pool.query(
-    `INSERT INTO users (name, email, password, role, student_id, department, major, gpa, financial_aid_year, avatar, phone, address, barangay, city, status, is_email_verified)
-     VALUES
-     ('ADMIN', 'support.edu2026@gmail.com', $1, 'admin', NULL, 'Quezon City Youth Development Office (QCYDO)', 'Scholarship Administrator', NULL, '2026-2027', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=250&q=80', '+63 918 234 5678', 'Quezon City Hall Complex, Diliman', 'Barangay Central', 'Quezon City', 'active', true)
-     ON CONFLICT (email) DO UPDATE SET password = $1, role = 'admin', is_email_verified = true, status = 'active'`,
-    [hashedPassword]
-  );
+  // 1. SEED OFFICIAL STAFF & GOVERNANCE ROLES
+  console.log('[seed] Seeding primary official system accounts...');
+  const officialAccounts = [
+    {
+      name: 'ADMIN',
+      email: 'support.edu2026@gmail.com',
+      role: 'admin',
+      dept: 'Quezon City Youth Development Office (QCYDO)',
+      major: 'Scholarship Head Administrator',
+      phone: '+63 918 234 5678',
+    },
+    {
+      name: 'City Treasury Disbursing Officer',
+      email: 'treasury.edu2026@gmail.com',
+      role: 'treasury',
+      dept: 'Quezon City Hall Treasury Office',
+      major: 'Disbursement & Fund Settlement',
+      phone: '+63 918 234 5679',
+    },
+    {
+      name: 'School Coordinator',
+      email: 'sr.edu2026@gmail.com',
+      role: 'school_coordinator',
+      dept: 'Quezon City University & Partner Schools',
+      major: 'University Registrar & Endorsement',
+      phone: '+63 918 234 5680',
+    },
+    {
+      name: 'Scholarship Program Supervisor',
+      email: 'sv.edu2026@gmail.com',
+      role: 'supervisor',
+      dept: 'Quezon City Youth Development Office (QCYDO)',
+      major: 'Evaluation Executive Reviewer',
+      phone: '+63 918 234 5681',
+    },
+  ];
+
+  for (const acc of officialAccounts) {
+    await pool.query(
+      `INSERT INTO users (name, email, password, role, department, major, phone, address, barangay, city, financial_aid_year, status, is_email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'Quezon City Hall Complex, Diliman', 'Barangay Central', 'Quezon City', '2026-2027', 'active', true)
+       ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'`,
+      [acc.name, acc.email, hashedPassword, acc.role, acc.dept, acc.major, acc.phone]
+    );
+  }
 
   // 2. SEED ACCREDITED PARTNER SCHOOLS CATALOG
   console.log('[seed] Seeding accredited partner schools master catalog...');

@@ -277,5 +277,90 @@ const sendAwardCertificate = async (req, res) => {
   }
 };
 
-module.exports = { getMyApplications, getApplicationById, createApplication, updateStatus, sendAwardCertificate };
+// @desc   Resubmit a specific requested missing/amended document (Phase 4 amendment flow)
+// @route  POST /api/applications/:id/resubmit-document
+const resubmitDocument = async (req, res) => {
+  try {
+    const { pool } = require('../config/db');
+    const { documentId, name, size, fileData, category } = req.body;
+    const appId = req.params.id;
+
+    // Verify application belongs to user (or user is staff)
+    const appRes = await pool.query('SELECT * FROM applications WHERE id = $1', [appId]);
+    if (appRes.rows.length === 0) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const application = appRes.rows[0];
+    if (req.user.role === 'student' && application.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'Unauthorized' });
+    }
+
+    // Determine MIME type
+    let mimeType = 'application/pdf';
+    const docName = name || 'Resubmitted_Document.pdf';
+    if (docName.endsWith('.jfif') || docName.endsWith('.jpg') || docName.endsWith('.jpeg') || docName.endsWith('.png')) {
+      mimeType = 'image/jpeg';
+    } else if (docName.endsWith('.json')) {
+      mimeType = 'application/json';
+    }
+
+    // Insert or update document record
+    await pool.query(
+      `INSERT INTO documents (user_id, application_id, name, category, upload_date, status, size, file_path, file_data, mime_type)
+       VALUES ($1, $2, $3, $4, CURRENT_DATE, 'verified', $5, $6, $7, $8)`,
+      [
+        req.user.id,
+        appId,
+        docName,
+        category || documentId || 'amended_document',
+        size || '1.2 MB',
+        `/uploads/${docName}`,
+        fileData || null,
+        mimeType
+      ]
+    );
+
+    // Update application status back to 'Under Review' and update notes
+    const updatedNotes = `Document [${docName}] resubmitted on ${new Date().toLocaleDateString('en-US')}. Re-queued for QCYDO Committee evaluation.`;
+    await pool.query(
+      `UPDATE applications
+       SET status = 'Under Review',
+           notes = $2,
+           updated_at = NOW()
+       WHERE id = $1`,
+      [appId, updatedNotes]
+    );
+
+    // Notify admins
+    try {
+      const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin', 'school_coordinator')");
+      for (const admin of adminUsers.rows) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+           VALUES ($1, $2, $3, 'info', false, 'application_status', '/admin/review-queue')`,
+          [
+            admin.id,
+            `📄 Amended Document Uploaded: ${application.title || application.program_name}`,
+            `Applicant ${req.user.name || 'Student'} resubmitted ${docName} for Application #${application.id}.`
+          ]
+        );
+      }
+    } catch (notifErr) {
+      console.warn('[applicationController] Resubmission admin notification note:', notifErr.message);
+    }
+
+    res.json({
+      success: true,
+      message: `Document "${docName}" successfully resubmitted! Your application status has been returned to "Under Review".`,
+      applicationId: appId,
+      newStatus: 'Under Review',
+    });
+  } catch (error) {
+    console.error('[applicationController] resubmitDocument error:', error);
+    res.status(500).json({ message: 'Failed to resubmit document: ' + error.message });
+  }
+};
+
+module.exports = { getMyApplications, getApplicationById, createApplication, updateStatus, sendAwardCertificate, resubmitDocument };
 

@@ -137,15 +137,49 @@ async function ensureTables() {
         ON CONFLICT (setting_key) DO NOTHING;
       `);
 
-      // Ensure primary Administrator support.edu2026@gmail.com has January10 password in cloud/local DB
+      // Ensure primary official accounts (Admin, Treasury, School Coordinator, Supervisor) have January10 password in cloud/local DB
       const bcrypt = require('bcryptjs');
-      const adminPassHash = await bcrypt.hash('January10', 10);
-      await pool.query(`
-        INSERT INTO users (name, email, password, role, department, major, financial_aid_year, status, is_email_verified)
-        VALUES ('ADMIN', 'support.edu2026@gmail.com', $1, 'admin', 'Quezon City Youth Development Office (QCYDO)', 'Scholarship Administrator', '2026-2027', 'active', true)
-        ON CONFLICT (email) DO UPDATE SET password = $1, role = 'admin', is_email_verified = true, status = 'active'
-      `, [adminPassHash]);
-      console.log('[db] Primary admin account synchronized with password "January10"');
+      const defaultPassHash = await bcrypt.hash('January10', 10);
+      
+      const seedUsers = [
+        {
+          name: 'ADMIN',
+          email: 'support.edu2026@gmail.com',
+          role: 'admin',
+          dept: 'Quezon City Youth Development Office (QCYDO)',
+          major: 'Scholarship Head Administrator',
+        },
+        {
+          name: 'City Treasury Disbursing Officer',
+          email: 'treasury.edu2026@gmail.com',
+          role: 'treasury',
+          dept: 'Quezon City Hall Treasury Office',
+          major: 'Disbursement & Fund Settlement',
+        },
+        {
+          name: 'School Coordinator',
+          email: 'sr.edu2026@gmail.com',
+          role: 'school_coordinator',
+          dept: 'Quezon City University & Partner Schools',
+          major: 'University Registrar & Endorsement',
+        },
+        {
+          name: 'Scholarship Program Supervisor',
+          email: 'sv.edu2026@gmail.com',
+          role: 'supervisor',
+          dept: 'Quezon City Youth Development Office (QCYDO)',
+          major: 'Evaluation Executive Reviewer',
+        },
+      ];
+
+      for (const u of seedUsers) {
+        await pool.query(`
+          INSERT INTO users (name, email, password, role, department, major, financial_aid_year, status, is_email_verified)
+          VALUES ($1, $2, $3, $4, $5, $6, '2026-2027', 'active', true)
+          ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'
+        `, [u.name, u.email, defaultPassHash, u.role, u.dept, u.major]);
+      }
+      console.log('[db] Primary system accounts (Admin, Treasury, Coordinator, Supervisor) synchronized with password "January10"');
     }
   } catch (err) {
     console.warn('[db] ensureTables warning:', err.message);

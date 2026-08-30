@@ -1,4 +1,4 @@
-// frontend/src/api/auth.ts
+
 import api from './axios';
 import type { UserRole, User } from '../types';
 

@@ -33,3 +33,10 @@ export const createApplication = (payload: CreateApplicationPayload) => {
 export const updateApplicationStatus = (id: string | number, status: string, notes?: string, remarks?: string) => {
   return api.patch<Application>(`/applications/${id}/status`, { status, notes, remarks });
 };
+
+export const resubmitApplicationDocument = (
+  id: string | number,
+  payload: { documentId: string; name: string; size?: string; fileData?: string; category?: string }
+) => {
+  return api.post<{ success: boolean; message: string; newStatus: string }>(`/applications/${id}/resubmit-document`, payload);
+};

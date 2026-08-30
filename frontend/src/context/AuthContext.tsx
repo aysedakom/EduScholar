@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       toast.success('Basic profile saved and synchronized with database!');
     } catch {
-      // Local fallback
+
       const updatedUser: User = {
         ...user,
         name: profile.fullName || user.name,
@@ -138,9 +138,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Stage 1: Send credentials, trigger OTP dispatch or legacy password redo prompt
-   */
   const loginRequest = async (email: string, password: string): Promise<LoginRequestResult> => {
     setApiError(null);
     try {
@@ -161,9 +158,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Stage 2: Verify OTP code and establish authenticated session
-   */
   const verifyOtp = async (email: string, otp: string, _targetRole: UserRole = 'student'): Promise<boolean> => {
     setApiError(null);
     try {
@@ -183,16 +177,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setApiError(null);
       return true;
     } catch (err: any) {
-      // If backend is offline or returned error during testing, check fallback
       const message = err?.response?.data?.message || err?.message || 'Invalid or expired verification code.';
       setApiError(message);
       throw new Error(message);
     }
   };
 
-  /**
-   * Resend fresh OTP code
-   */
   const resendOtp = async (email: string, purpose: string = 'login'): Promise<{ success: boolean; devOtp?: string }> => {
     try {
       const res = await authApi.resendOtp(email, purpose);
@@ -205,9 +195,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Authorize & Verify Email via Token Link
-   */
   const verifyEmailToken = async (token: string, email?: string): Promise<boolean> => {
     setApiError(null);
     try {
@@ -221,9 +208,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Verify Email with 6-digit Code (Applicant Email Activation)
-   */
   const verifyEmailCode = async (email: string, code: string): Promise<boolean> => {
     setApiError(null);
     try {
@@ -237,9 +221,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Resend Account Verification Link
-   */
+
   const resendVerification = async (email: string): Promise<{ success: boolean; devVerifyUrl?: string }> => {
     try {
       const res = await authApi.resendVerification(email);
@@ -252,9 +234,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Request password reset link (sends verification email)
-   */
+
   const forgotPassword = async (email: string): Promise<{ success: boolean; message: string; devResetUrl?: string }> => {
     setApiError(null);
     try {
@@ -270,9 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Complete password reset using verification token
-   */
+
   const resetPassword = async (token: string, newPassword: string, email?: string): Promise<{ success: boolean; message: string }> => {
     setApiError(null);
     try {
@@ -287,9 +265,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Update legacy non-compliant password and establish session
-   */
   const updateLegacyPassword = async (
     email: string,
     currentPassword: string,
@@ -321,9 +296,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Direct login helper (used for mock switcher & demo roles)
-   */
   const login = async (email: string, _password: string, targetRole: UserRole = 'student'): Promise<boolean> => {
     setApiError(null);
     try {
@@ -373,9 +345,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  /**
-   * Register user (creates account, triggers OTP email, DOES NOT auto-login)
-   */
   const register = async (
     name: string,
     email: string,
@@ -385,8 +354,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setApiError(null);
     try {
       const res = await authApi.register({ name, email, password, role: selectedRole });
-      
-      // Clear legacy global application storage so fresh accounts start with zero applications
+
       localStorage.removeItem('active_scholarship_application');
       localStorage.removeItem('student_active_app');
       localStorage.removeItem('student_applications');
