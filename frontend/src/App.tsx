@@ -35,6 +35,7 @@ import { AdminPartnerSchoolsPage } from './pages/admin/AdminPartnerSchoolsPage';
 
 import { ReportsModulePage } from './pages/admin/ReportsModulePage';
 import { StudentProfilesSearchPage } from './pages/admin/StudentProfilesSearchPage';
+import { ApplicationReviewQueuePage } from './pages/admin/ApplicationReviewQueuePage';
 
 // Supervisor & Staff Phase 5 Pages
 import { StudentEvaluationsPage } from './pages/supervisor/StudentEvaluationsPage';
@@ -140,8 +141,11 @@ export function App() {
               <Route path="/recommendations" element={<SmartRecommendationsPage />} />
               <Route path="/surveys" element={<SurveysPage />} />
 
-              {/* Admin & Staff Phase 4 & 8 Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['admin', 'system_admin']} />}>
+              {/* Admin, Supervisor & Staff Phase 4 & 8 Routes */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'system_admin']} />}>
+                <Route path="/admin/review-queue" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/review" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/queue" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/partner-schools" element={<AdminPartnerSchoolsPage />} />
                 <Route path="/admin/partners" element={<AdminPartnerSchoolsPage />} />
                 <Route path="/admin/scholarships" element={<ScholarshipsPage />} />
@@ -163,7 +167,8 @@ export function App() {
               </Route>
 
               {/* School Coordinator Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'system_admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'system_admin', 'admin']} />}>
+                <Route path="/school/portal" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/batch-verification" element={<BatchVerificationPage />} />
                 <Route path="/school/academic" element={<AcademicMonitoringPage />} />
