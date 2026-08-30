@@ -106,7 +106,7 @@ const resolveClientUrl = (req) => {
     return `https://${process.env.RAILWAY_STATIC_URL}`;
   }
   if (process.env.NODE_ENV === 'production') {
-    return 'https://eduscholar-production.up.railway.app';
+    return 'https://eduscholar.up.railway.app';
   }
   return 'http://localhost:5173';
 };
