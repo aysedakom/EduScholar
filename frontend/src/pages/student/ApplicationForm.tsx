@@ -254,12 +254,28 @@ export const ApplicationForm: React.FC = () => {
 
   const hasSpecialSector = Boolean(isPWD || isIndigenous || is4Ps || isSoloParent || isKasambahayOrToda);
 
-  const activeRequiredDocs = selectedProgram.requiredDocuments.filter((doc) => {
+  const selectedSchool = watch('school');
+  const isUnlistedSchool = selectedSchool?.includes('Other / School Not Listed');
+
+  const baseRequiredDocs = selectedProgram.requiredDocuments.filter((doc) => {
     if (doc.id === 'sectoral_proof') {
       return hasSpecialSector;
     }
     return true;
   });
+
+  const activeRequiredDocs = isUnlistedSchool
+    ? [
+        ...baseRequiredDocs,
+        {
+          id: 'unlisted_school_coe',
+          label: 'Certificate of Enrollment / Registration (Unlisted School)',
+          description: 'Official DepEd/CHED Certificate of Registration, Assessment Form, or Enrollment Certificate verifying your active student standing at your unlisted institution.',
+          isRequired: true,
+          accept: '.pdf,.jpg,.jpeg,.png',
+        },
+      ]
+    : baseRequiredDocs;
 
   const steps = [
     { id: 1, title: 'Basic Information', description: 'Personal & Contact Details', icon: User },

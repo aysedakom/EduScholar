@@ -123,11 +123,11 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
       setSelectedRole('system_admin');
     } else if (emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) {
       setSelectedRole('admin');
-    } else if (emailLower.includes('supervisor') || emailLower.startsWith('supervisor@')) {
+    } else if (emailLower === 'sv.edu2026@gmail.com' || emailLower.includes('supervisor') || emailLower.startsWith('supervisor@') || emailLower.startsWith('sv.')) {
       setSelectedRole('supervisor');
-    } else if (emailLower.includes('school') || emailLower.startsWith('school@')) {
+    } else if (emailLower === 'sr.edu2026@gmail.com' || emailLower.includes('school') || emailLower.startsWith('school@') || emailLower.startsWith('sr.')) {
       setSelectedRole('school_coordinator');
-    } else if (emailLower.includes('treasury') || emailLower.startsWith('treasury@')) {
+    } else if (emailLower === 'treasury.edu2026@gmail.com' || emailLower.includes('treasury') || emailLower.startsWith('treasury@')) {
       setSelectedRole('treasury');
     } else {
       setSelectedRole('student');
@@ -138,19 +138,21 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
     const emailLower = targetEmail.toLowerCase().trim();
     if (emailLower.includes('sysadmin') || emailLower.startsWith('sysadmin@')) return 'system_admin';
     if (emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) return 'admin';
-    if (emailLower.includes('supervisor') || emailLower.startsWith('supervisor@')) return 'supervisor';
-    if (emailLower.includes('school') || emailLower.startsWith('school@')) return 'school_coordinator';
-    if (emailLower.includes('treasury') || emailLower.startsWith('treasury@')) return 'treasury';
+    if (emailLower === 'sv.edu2026@gmail.com' || emailLower.includes('supervisor') || emailLower.startsWith('supervisor@') || emailLower.startsWith('sv.')) return 'supervisor';
+    if (emailLower === 'sr.edu2026@gmail.com' || emailLower.includes('school') || emailLower.startsWith('school@') || emailLower.startsWith('sr.')) return 'school_coordinator';
+    if (emailLower === 'treasury.edu2026@gmail.com' || emailLower.includes('treasury') || emailLower.startsWith('treasury@')) return 'treasury';
     return selectedRole || 'student';
   };
 
   const navigateAfterLogin = (roleToUse: UserRole) => {
-    if (roleToUse === 'admin') {
-      navigate('/dashboard', { replace: true });
+    if (roleToUse === 'admin' || roleToUse === 'supervisor') {
+      navigate('/admin/review-queue', { replace: true });
     } else if (roleToUse === 'system_admin') {
       navigate('/admin/super', { replace: true });
-    } else if (roleToUse === 'supervisor' || roleToUse === 'school_coordinator' || roleToUse === 'treasury') {
-      navigate('/dashboard', { replace: true });
+    } else if (roleToUse === 'treasury') {
+      navigate('/treasury/reconciliation', { replace: true });
+    } else if (roleToUse === 'school_coordinator') {
+      navigate('/school/portal', { replace: true });
     } else if (redirectParam && redirectParam !== '/education-scholarship') {
       navigate(redirectParam, { replace: true });
     } else {

@@ -19,6 +19,70 @@ import { toast } from 'sonner';
 import { ScholarshipAwardCertificateModal } from '../components/common/ScholarshipAwardCertificateModal';
 import { ExamSchedulePermitModal } from '../components/common/ExamSchedulePermitModal';
 
+// Real-time 5-Day Countdown Timer Component (Phase 4 Sub-Flow)
+const CountdownTimer: React.FC<{ submissionDate?: string }> = ({ submissionDate }) => {
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; minutes: number; seconds: number; expired: boolean }>({
+    days: 4,
+    hours: 23,
+    minutes: 59,
+    seconds: 59,
+    expired: false,
+  });
+
+  useEffect(() => {
+    const calculateTime = () => {
+      const baseDate = submissionDate ? new Date(submissionDate) : new Date();
+      // 5-day grace period
+      const deadline = new Date(baseDate.getTime() + 5 * 24 * 60 * 60 * 1000);
+      const diff = deadline.getTime() - new Date().getTime();
+
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0, expired: true });
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / 1000 / 60) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      setTimeLeft({ days, hours, minutes, seconds, expired: false });
+    };
+
+    calculateTime();
+    const interval = setInterval(calculateTime, 1000);
+    return () => clearInterval(interval);
+  }, [submissionDate]);
+
+  if (timeLeft.expired) {
+    return (
+      <span className="bg-rose-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+        🔴 Window Expired
+      </span>
+    );
+  }
+
+  const isUrgent = timeLeft.days === 0;
+  const isModerate = timeLeft.days <= 2;
+
+  return (
+    <span
+      className={`font-extrabold text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs ${
+        isUrgent
+          ? 'bg-rose-600 text-white animate-pulse'
+          : isModerate
+          ? 'bg-amber-600 text-white'
+          : 'bg-emerald-600 text-white'
+      }`}
+    >
+      <Clock className="h-3 w-3" />
+      <span>
+        Remaining: {timeLeft.days}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.minutes).padStart(2, '0')}m {String(timeLeft.seconds).padStart(2, '0')}s
+      </span>
+    </span>
+  );
+};
+
 export const ApplicationsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -231,13 +295,11 @@ export const ApplicationsPage: React.FC = () => {
                         <Clock className="h-5 w-5" />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-extrabold text-amber-950 dark:text-amber-200 text-xs">
                             Targeted Amendment Required (5-Day Correction Window)
                           </span>
-                          <span className="bg-amber-600 text-white font-extrabold text-[10px] px-2 py-0.5 rounded-full">
-                            Active Grace Period
-                          </span>
+                          <CountdownTimer submissionDate={app.submissionDate || app.submission_date} />
                         </div>
                         <p className="text-xs text-amber-900 dark:text-amber-300 mt-0.5">
                           {app.notes || 'The review committee flagged an incomplete or unclear document. Please resubmit the requested item.'}

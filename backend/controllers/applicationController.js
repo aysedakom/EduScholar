@@ -168,17 +168,25 @@ const createApplication = async (req, res) => {
         );
       }
 
-      // 3b. Staff/Admin notifications
-      const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin', 'school_coordinator')");
-      for (const admin of adminUsers.rows) {
+      // 3b. Staff/Admin/Coordinator notifications
+      const staffUsers = await pool.query("SELECT id, role FROM users WHERE role IN ('admin', 'system_admin', 'school_coordinator', 'supervisor')");
+      const isUnlistedSchool = formData?.school?.includes('Other') || Boolean(formData?.unlistedSchoolName);
+
+      for (const staff of staffUsers.rows) {
+        let notifTitle = `New Application: ${application.title || application.program_name}`;
+        let notifMsg = `Applicant ${formData?.firstName || req.user.name || 'Student'} (${req.user.email || 'student@qc.gov.ph'}) submitted an application for ${application.program_name}.`;
+        let notifLink = '/admin/review-queue';
+
+        if (isUnlistedSchool && staff.role === 'school_coordinator') {
+          notifTitle = `🏫 School Exception Review: ${formData?.unlistedSchoolName || 'Unlisted School'}`;
+          notifMsg = `Applicant ${formData?.firstName || 'Student'} requested Special Eligibility Review with attached Certificate of Enrollment.`;
+          notifLink = '/school/portal';
+        }
+
         await pool.query(
           `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
-           VALUES ($1, $2, $3, 'info', false, 'application_status', '/admin/review-queue')`,
-          [
-            admin.id,
-            `New Application: ${application.title || application.program_name}`,
-            `Applicant ${formData?.firstName || req.user.name || 'Student'} (${req.user.email || 'student@qc.gov.ph'}) submitted an application for ${application.program_name}.`
-          ]
+           VALUES ($1, $2, $3, 'info', false, 'application_status', $4)`,
+          [staff.id, notifTitle, notifMsg, notifLink]
         );
       }
 
