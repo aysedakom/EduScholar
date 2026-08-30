@@ -235,7 +235,7 @@ const updateStatus = async (id, status, notes, remarks) => {
           try {
             await pool.query(
               `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
-               VALUES ($1, $2, $3, 'success', false, 'scholarship_award', '/student/applications')`,
+               VALUES ($1, $2, $3, 'success', false, 'scholarship_award', '/applications')`,
               [
                 user.id,
                 `🎓 Congratulations! Official Scholar Award Conferred`,
@@ -248,6 +248,46 @@ const updateStatus = async (id, status, notes, remarks) => {
         }
       } catch (enrollErr) {
         console.error('[applicationModel] Auto-enrollment & Certificate error on approval:', enrollErr.message);
+      }
+    }
+
+    // Automatically notify applicant in system and email if Rejected / Disapproved
+    if (updatedApp && (statusLower === 'rejected' || statusLower === 'disapproved' || statusLower === 'denied')) {
+      try {
+        const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [updatedApp.user_id]);
+        const user = userRes.rows[0];
+        if (user) {
+          const programName = updatedApp.title || updatedApp.program_name || 'Quezon City Scholarship Program';
+          const appCode = updatedApp.application_code || updatedApp.reference_id || `APP-QC-${updatedApp.id}`;
+          const reasonText = remarks || notes || 'Documentary requirements, residency verification, or academic threshold criteria were not met.';
+
+          // 1. Create in-app notification for the student
+          await pool.query(
+            `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+             VALUES ($1, $2, $3, 'error', false, 'application_status', '/applications')`,
+            [
+              user.id,
+              `Scholarship Application Status: ${programName}`,
+              `Your application for ${programName} (${appCode}) was evaluated and not approved. Remarks: ${reasonText}`
+            ]
+          );
+
+          // 2. Dispatch rejection email
+          try {
+            await emailService.sendScholarshipRejectionEmail({
+              to: user.email,
+              name: user.name,
+              applicationCode: appCode,
+              programTitle: programName,
+              remarks: reasonText,
+              reviewDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            });
+          } catch (emailErr) {
+            console.warn('[applicationModel] Rejection email dispatch note:', emailErr.message);
+          }
+        }
+      } catch (rejectErr) {
+        console.error('[applicationModel] Rejection notification error:', rejectErr.message);
       }
     }
 

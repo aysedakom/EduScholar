@@ -6,7 +6,10 @@ import * as adminApi from '../api/admin';
 import { toast } from 'sonner';
 
 interface LoginRequestResult {
-  requireOtp: boolean;
+  requireOtp?: boolean;
+  requirePasswordReset?: boolean;
+  mustResetPassword?: boolean;
+  reason?: string;
   email: string;
   devOtp?: string;
   message?: string;
@@ -26,6 +29,7 @@ interface AuthContextType {
   resendVerification: (email: string) => Promise<{ success: boolean; devVerifyUrl?: string }>;
   forgotPassword: (email: string) => Promise<{ success: boolean; message: string; devResetUrl?: string }>;
   resetPassword: (token: string, newPassword: string, email?: string) => Promise<{ success: boolean; message: string }>;
+  updateLegacyPassword: (email: string, currentPassword: string, newPassword: string) => Promise<boolean>;
   login: (email: string, password: string, role?: UserRole) => Promise<boolean>;
   register: (name: string, email: string, password: string, role: UserRole) => Promise<{ success: boolean; email?: string; devVerifyUrl?: string; message?: string }>;
   logout: () => void;
@@ -135,14 +139,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   /**
-   * Stage 1: Send credentials, trigger OTP dispatch
+   * Stage 1: Send credentials, trigger OTP dispatch or legacy password redo prompt
    */
   const loginRequest = async (email: string, password: string): Promise<LoginRequestResult> => {
     setApiError(null);
     try {
       const res = await authApi.login(email, password);
       return {
-        requireOtp: res.data.requireOtp ?? true,
+        requireOtp: res.data.requireOtp,
+        requirePasswordReset: res.data.requirePasswordReset || res.data.mustResetPassword,
+        mustResetPassword: res.data.mustResetPassword || res.data.requirePasswordReset,
+        reason: res.data.reason,
         email: res.data.email || email,
         devOtp: res.data.devOtp,
         message: res.data.message,
@@ -275,6 +282,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return { success: true, message: msg };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Failed to reset password. The link may be expired.';
+      setApiError(message);
+      throw new Error(message);
+    }
+  };
+
+  /**
+   * Update legacy non-compliant password and establish session
+   */
+  const updateLegacyPassword = async (
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<boolean> => {
+    setApiError(null);
+    try {
+      const res = await authApi.updateLegacyPassword(email, currentPassword, newPassword);
+      if (res.data?.token && res.data?.user) {
+        const respUser = res.data.user;
+        const fullUser: User = {
+          ...respUser,
+          id: String(respUser.id),
+          hasCompletedBasicForm: true,
+        };
+        setUser(fullUser);
+        setRole(respUser.role);
+        setToken(res.data.token);
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user_profile', JSON.stringify(fullUser));
+        localStorage.setItem('user_role', respUser.role);
+      }
+      toast.success(res.data.message || 'Password successfully upgraded to the new security standard! 🎉');
+      return true;
+    } catch (err: any) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to update password. Please check requirements.';
       setApiError(message);
       throw new Error(message);
     }
@@ -422,6 +463,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         resendVerification,
         forgotPassword,
         resetPassword,
+        updateLegacyPassword,
         login,
         register,
         logout,

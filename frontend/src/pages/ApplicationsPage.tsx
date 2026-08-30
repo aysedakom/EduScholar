@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertCircle, Award } from 'lucide-react';
+import { AlertCircle, Award, XCircle } from 'lucide-react';
 import { getMyApplications } from '../api/applications';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -108,12 +108,15 @@ export const ApplicationsPage: React.FC = () => {
                       variant={
                         app.status === 'approved'
                           ? 'success'
-                          : app.status === 'pending'
-                            ? 'info'
-                            : 'warning'
+                          : app.status === 'rejected'
+                            ? 'destructive'
+                            : app.status === 'pending'
+                              ? 'info'
+                              : 'warning'
                       }
                     >
                       {app.status === 'approved' && 'Approved'}
+                      {app.status === 'rejected' && 'Not Approved'}
                       {app.status === 'pending' && 'Under Review'}
                       {app.status === 'action_required' && 'Action Required'}
                     </Badge>
@@ -157,7 +160,7 @@ export const ApplicationsPage: React.FC = () => {
 
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 space-y-1">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold block">Reviewer Notes</span>
-                  <p className="text-slate-600 dark:text-slate-300 text-[11px] line-clamp-2">{app.notes}</p>
+                  <p className="text-slate-600 dark:text-slate-300 text-[11px] line-clamp-2">{app.notes || 'Under review by QCYDO Secretariat.'}</p>
                 </div>
               </div>
 
@@ -190,6 +193,38 @@ export const ApplicationsPage: React.FC = () => {
                     className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0 shadow-xs"
                   >
                     View & Download Certificate
+                  </Button>
+                </div>
+              )}
+
+              {app.status === 'rejected' && (
+                <div className="p-4 rounded-2xl bg-rose-50/80 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-rose-600 text-white shadow-xs shrink-0">
+                      <XCircle className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-extrabold text-rose-950 dark:text-rose-200 text-xs">
+                          Application Evaluation Decision: Not Approved
+                        </span>
+                        <Badge variant="destructive" className="text-[9px] py-0 px-1.5">
+                          Ineligible for Current Term
+                        </Badge>
+                      </div>
+                      <p className="text-[11px] text-rose-800 dark:text-rose-300/90 mt-0.5 font-medium">
+                        {app.notes || 'Documentary requirements or academic threshold criteria were not met. You are welcome to submit updated documents in the next application window.'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/scholar-prog-available')}
+                    className="border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-bold text-xs shrink-0"
+                  >
+                    Browse Other Programs
                   </Button>
                 </div>
               )}

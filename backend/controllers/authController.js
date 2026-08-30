@@ -285,6 +285,21 @@ const login = async (req, res) => {
       });
     }
 
+    // Verify if existing password satisfies the enhanced security policy
+    const passwordCheck = validateStandardPassword(password, { name: user.name, email: user.email });
+    const isLegacyFormat = !passwordCheck.isValid || user.must_reset_password === true;
+
+    if (isLegacyFormat) {
+      return res.json({
+        requirePasswordReset: true,
+        mustResetPassword: true,
+        email: user.email,
+        name: user.name,
+        message: 'Security Policy Update: Your account password was created before our enhanced security standard was implemented. Please set a new secure password to continue.',
+        reason: passwordCheck.message || 'Password must be at least 12 characters and include uppercase, lowercase, numeric, and symbol characters.',
+      });
+    }
+
     // Credentials valid & email verified -> Generate unique 6-digit login OTP
     const otp = await otpModel.createOtp({
       email: user.email,
@@ -448,7 +463,7 @@ const forgotPassword = async (req, res) => {
     });
 
     const clientUrl = resolveClientUrl(req);
-    const resetUrl = `${clientUrl}/forgot-password?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
+    const resetUrl = `${clientUrl}/login?view=reset-password&token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
     // Dispatch verification link email
     emailService.sendPasswordResetEmail({
@@ -503,13 +518,62 @@ const resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     await userModel.updatePassword(targetEmail, hashedPassword);
 
+    // Issue JWT token and return user profile
+    const authToken = generateToken(user);
+
     res.json({
       success: true,
       message: 'Your password has been successfully reset. You can now sign in with your new password.',
+      token: authToken,
+      user: formatUserResponse(user),
     });
   } catch (error) {
     console.error('[authController] resetPassword error:', error);
     res.status(500).json({ message: 'Server error resetting password: ' + error.message });
+  }
+};
+
+// @desc   Update legacy password and establish authenticated session
+// @route  POST /api/auth/update-legacy-password
+const updateLegacyPassword = async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Email, current password, and new password are required.' });
+    }
+
+    const user = await userModel.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password).catch(() => false);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Current password verification failed.' });
+    }
+
+    // Validate new password against standard security policy
+    const pwdValidation = validateStandardPassword(newPassword, { name: user.name, email: user.email });
+    if (!pwdValidation.isValid) {
+      return res.status(400).json({ message: pwdValidation.message });
+    }
+
+    // Hash and store new password in PostgreSQL
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await userModel.updatePassword(user.email, hashedPassword);
+
+    // Issue JWT token and complete session establishment
+    const token = generateToken(user);
+    res.json({
+      success: true,
+      message: 'Your password has been successfully updated to the new standard security format! Welcome back.',
+      token,
+      user: formatUserResponse(user),
+    });
+  } catch (error) {
+    console.error('[authController] updateLegacyPassword error:', error);
+    res.status(500).json({ message: 'Server error updating password: ' + error.message });
   }
 };
 
@@ -522,6 +586,7 @@ module.exports = {
   resendOtp,
   forgotPassword,
   resetPassword,
+  updateLegacyPassword,
   me,
   updateProfile,
 };

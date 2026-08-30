@@ -10,6 +10,9 @@ export interface AuthResponse {
 
 export interface LoginRequestResponse {
   requireOtp?: boolean;
+  requirePasswordReset?: boolean;
+  mustResetPassword?: boolean;
+  reason?: string;
   email?: string;
   devOtp?: string;
   message: string;
@@ -69,7 +72,15 @@ export const forgotPassword = (email: string) => {
 };
 
 export const resetPassword = (token: string, newPassword: string, email?: string) => {
-  return api.post<{ success: boolean; message: string }>('/auth/reset-password', { token, newPassword, email });
+  return api.post<{ success: boolean; message: string; token?: string; user?: User }>('/auth/reset-password', { token, newPassword, email });
+};
+
+export const updateLegacyPassword = (email: string, currentPassword: string, newPassword: string) => {
+  return api.post<{ success: boolean; message: string; token?: string; user?: User }>('/auth/update-legacy-password', {
+    email,
+    currentPassword,
+    newPassword,
+  });
 };
 
 export const getMe = () => {

@@ -199,7 +199,7 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
 
           {/* Notifications Dropdown Panel */}
           {notifOpen && (
-            <div className="notif-panel absolute right-0 top-12 w-80 sm:w-96 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-xl z-50 animate-in fade-in duration-150">
+            <div className="notif-panel fixed sm:absolute right-3 sm:right-0 top-16 sm:top-12 w-[calc(100vw-24px)] max-w-sm sm:w-96 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-2xl z-50 animate-in fade-in duration-150">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5 mb-2">
                 <div className="flex items-center gap-2">
                   <h3 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">Notifications</h3>

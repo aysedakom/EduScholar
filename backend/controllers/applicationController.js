@@ -140,8 +140,22 @@ const createApplication = async (req, res) => {
       }
     }
 
-    // 3. Dispatch real-time notification to all staff/admin users
+    // 3. Dispatch real-time notification to applicant and staff/admin users
     try {
+      // 3a. Applicant notification
+      if (req.user && req.user.id) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+           VALUES ($1, $2, $3, 'success', false, 'application_status', '/applications')`,
+          [
+            req.user.id,
+            `Application Submitted: ${application.title || application.program_name}`,
+            `Your application for ${application.program_name} (Ref: ${application.application_code || application.reference_id || 'QCSP'}) has been successfully submitted and queued for verification.`
+          ]
+        );
+      }
+
+      // 3b. Staff/Admin notifications
       const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin', 'school_coordinator')");
       for (const admin of adminUsers.rows) {
         await pool.query(
@@ -150,12 +164,27 @@ const createApplication = async (req, res) => {
           [
             admin.id,
             `New Application: ${application.title || application.program_name}`,
-            `Applicant ${formData?.firstName || req.user.name || 'Student'} (${req.user.email}) submitted an application for ${application.program_name}.`
+            `Applicant ${formData?.firstName || req.user.name || 'Student'} (${req.user.email || 'student@qc.gov.ph'}) submitted an application for ${application.program_name}.`
           ]
         );
       }
+
+      // 3c. WebSocket broadcast
+      try {
+        const { broadcast } = require('../realtime/socketServer');
+        broadcast({
+          type: 'DB_EVENT',
+          channel: 'eduscholar_events',
+          table: 'applications',
+          action: 'INSERT',
+          record: application,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (wsErr) {
+        // ws optional
+      }
     } catch (notifErr) {
-      console.warn('[applicationController] Admin notification error:', notifErr.message);
+      console.warn('[applicationController] Notification error:', notifErr.message);
     }
 
     res.status(201).json(application);

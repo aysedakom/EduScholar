@@ -1,16 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ArrowLeft, ShieldCheck, RefreshCw, CheckCircle2, ArrowRight, KeyRound } from 'lucide-react';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  ArrowLeft,
+  ShieldCheck,
+  ShieldAlert,
+  RefreshCw,
+  CheckCircle2,
+  ArrowRight,
+  KeyRound,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import * as authApi from '../../api/auth';
 import { AuthBrandPanel } from '../../components/shared/AuthBrandPanel';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
+import { PasswordStrengthIndicator } from '../../components/common/PasswordStrengthIndicator';
+import { validateStandardPassword } from '../../utils/passwordValidation';
 import type { UserRole } from '../../types';
 
 interface LoginPageProps {
-  defaultView?: 'credentials' | 'forgot-password';
+  defaultView?: 'credentials' | 'forgot-password' | 'must-reset-password' | 'set-new-password';
 }
 
 export function LoginPage({ defaultView }: LoginPageProps = {}) {
@@ -18,12 +34,27 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const redirectParam = searchParams.get('redirect');
   const registeredParam = searchParams.get('registered') === 'true';
   const emailParam = searchParams.get('email') || '';
+  const tokenParam = searchParams.get('token') || '';
   const viewParam = searchParams.get('view');
 
-  // Stages: 'credentials' | 'otp' | 'forgot-password' | 'forgot-success'
-  const [stage, setStage] = useState<'credentials' | 'otp' | 'forgot-password' | 'forgot-success'>(
-    defaultView || (viewParam === 'forgot-password' ? 'forgot-password' : 'credentials')
-  );
+  // Stages:
+  // - 'credentials': Email & Password login
+  // - 'otp': 6-digit OTP verification
+  // - 'must-reset-password': Legacy password format redo prompt
+  // - 'forgot-password': Request reset link
+  // - 'forgot-success': Reset link email confirmation
+  // - 'set-new-password': Set new password with token
+  // - 'reset-success': Password update confirmation
+  const [stage, setStage] = useState<
+    'credentials' | 'otp' | 'must-reset-password' | 'forgot-password' | 'forgot-success' | 'set-new-password' | 'reset-success'
+  >(() => {
+    if (tokenParam || viewParam === 'reset-password' || viewParam === 'set-new-password') {
+      return 'set-new-password';
+    }
+    if (defaultView) return defaultView;
+    if (viewParam === 'forgot-password') return 'forgot-password';
+    return 'credentials';
+  });
   
   const [email, setEmail] = useState(emailParam || '');
   const [password, setPassword] = useState('');
@@ -31,6 +62,14 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const [selectedRole, setSelectedRole] = useState<UserRole>('student');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [policyReason, setPolicyReason] = useState('');
+
+  // Password Redo / Token Reset State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [resetError, setResetError] = useState('');
 
   // 6-digit OTP state
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
@@ -39,7 +78,7 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const [canResend, setCanResend] = useState<boolean>(false);
   const [isResending, setIsResending] = useState<boolean>(false);
 
-  const { loginRequest, verifyOtp, resendOtp, login } = useAuth();
+  const { loginRequest, verifyOtp, resendOtp, updateLegacyPassword, resetPassword, login } = useAuth();
   const navigate = useNavigate();
 
   // Handle prefilled email and role deduction
@@ -51,10 +90,14 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   }, [emailParam]);
 
   useEffect(() => {
-    if (viewParam === 'forgot-password' || defaultView === 'forgot-password') {
+    const tokenInUrl = searchParams.get('token');
+    const viewInUrl = searchParams.get('view');
+    if (tokenInUrl || viewInUrl === 'reset-password' || viewInUrl === 'set-new-password') {
+      setStage('set-new-password');
+    } else if (viewInUrl === 'forgot-password' || defaultView === 'forgot-password') {
       setStage('forgot-password');
     }
-  }, [viewParam, defaultView]);
+  }, [searchParams, defaultView]);
 
   // Countdown timer for Resend OTP
   useEffect(() => {
@@ -115,7 +158,7 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
     }
   };
 
-  // Stage 1: Validate credentials & request OTP
+  // Stage 1: Validate credentials & request OTP or intercept legacy password format
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
@@ -127,6 +170,20 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
 
     try {
       const result = await loginRequest(email, password);
+
+      // Check if user has an old format password that needs to be redone
+      if (result.requirePasswordReset || result.mustResetPassword) {
+        setStage('must-reset-password');
+        setPolicyReason(result.reason || 'Password must be at least 12 characters and include uppercase, lowercase, numeric, and symbol characters.');
+        setResetError('');
+        setNewPassword('');
+        setConfirmPassword('');
+        toast.info(result.message || 'Security Policy Update: Please create a new password meeting the updated security standard.', {
+          duration: 7000,
+        });
+        return;
+      }
+
       if (result.requireOtp) {
         setStage('otp');
         setOtpDigits(['', '', '', '', '', '']);
@@ -164,6 +221,79 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
         return;
       }
       setError(err.message || 'Invalid email or password.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handler: Submit Legacy Password Redo (Update to new secure format & sign in)
+  const handleLegacyPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+
+    if (!newPassword) {
+      setResetError('Please enter a new password.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError('Passwords do not match. Please ensure both fields are identical.');
+      return;
+    }
+
+    const validation = validateStandardPassword(newPassword, { email });
+    if (!validation.isValid) {
+      setResetError('Password must satisfy all standard security requirements (min 12 characters, uppercase, lowercase, numeric digit, and symbol).');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await updateLegacyPassword(email, password, newPassword);
+      const roleToUse = getRoleFromEmail(email);
+      navigateAfterLogin(roleToUse);
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to update password. Please check security requirements.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handler: Submit Token Reset Password (from email reset link)
+  const handleTokenResetSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+
+    const tokenToUse = tokenParam || searchParams.get('token') || '';
+    const emailToUse = email || searchParams.get('email') || '';
+
+    if (!tokenToUse) {
+      setResetError('Password reset token is missing. Please request a fresh reset link.');
+      return;
+    }
+
+    if (!newPassword) {
+      setResetError('Please enter your new password.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setResetError('Passwords do not match. Please re-enter.');
+      return;
+    }
+
+    const validation = validateStandardPassword(newPassword, { email: emailToUse });
+    if (!validation.isValid) {
+      setResetError('Password must satisfy all standard security requirements (min 12 characters, uppercase, lowercase, number, symbol).');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await resetPassword(tokenToUse, newPassword, emailToUse);
+      setStage('reset-success');
+    } catch (err: any) {
+      setResetError(err.message || 'Failed to reset password. The link may be expired.');
     } finally {
       setIsLoading(false);
     }
@@ -632,6 +762,298 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                 </Button>
               </form>
             </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STAGE 5: INLINE LEGACY PASSWORD REDO / UPGRADE VIEW */}
+          {/* ========================================================================= */}
+          {stage === 'must-reset-password' && (
+            <>
+              {/* Header */}
+              <div className="space-y-1.5">
+                <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200/60 shadow-xs mb-1">
+                  <ShieldAlert className="h-5 w-5" />
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider">
+                  <Sparkles className="h-3 w-3" />
+                  <span>Security Standard Update</span>
+                </div>
+                <h2 className="font-heading text-2xl font-bold text-slate-900">Create New Password</h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Your account was created before our enhanced password security policy was enforced. Please create a new password meeting the updated standard to secure your profile and proceed.
+                </p>
+                {policyReason && (
+                  <div className="mt-1 p-2.5 rounded-xl bg-amber-100/70 border border-amber-200 text-[11px] font-medium text-amber-900 flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <span>{policyReason}</span>
+                  </div>
+                )}
+              </div>
+
+              {resetError && (
+                <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 space-y-1">
+                  <p>{resetError}</p>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleLegacyPasswordSubmit} className="space-y-4">
+                
+                {/* New Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="new_password" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    New Standard Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="new_password"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new strong password"
+                      leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
+                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
+                      required
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Password Strength Indicator & Checklist */}
+                <PasswordStrengthIndicator
+                  password={newPassword}
+                  userContext={{ name: email.split('@')[0], email }}
+                  showChecklist={true}
+                />
+
+                {/* Confirm New Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="confirm_password" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="confirm_password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
+                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit & Return buttons */}
+                <div className="pt-2 space-y-2.5">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Update Password & Sign In</span>
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage('credentials');
+                      setResetError('');
+                      setPassword('');
+                    }}
+                    className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline cursor-pointer py-1 block"
+                  >
+                    ← Cancel & Return to Sign In
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STAGE 6: INLINE SET NEW PASSWORD (FROM RESET TOKEN) */}
+          {/* ========================================================================= */}
+          {stage === 'set-new-password' && (
+            <>
+              {/* Header */}
+              <div className="space-y-1.5">
+                <div className="h-11 w-11 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-200/60 shadow-xs mb-1">
+                  <KeyRound className="h-5 w-5" />
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">
+                  <CheckCircle2 className="h-3 w-3" />
+                  <span>Identity Verified</span>
+                </div>
+                <h2 className="font-heading text-2xl font-bold text-slate-900">Set New Password</h2>
+                <p className="text-xs text-slate-500">
+                  {email || searchParams.get('email') ? (
+                    <>Creating new password for <strong className="text-slate-800">{email || searchParams.get('email')}</strong>.</>
+                  ) : (
+                    'Enter your new password below to update your account credentials.'
+                  )}
+                </p>
+              </div>
+
+              {resetError && (
+                <div className="p-3.5 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 space-y-1.5">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <div>
+                      <p>{resetError}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStage('forgot-password');
+                          setResetError('');
+                        }}
+                        className="text-rose-800 underline font-bold mt-1 inline-block"
+                      >
+                        Request a fresh reset link →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Form */}
+              <form onSubmit={handleTokenResetSubmit} className="space-y-4">
+                
+                {/* New Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="token_new_password" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    New Standard Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="token_new_password"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new strong password"
+                      leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
+                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
+                      required
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Live Password Strength Indicator & Checklist */}
+                <PasswordStrengthIndicator
+                  password={newPassword}
+                  userContext={{ email: email || searchParams.get('email') || '' }}
+                  showChecklist={true}
+                />
+
+                {/* Confirm New Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="token_confirm_password" className="block text-[10px] font-bold tracking-wider uppercase text-slate-400">
+                    Confirm New Password
+                  </label>
+                  <div className="relative">
+                    <Input
+                      id="token_confirm_password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
+                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Submit & Return buttons */}
+                <div className="pt-2 space-y-2.5">
+                  <Button
+                    type="submit"
+                    isLoading={isLoading}
+                    className="w-full py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    <span>Save New Password & Sign In</span>
+                  </Button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStage('credentials');
+                      setResetError('');
+                    }}
+                    className="w-full text-center text-xs font-bold text-slate-500 hover:text-slate-700 hover:underline cursor-pointer py-1 block"
+                  >
+                    ← Return to Sign In
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
+
+          {/* ========================================================================= */}
+          {/* STAGE 7: INLINE PASSWORD RESET SUCCESS CONFIRMATION */}
+          {/* ========================================================================= */}
+          {stage === 'reset-success' && (
+            <div className="text-center space-y-5 py-3 animate-in fade-in">
+              <div className="h-16 w-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200 shadow-md">
+                <CheckCircle2 className="h-9 w-9" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="font-heading text-2xl font-extrabold text-slate-900">
+                  Password Reset Complete!
+                </h2>
+                <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
+                  Your account password has been successfully updated in our system to the new standard security format.
+                </p>
+              </div>
+
+              <div className="pt-2">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    setStage('credentials');
+                    setPassword('');
+                    setError('');
+                  }}
+                  variant="primary"
+                  size="lg"
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
+                  className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold shadow-md rounded-xl cursor-pointer"
+                >
+                  Proceed to Sign In
+                </Button>
+              </div>
+            </div>
           )}
 
         </div>

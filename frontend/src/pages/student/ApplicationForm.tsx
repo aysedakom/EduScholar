@@ -39,6 +39,7 @@ import {
   saveActiveStudentApplication,
   type ScholarshipProgramSpec,
 } from '../../utils/scholarshipPrograms';
+import { sendSystemScholarshipNotice } from '../../utils/systemNotifications';
 
 // List of accredited Quezon City Universities, Colleges & HEIs
 export const QC_SCHOOLS = [
@@ -449,6 +450,21 @@ export const ApplicationForm: React.FC = () => {
         localStorage.setItem('vault_uploaded_documents', JSON.stringify([...newVaultItems, ...currentVaultDocs]));
       } catch (e) {
         console.error('Vault LocalStorage error:', e);
+      }
+
+      // 4. Record student in-app notification
+      try {
+        sendSystemScholarshipNotice({
+          recipientStudentId: data.studentId || 'STUDENT',
+          recipientStudentName: `${data.firstName} ${data.lastName}`,
+          recipientEmail: data.email,
+          scholarshipTitle: selectedProgram.title,
+          subject: `Application Submitted: ${selectedProgram.title}`,
+          message: `Your scholarship application (${generatedRefId}) for ${selectedProgram.title} has been successfully filed. All ${activeRequiredDocs.length} required documents have been received and are queued for review.`,
+          category: 'Document Compliance',
+        });
+      } catch (notifErr) {
+        console.warn('System notification record note:', notifErr);
       }
 
       setSubmittedApp(newApplicationRecord);

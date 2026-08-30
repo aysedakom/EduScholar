@@ -186,7 +186,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
   const [applications, setApplications] = useState<ReviewApplication[]>(INITIAL_REVIEW_QUEUE);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'flagged' | 'Submitted' | 'Under Review' | 'Approved' | 'Rejected'>('all');
+  const [statusFilter, setStatusFilter] = useState<'pending' | 'flagged' | 'Approved' | 'Rejected' | 'all'>('pending');
   const [programFilter, setProgramFilter] = useState<string>(() => {
     if (initialProgramFilter) return initialProgramFilter;
     if (urlProgram) return urlProgram;
@@ -238,14 +238,23 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
       (app.school && app.school.toLowerCase().includes(searchQuery.toLowerCase()));
     
     const matchesStatus =
-      statusFilter === 'all' ||
-      (statusFilter === 'flagged' && app.complianceFlags.length > 0) ||
-      app.status === statusFilter;
+      statusFilter === 'all'
+        ? true
+        : statusFilter === 'pending'
+        ? (app.status !== 'Approved' && app.status !== 'Rejected')
+        : statusFilter === 'flagged'
+        ? app.complianceFlags.length > 0
+        : app.status === statusFilter;
 
     const matchesProg = matchesProgram(app, programFilter);
 
     return matchesSearch && matchesStatus && matchesProg;
   });
+
+  const pendingCount = applications.filter((a) => a.status !== 'Approved' && a.status !== 'Rejected').length;
+  const approvedCount = applications.filter((a) => a.status === 'Approved').length;
+  const rejectedCount = applications.filter((a) => a.status === 'Rejected').length;
+  const flaggedCount = applications.filter((a) => a.complianceFlags.length > 0).length;
 
   const handleApprove = async (id: string) => {
     const approvedNotes = reviewNotes || 'All documentary attachments verified and approved by QCYDO Review Committee.';
@@ -254,7 +263,10 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
     if (appRecord?.dbId) {
       try {
         await updateApplicationStatus(appRecord.dbId, 'Approved', approvedNotes, approvedNotes);
-        toast.success(`Application ${id} APPROVED in database!`);
+        toast.success(`Application #${id} Approved!`, {
+          description: `Applicant ${appRecord.studentName} has been enrolled into the Student Registry. System notification & award certificate email dispatched.`,
+          duration: 8000,
+        });
       } catch (err) {
         console.error(err);
         toast.error('Failed to update status in PostgreSQL');
@@ -293,7 +305,10 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
     if (appToReject?.dbId) {
       try {
         await updateApplicationStatus(appToReject.dbId, 'Rejected', rejectNotes, rejectNotes);
-        toast.error(`Application ${id} REJECTED in database!`);
+        toast.error(`Application #${id} Rejected`, {
+          description: `Applicant ${appToReject.studentName} has been archived. Status update notification and email notice dispatched.`,
+          duration: 8000,
+        });
       } catch (err) {
         console.error(err);
         toast.error('Failed to reject application in PostgreSQL');
@@ -341,11 +356,11 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Application Review Queue</h1>
             <Badge variant="warning">
-              {applications.filter((a) => a.status !== 'Approved' && a.status !== 'Rejected').length} Total Pending
+              {pendingCount} Pending Review
             </Badge>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-            Review student eligibility credentials, verify document compliance flags, and render approval decisions.
+            Review student eligibility credentials, verify document compliance flags, and render approval decisions. Processed applications automatically advance and notify applicants via system alert and official email.
           </p>
         </div>
 
@@ -431,12 +446,11 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           {/* Status Tabs */}
           <div className="flex flex-wrap gap-1.5">
             {[
-              { id: 'all', label: 'All Status' },
-              { id: 'flagged', label: 'Flagged' },
-              { id: 'Submitted', label: 'Submitted' },
-              { id: 'Under Review', label: 'Under Review' },
-              { id: 'Approved', label: 'Approved' },
-              { id: 'Rejected', label: 'Rejected' },
+              { id: 'pending', label: `Pending Queue (${pendingCount})` },
+              { id: 'Approved', label: `Approved (${approvedCount})` },
+              { id: 'Rejected', label: `Rejected (${rejectedCount})` },
+              { id: 'flagged', label: `Flagged (${flaggedCount})` },
+              { id: 'all', label: `All (${applications.length})` },
             ].map((tab) => (
               <button
                 key={tab.id}

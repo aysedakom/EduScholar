@@ -14,6 +14,7 @@ router.post('/verify-otp', authLimiter, authController.verifyOtp);
 router.post('/resend-otp', authLimiter, authController.resendOtp);
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authLimiter, authController.resetPassword);
+router.post('/update-legacy-password', authLimiter, authController.updateLegacyPassword);
 
 // Authenticated session endpoints
 router.get('/me', authMiddleware, authController.me);

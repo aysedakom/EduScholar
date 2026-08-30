@@ -140,6 +140,15 @@
   letter-spacing: 0.1em;
 }
 
+/* Prevent auto-zoom on iOS/Android input focus (<16px causes viewport zoom shift) */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* Scrollbar styles */
 ::-webkit-scrollbar {
   width: 6px;

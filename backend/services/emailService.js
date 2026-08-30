@@ -766,6 +766,180 @@ async function sendScholarshipAwardCertificateEmail({
   };
 }
 
+/**
+ * Generates an official, encouraging HTML email template for Scholarship Application Rejection / Ineligibility Status
+ */
+function generateScholarshipRejectionEmailHtml({
+  name,
+  applicationCode,
+  programTitle,
+  remarks,
+  reviewDate,
+}) {
+  const dateStr = reviewDate || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const appCode = applicationCode || 'QCSP-APP-2026';
+  const reasonText = remarks || 'Documentary requirements, residency verification, or academic threshold criteria were not fulfilled for this specific scholarship category.';
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scholarship Application Status Update - Quezon City Government</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f1f5f9; margin: 0; padding: 24px; color: #1e293b; }
+    .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
+    .header-banner { background: linear-gradient(135deg, #0A1628 0%, #1e293b 100%); padding: 32px 24px; text-align: center; color: #ffffff; }
+    .header-banner h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.5px; }
+    .header-banner p { margin: 6px 0 0 0; font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #94a3b8; }
+    .content-body { padding: 32px 28px; }
+    .status-title { font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .status-desc { font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 20px; }
+    
+    .status-card { background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 12px; padding: 18px 20px; margin: 20px 0; }
+    .status-card-header { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #991b1b; margin-bottom: 6px; }
+    .status-card-remarks { font-size: 13px; color: #7f1d1d; line-height: 1.5; font-weight: 500; }
+    
+    .meta-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin: 20px 0; font-size: 12px; }
+    .meta-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #edf2f7; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { color: #64748b; font-weight: 600; }
+    .meta-val { color: #0f172a; font-weight: 700; }
+
+    .next-steps-box { background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 10px; padding: 16px 20px; margin: 24px 0; font-size: 12px; color: #1e40af; line-height: 1.6; }
+    .footer-bar { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 24px; text-align: center; font-size: 11px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header-banner">
+      <h1>QUEZON CITY GOVERNMENT</h1>
+      <p>Quezon City Youth Development Office (QCYDO)</p>
+    </div>
+
+    <div class="content-body">
+      <div class="status-title">Dear ${name},</div>
+      <div class="status-desc">
+        Thank you for your interest and for submitting your application for the <strong>${programTitle}</strong> under the Quezon City Scholarship Program for Academic Year 2026–2027.
+        <br><br>
+        After thorough evaluation by the QCYDO Screening and Verification Committee, we regret to inform you that your application was <strong>not approved</strong> in this intake cycle.
+      </div>
+
+      <div class="status-card">
+        <div class="status-card-header">Evaluation Committee Remarks & Status</div>
+        <div class="status-card-remarks">${reasonText}</div>
+      </div>
+
+      <div class="meta-box">
+        <div class="meta-row">
+          <span class="meta-label">Application Code:</span>
+          <span class="meta-val">${appCode}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Scholarship Category:</span>
+          <span class="meta-val">${programTitle}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Review Date:</span>
+          <span class="meta-val">${dateStr}</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Decision:</span>
+          <span class="meta-val" style="color: #dc2626;">Not Passed / Ineligible for Current Batch</span>
+        </div>
+      </div>
+
+      <div class="next-steps-box">
+        <strong>💡 Future Opportunities & Next Steps:</strong><br>
+        1. You are welcome to re-apply for upcoming semester intakes once the criteria or required documents have been updated.<br>
+        2. You may explore alternative Quezon City bursaries and special financial grants through the <strong>EduScholar Campus Aid Hub</strong>.<br>
+        3. If you believe this evaluation was made in error or have updated credentials, you may visit the QCYDO Help Desk at QC Hall or file an inquiry in the portal.
+      </div>
+    </div>
+
+    <div class="footer-bar">
+      This is an official automated notification from Quezon City Youth Development Office.<br>
+      © 2026 City Government of Quezon City. All rights reserved.
+    </div>
+  </div>
+</body>
+</html>
+  `;
+}
+
+/**
+ * Dispatches the official Scholarship Application Rejection / Ineligibility Status Email
+ */
+async function sendScholarshipRejectionEmail({
+  to,
+  name,
+  applicationCode,
+  programTitle,
+  remarks,
+  reviewDate,
+}) {
+  const appCode = applicationCode || 'QCSP-APP-2026';
+  const subject = `📋 [APPLICATION STATUS] Quezon City Scholarship Decision - ${name} (${appCode})`;
+  const htmlContent = generateScholarshipRejectionEmailHtml({
+    name,
+    applicationCode: appCode,
+    programTitle,
+    remarks,
+    reviewDate,
+  });
+  const textContent = `Dear ${name}, your application for ${programTitle} (${appCode}) has been evaluated. Status: Not Approved. Remarks: ${remarks || 'Criteria threshold not met.'}. You may re-apply in future intake cycles through the EduScholar Portal.`;
+
+  // 1. Try Brevo REST API
+  if (process.env.BREVO_API_KEY) {
+    try {
+      const apiResult = await sendViaBrevoApi({ to, toName: name, subject, htmlContent, textContent });
+      console.log(`[EmailService] ✅ Rejection status notice emailed via Brevo API to ${to} (MessageId: ${apiResult.messageId})`);
+      logEmailToDatabase({ recipientEmail: to, recipientName: name, emailType: 'scholarship_rejection_notice', subject, codeOrUrl: appCode, dispatchMethod: 'brevo_api' });
+      return { success: true, method: 'brevo_api', messageId: apiResult.messageId };
+    } catch (apiErr) {
+      console.warn(`[EmailService] ⚠️ Brevo API failed (${apiErr.message}), trying SMTP fallback...`);
+    }
+  }
+
+  // 2. Try SMTP Transporter
+  const transporter = getSmtpTransporter();
+  if (transporter) {
+    try {
+      const info = await transporter.sendMail({
+        from: `"${SENDER_NAME}" <${SENDER_EMAIL}>`,
+        to,
+        subject,
+        text: textContent,
+        html: htmlContent,
+      });
+      console.log(`[EmailService] ✅ Rejection status notice emailed via SMTP to ${to} (MessageId: ${info.messageId})`);
+      logEmailToDatabase({ recipientEmail: to, recipientName: name, emailType: 'scholarship_rejection_notice', subject, codeOrUrl: appCode, dispatchMethod: 'smtp' });
+      return { success: true, method: 'smtp', messageId: info.messageId };
+    } catch (smtpErr) {
+      console.warn(`[EmailService] ⚠️ SMTP transport failed: ${smtpErr.message}`);
+    }
+  }
+
+  // 3. Local Development Simulation Fallback
+  console.log('====================================================');
+  console.log('  📋 📧 [EMAIL SERVICE - APPLICATION STATUS NOTIFICATION (NOT PASSED)]');
+  console.log(`  To:           ${to} (${name || 'Applicant'})`);
+  console.log(`  Subject:      ${subject}`);
+  console.log(`  📁 APP CODE:  [ ${appCode} ]`);
+  console.log(`  📚 PROGRAM:   ${programTitle}`);
+  console.log(`  📝 REMARKS:   ${remarks || 'Threshold not met'}`);
+  console.log('====================================================');
+
+  logEmailToDatabase({ recipientEmail: to, recipientName: name, emailType: 'scholarship_rejection_notice', subject, codeOrUrl: appCode, dispatchMethod: 'simulation' });
+
+  return {
+    success: true,
+    method: 'simulation',
+    applicationCode: appCode,
+  };
+}
+
 module.exports = {
   sendVerificationLinkEmail,
   generateVerificationLinkEmailHtml,
@@ -775,5 +949,8 @@ module.exports = {
   generatePasswordResetEmailHtml,
   sendScholarshipAwardCertificateEmail,
   generateScholarshipAwardCertificateHtml,
+  sendScholarshipRejectionEmail,
+  generateScholarshipRejectionEmailHtml,
 };
+
 

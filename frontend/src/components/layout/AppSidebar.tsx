@@ -22,7 +22,8 @@ import {
   KeyRound,
   Activity,
   FileCode,
-  HardDrive
+  HardDrive,
+  X
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -199,21 +200,22 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
   return (
     <aside
       className={cn(
-        'flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 font-sans shadow-xl transition-all duration-300 ease-in-out z-40 shrink-0 h-full',
-        'fixed inset-y-0 left-0 lg:static lg:h-full',
+        'flex flex-col bg-slate-900 border-r border-slate-800 text-slate-300 font-sans shadow-2xl transition-all duration-300 ease-in-out z-50 shrink-0',
+        'fixed inset-y-0 left-0 h-[100dvh] lg:static lg:h-full',
+        'w-[280px] sm:w-72 max-w-[85vw] lg:max-w-none',
         mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
-        collapsed ? 'w-20' : 'w-64'
+        collapsed ? 'lg:w-20' : 'lg:w-64'
       )}
     >
       {/* Brand Header */}
-      <div className="flex h-16 shrink-0 items-center border-b border-slate-800/80 bg-slate-900 px-4 gap-3">
-        <img
-          src="/logo-system.png"
-          alt="GovServe Logo"
-          className="h-10 w-10 min-w-[40px] min-h-[40px] object-contain bg-blue-600/25 p-0.5 rounded-full border border-blue-500/40 shadow-md shrink-0 transition-transform hover:scale-105"
-        />
-        {!collapsed && (
-          <div className="flex flex-col min-w-0 truncate">
+      <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-900 px-4 gap-3">
+        <div className="flex items-center gap-3 min-w-0 truncate">
+          <img
+            src="/logo-system.png"
+            alt="GovServe Logo"
+            className="h-10 w-10 min-w-[40px] min-h-[40px] object-contain bg-blue-600/25 p-0.5 rounded-full border border-blue-500/40 shadow-md shrink-0 transition-transform hover:scale-105"
+          />
+          <div className={cn('flex flex-col min-w-0 truncate', collapsed ? 'lg:hidden' : 'flex')}>
             <span className="font-heading font-black text-base text-white tracking-tight leading-none truncate">
               GovServe
             </span>
@@ -221,7 +223,17 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
               Campus Aid Hub
             </span>
           </div>
-        )}
+        </div>
+
+        {/* Mobile Close Button (Touch target min 44x44) */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close navigation sidebar"
+          className="flex lg:hidden p-2 rounded-xl text-slate-400 hover:text-white bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 transition-colors cursor-pointer shrink-0"
+        >
+          <X className="h-5 w-5" />
+        </button>
       </div>
 
       {/* Navigation Groups Container */}
@@ -237,13 +249,15 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
 
           return (
             <div key={group.label} className="space-y-1.5">
-              {!collapsed ? (
-                <p className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate">
-                  {groupLabel}
-                </p>
-              ) : (
-                <div className="h-px bg-slate-800/80 my-2 mx-1" title={groupLabel} />
-              )}
+              <p
+                className={cn(
+                  'px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 truncate',
+                  collapsed ? 'lg:hidden' : 'block'
+                )}
+              >
+                {groupLabel}
+              </p>
+              {collapsed && <div className="hidden lg:block h-px bg-slate-800/80 my-2 mx-1" title={groupLabel} />}
 
               <div className="space-y-1">
                 {visibleItems.map((item) => {
@@ -258,20 +272,29 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
                       title={collapsed ? itemLabel : undefined}
                       className={({ isActive }) =>
                         cn(
-                          'group flex items-center rounded-xl transition-all duration-150',
-                          collapsed ? 'justify-center p-2.5' : 'justify-between px-3 py-2 text-xs font-bold',
+                          'group flex items-center rounded-xl transition-all duration-150 min-h-[42px]',
+                          collapsed
+                            ? 'lg:justify-center lg:p-2.5 justify-between px-3 py-2 text-xs font-bold'
+                            : 'justify-between px-3 py-2 text-xs font-bold',
                           isActive
                             ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                             : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
                         )
                       }
                     >
-                      <div className={cn('flex items-center min-w-0', collapsed ? 'justify-center' : 'gap-2.5')}>
-                        <Icon className={cn('shrink-0 transition-transform group-hover:scale-110', collapsed ? 'h-5 w-5' : 'h-4 w-4')} />
-                        {!collapsed && <span className="truncate">{itemLabel}</span>}
+                      <div className={cn('flex items-center min-w-0', collapsed ? 'lg:justify-center gap-2.5' : 'gap-2.5')}>
+                        <Icon className={cn('shrink-0 transition-transform group-hover:scale-110', collapsed ? 'lg:h-5 lg:w-5 h-4 w-4' : 'h-4 w-4')} />
+                        <span className={cn('truncate', collapsed ? 'lg:hidden inline' : 'inline')}>
+                          {itemLabel}
+                        </span>
                       </div>
-                      {!collapsed && item.badge && (
-                        <span className="rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-blue-300 border border-blue-400/30">
+                      {item.badge && (
+                        <span
+                          className={cn(
+                            'rounded-md bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-extrabold text-blue-300 border border-blue-400/30',
+                            collapsed ? 'lg:hidden inline' : 'inline'
+                          )}
+                        >
                           {item.badge}
                         </span>
                       )}

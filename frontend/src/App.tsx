@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'sonner';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -80,6 +79,7 @@ import { SecurityManagementPage } from './pages/admin/SecurityManagementPage';
 import { AdvancedAnalyticsPage } from './pages/admin/AdvancedAnalyticsPage';
 
 import { WebSocketProvider } from './context/WebSocketContext';
+import { ResponsiveToaster } from './components/common/ResponsiveToaster';
 
 export function App() {
   return (
@@ -87,7 +87,7 @@ export function App() {
       <LanguageProvider>
         <AuthProvider>
           <WebSocketProvider>
-            <Toaster position="top-right" richColors />
+            <ResponsiveToaster />
             <BrowserRouter>
           <Routes>
           {/* Public Unauthenticated Routes */}
@@ -113,6 +113,7 @@ export function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-email" element={<VerifyEmailPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ForgotPasswordPage />} />
 
           <Route path="/renewal" element={<OneClickRenewalPage />} />
           <Route path="/student/renewal" element={<OneClickRenewalPage />} />

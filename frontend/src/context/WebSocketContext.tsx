@@ -53,15 +53,57 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
               tableSubs.forEach((cb) => cb(dbEvent));
             }
 
-            // Real-time user toast feedback for key events
+            // Trigger custom event so header notification bell badge updates in real time
+            window.dispatchEvent(new Event('qc_new_notification'));
+
+            // Real-time user popout toast feedback for key application & notification events
             if (dbEvent.table === 'applications') {
+              const rec = dbEvent.record || {};
+              const appCode = rec.application_code || rec.reference_id || 'QCSP-APP';
+              const progName = rec.program_name || rec.title || 'Scholarship Program';
+
               if (dbEvent.action === 'INSERT') {
-                toast.info(`New Application Filed: ${dbEvent.record.application_code || dbEvent.record.program_name}`);
+                toast.success('Scholarship Application Submitted', {
+                  description: `Application for ${progName} (${appCode}) has been registered and is under verification.`,
+                  duration: 8000,
+                });
               } else if (dbEvent.action === 'UPDATE') {
-                toast.success(`Application Updated: ${dbEvent.record.application_code || ''} [Status: ${dbEvent.record.status}]`);
+                const rawStatus = String(rec.status || '').toLowerCase();
+                if (rawStatus === 'approved' || rawStatus === 'granted') {
+                  toast.success('🎉 Application Approved!', {
+                    description: `Congratulations! Your application for ${progName} has passed and been approved. Proceed to your Document Vault for your Official Award Certificate.`,
+                    duration: 10000,
+                  });
+                } else if (rawStatus === 'rejected' || rawStatus === 'disapproved' || rawStatus === 'denied') {
+                  toast.error('Application Status Update', {
+                    description: `Your application for ${progName} was not approved. Remarks: ${rec.remarks || rec.notes || 'Documentary requirements or qualification criteria not met.'}`,
+                    duration: 10000,
+                  });
+                } else {
+                  toast.info(`Application Status: ${rec.status}`, {
+                    description: `Application (${appCode}) is now ${rec.status}.`,
+                    duration: 6000,
+                  });
+                }
               }
             } else if (dbEvent.table === 'notifications') {
-              toast.info(`Portal Notice: ${dbEvent.record.title || 'New update available'}`);
+              const notif = dbEvent.record || {};
+              if (notif.type === 'success') {
+                toast.success(notif.title || 'Portal Notice', {
+                  description: notif.message,
+                  duration: 8000,
+                });
+              } else if (notif.type === 'error') {
+                toast.error(notif.title || 'Portal Alert', {
+                  description: notif.message,
+                  duration: 8000,
+                });
+              } else {
+                toast.info(notif.title || 'Portal Notice', {
+                  description: notif.message,
+                  duration: 7000,
+                });
+              }
             } else if (dbEvent.table === 'school_aid_distributions') {
               toast.success(`Disbursement Update: Batch ${dbEvent.record.batch_code} is now ${dbEvent.record.status}`);
             }
