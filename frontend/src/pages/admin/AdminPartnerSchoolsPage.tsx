@@ -136,10 +136,14 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
           return (
             sName.includes(targetName) ||
             targetName.includes(sName) ||
-            (targetName.includes('quezon city university') && sName.includes('qcu')) ||
-            (targetName.includes('university of the philippines') && sName.includes('up')) ||
-            (targetName.includes('polytechnic') && sName.includes('pup')) ||
-            (targetName.includes('ust') && sName.includes('santo tomas'))
+            (targetName.includes('quezon city university') && (sName.includes('qcu') || sName.includes('quezon city university'))) ||
+            (targetName.includes('bestlink') && (sName.includes('bcp') || sName.includes('bestlink'))) ||
+            (targetName.includes('university of the philippines') && (sName.includes('up') || sName.includes('diliman'))) ||
+            (targetName.includes('polytechnic') && (sName.includes('pup') || sName.includes('polytechnic'))) ||
+            (targetName.includes('ateneo') && sName.includes('ateneo')) ||
+            (targetName.includes('feu') && (sName.includes('feu') || sName.includes('far eastern'))) ||
+            (targetName.includes('tip') && (sName.includes('tip') || sName.includes('technological institute'))) ||
+            (targetName.includes('ust') && (sName.includes('ust') || sName.includes('santo tomas')))
           );
         });
         setSchoolScholars(matched);

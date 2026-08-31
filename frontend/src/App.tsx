@@ -141,13 +141,18 @@ export function App() {
               <Route path="/recommendations" element={<SmartRecommendationsPage />} />
               <Route path="/surveys" element={<SurveysPage />} />
 
+              {/* Partner Schools Database (Admin, Supervisor, System Admin, School Coordinator) */}
+              <Route element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'system_admin', 'school_coordinator']} />}>
+                <Route path="/admin/partner-schools" element={<AdminPartnerSchoolsPage />} />
+                <Route path="/admin/partners" element={<AdminPartnerSchoolsPage />} />
+                <Route path="/school/partner-schools" element={<AdminPartnerSchoolsPage />} />
+              </Route>
+
               {/* Admin, Supervisor & Staff Phase 4 & 8 Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'system_admin']} />}>
                 <Route path="/admin/review-queue" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/review" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/queue" element={<ApplicationReviewQueuePage />} />
-                <Route path="/admin/partner-schools" element={<AdminPartnerSchoolsPage />} />
-                <Route path="/admin/partners" element={<AdminPartnerSchoolsPage />} />
                 <Route path="/admin/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/admin/school-aid-distribution" element={<SchoolAidDistributionPage />} />
                 <Route path="/school-aid-distribution" element={<SchoolAidDistributionPage />} />
