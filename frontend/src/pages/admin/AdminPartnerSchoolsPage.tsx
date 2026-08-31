@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Building2,
   Search,
@@ -19,6 +20,8 @@ import {
   FileSpreadsheet,
   Users,
   ExternalLink,
+  FileText,
+  ArrowRight,
 } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -28,6 +31,8 @@ import { Modal } from '../../components/ui/Modal';
 import { toast } from 'sonner';
 import { getPartners } from '../../api/partners';
 import { getScholars, type ScholarRegistryRecord } from '../../api/registry';
+import { getMyApplications } from '../../api/applications';
+import type { Application } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/cn';
 
@@ -410,19 +415,61 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
   },
 ];
 
+export const matchPartnerSchool = (schoolInput: string | undefined | null, partnerSchool: AdminPartnerSchool): boolean => {
+  if (!schoolInput) return false;
+  const s = schoolInput.toLowerCase().trim();
+  const tName = partnerSchool.schoolName.toLowerCase().trim();
+  const tId = partnerSchool.schoolId.toLowerCase().trim();
+
+  return (
+    s.includes(tName) ||
+    tName.includes(s) ||
+    s.includes(tId) ||
+    (tName.includes('quezon city university') && (s.includes('qcu') || s.includes('quezon city university') || s.includes('san bartolome') || s.includes('batasan') || s.includes('san francisco'))) ||
+    (tName.includes('bestlink') && (s.includes('bcp') || s.includes('bestlink'))) ||
+    (tName.includes('university of the philippines') && (s.includes('up') || s.includes('diliman') || s.includes('upd'))) ||
+    (tName.includes('polytechnic') && (s.includes('pup') || s.includes('polytechnic'))) ||
+    (tName.includes('ateneo') && (s.includes('ateneo') || s.includes('admu'))) ||
+    (tName.includes('feu') && (s.includes('feu') || s.includes('far eastern') || s.includes('nrmf'))) ||
+    (tName.includes('tip') && (s.includes('tip') || s.includes('technological institute'))) ||
+    (tName.includes('ust') && (s.includes('ust') || s.includes('santo tomas') || s.includes('angelicum'))) ||
+    (tName.includes('fatima') && (s.includes('fatima') || s.includes('olfu'))) ||
+    (tName.includes('national university') && (s.includes('nu') || s.includes('fairview'))) ||
+    (tName.includes('trinity') && (s.includes('tua') || s.includes('trinity'))) ||
+    (tName.includes('new era') && (s.includes('neu') || s.includes('new era'))) ||
+    (tName.includes('miriam') && s.includes('miriam')) ||
+    (tName.includes('st. paul') && (s.includes('spuqc') || s.includes('paul'))) ||
+    (tName.includes('world citi') && (s.includes('wcc') || s.includes('world citi'))) ||
+    (tName.includes('sti') && s.includes('sti')) ||
+    (tName.includes('ama') && s.includes('ama')) ||
+    (tName.includes('metro manila college') && (s.includes('mmc') || s.includes('metro manila'))) ||
+    (tName.includes('access') && s.includes('access')) ||
+    (tName.includes('capitol medical') && (s.includes('cmcc') || s.includes('capitol'))) ||
+    (tName.includes('earist') && s.includes('earist'))
+  );
+};
+
 export const AdminPartnerSchoolsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [schools, setSchools] = useState<AdminPartnerSchool[]>(DEFAULT_PARTNER_SCHOOLS);
+  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({});
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [typeFilter, setTypeFilter] = useState<string>('All');
 
   useEffect(() => {
     let isMounted = true;
-    const fetchSchools = async () => {
+    const fetchSchoolsAndApps = async () => {
       try {
-        const res = await getPartners();
-        if (res.data && res.data.length > 0 && isMounted) {
-          const mapped: AdminPartnerSchool[] = res.data.map(p => {
+        const [partnersRes, appsRes] = await Promise.allSettled([
+          getPartners(),
+          getMyApplications(),
+        ]);
+
+        let loadedSchools: AdminPartnerSchool[] = DEFAULT_PARTNER_SCHOOLS;
+
+        if (partnersRes.status === 'fulfilled' && partnersRes.value?.data && partnersRes.value.data.length > 0) {
+          loadedSchools = partnersRes.value.data.map(p => {
             const rawStatus = String(p.partnership_status || '').toLowerCase();
             const status: 'Active' | 'Inactive' | 'Pending' | 'Expired' = 
               rawStatus.includes('accredited') || rawStatus.includes('active')
@@ -459,14 +506,40 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
               activeScholarsCount: Number(p.active_scholars) || 0,
             };
           });
-          setSchools(mapped);
         }
-      } catch {
-        // fallback to default dataset
+
+        if (isMounted) {
+          setSchools(loadedSchools);
+
+          // Compute applying students per school from live applications
+          if (appsRes.status === 'fulfilled' && appsRes.value?.data) {
+            const apps = appsRes.value.data;
+            const counts: Record<string, number> = {};
+            loadedSchools.forEach(sch => {
+              const matched = apps.filter(app => {
+                const fd = app.form_data || (app as any).formData || {};
+                const appSchool = (
+                  fd.school ||
+                  fd.university ||
+                  fd.schoolName ||
+                  fd.institution ||
+                  (app as any).school ||
+                  app.notes ||
+                  ''
+                );
+                return matchPartnerSchool(appSchool, sch);
+              });
+              counts[sch.schoolId] = matched.length;
+            });
+            setApplicantCounts(counts);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to load partner schools data:', e);
         if (isMounted) setSchools(DEFAULT_PARTNER_SCHOOLS);
       }
     };
-    fetchSchools();
+    fetchSchoolsAndApps();
     return () => { isMounted = false; };
   }, []);
 
@@ -480,42 +553,59 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
   const [deletingSchool, setDeletingSchool] = useState<AdminPartnerSchool | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
 
-  // Enrolled Students Roster Drilldown Modal
+  // Enrolled Students & Scholarship Applicants Drilldown Modal
   const [selectedSchoolForStudents, setSelectedSchoolForStudents] = useState<AdminPartnerSchool | null>(null);
+  const [activeRosterTab, setActiveRosterTab] = useState<'enrolled' | 'applicants'>('enrolled');
   const [schoolScholars, setSchoolScholars] = useState<ScholarRegistryRecord[]>([]);
-  const [loadingScholars, setLoadingScholars] = useState(false);
+  const [schoolApplicants, setSchoolApplicants] = useState<Application[]>([]);
+  const [loadingStudentsData, setLoadingStudentsData] = useState(false);
   const [scholarSearchQuery, setScholarSearchQuery] = useState('');
 
-  const handleOpenEnrolledStudents = async (school: AdminPartnerSchool) => {
+  const handleOpenEnrolledStudents = async (
+    school: AdminPartnerSchool,
+    initialTab: 'enrolled' | 'applicants' = 'enrolled'
+  ) => {
     setSelectedSchoolForStudents(school);
-    setLoadingScholars(true);
+    setActiveRosterTab(initialTab);
+    setLoadingStudentsData(true);
     setScholarSearchQuery('');
+
     try {
-      const res = await getScholars();
-      if (res.data) {
-        // Filter scholars enrolled in this specific school
-        const matched = res.data.filter((s) => {
-          const sName = (s.school || '').toLowerCase();
-          const targetName = school.schoolName.toLowerCase();
-          return (
-            sName.includes(targetName) ||
-            targetName.includes(sName) ||
-            (targetName.includes('quezon city university') && (sName.includes('qcu') || sName.includes('quezon city university'))) ||
-            (targetName.includes('bestlink') && (sName.includes('bcp') || sName.includes('bestlink'))) ||
-            (targetName.includes('university of the philippines') && (sName.includes('up') || sName.includes('diliman'))) ||
-            (targetName.includes('polytechnic') && (sName.includes('pup') || sName.includes('polytechnic'))) ||
-            (targetName.includes('ateneo') && sName.includes('ateneo')) ||
-            (targetName.includes('feu') && (sName.includes('feu') || sName.includes('far eastern'))) ||
-            (targetName.includes('tip') && (sName.includes('tip') || sName.includes('technological institute'))) ||
-            (targetName.includes('ust') && (sName.includes('ust') || sName.includes('santo tomas')))
-          );
-        });
+      const [scholarsRes, appsRes] = await Promise.allSettled([
+        getScholars(),
+        getMyApplications(),
+      ]);
+
+      if (scholarsRes.status === 'fulfilled' && scholarsRes.value?.data) {
+        const matched = scholarsRes.value.data.filter((s) => matchPartnerSchool(s.school, school));
         setSchoolScholars(matched);
+      } else {
+        setSchoolScholars([]);
       }
-    } catch {
-      toast.error(`Failed to load enrolled students for ${school.schoolName}`);
+
+      if (appsRes.status === 'fulfilled' && appsRes.value?.data) {
+        const matched = appsRes.value.data.filter((app) => {
+          const fd = app.form_data || (app as any).formData || {};
+          const appSchool = (
+            fd.school ||
+            fd.university ||
+            fd.schoolName ||
+            fd.institution ||
+            (app as any).school ||
+            app.notes ||
+            ''
+          );
+          return matchPartnerSchool(appSchool, school);
+        });
+        setSchoolApplicants(matched);
+      } else {
+        setSchoolApplicants([]);
+      }
+    } catch (e) {
+      console.error('Failed to load roster data:', e);
+      toast.error(`Failed to load student data for ${school.schoolName}`);
     } finally {
-      setLoadingScholars(false);
+      setLoadingStudentsData(false);
     }
   };
 
@@ -531,7 +621,37 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `Scholars_Roster_${school.schoolName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `Enrolled_Scholars_${school.schoolName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
+
+  const handleExportApplicantsRoster = (school: AdminPartnerSchool) => {
+    toast.success(`Exporting Scholarship Applicants List for ${school.schoolName}...`);
+    const headers = 'Reference ID,Applicant Name,Email,School,Program Applied,Year Level,GWA,Income,Date Submitted,Status\n';
+    const rows = schoolApplicants
+      .map((app) => {
+        const fd = app.form_data || (app as any).formData || {};
+        const name =
+          app.applicant_name ||
+          fd.fullName ||
+          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
+          (app as any).student_name ||
+          app.applicant_email ||
+          (app as any).email ||
+          'N/A';
+        const email = app.applicant_email || (app as any).email || fd.email || '';
+        const prog = app.program_name || app.title || 'QCSP Scholarship';
+        const yl = fd.yearLevel || 'Undergraduate';
+        const gwa = fd.gwa || 'N/A';
+        const inc = fd.householdIncome || fd.annualIncome || 'N/A';
+        const created = app.created_at ? new Date(app.created_at).toISOString().split('T')[0] : 'N/A';
+        return `"${app.reference_id || app.id}","${name}","${email}","${school.schoolName}","${prog}","${yl}","${gwa}","${inc}","${created}","${app.status}"`;
+      })
+      .join('\n');
+    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Scholarship_Applicants_${school.schoolName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
   };
 
@@ -876,26 +996,33 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
 
                     <td className="p-4 text-center">
                       <button
-                        onClick={() => handleOpenEnrolledStudents(school)}
-                        className="hover:scale-105 transition-transform cursor-pointer"
-                        title="Click to view enrolled scholars"
+                        onClick={() => handleOpenEnrolledStudents(school, 'enrolled')}
+                        className="hover:scale-105 transition-transform cursor-pointer block mx-auto text-center"
+                        title="Click to view Enrolled Scholars and Scholarship Applicants"
                       >
                         <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
-                          {school.scholarshipSlots}
+                          {school.scholarshipSlots} <span className="text-[10px] text-slate-400 font-normal">slots</span>
                         </span>
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                          {school.activeScholarsCount ?? 0} enrolled
-                        </span>
+                        <div className="flex items-center justify-center gap-1.5 mt-1 flex-wrap">
+                          <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                            {school.activeScholarsCount ?? 0} enrolled
+                          </span>
+                          {(applicantCounts[school.schoolId] || 0) > 0 && (
+                            <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
+                              {applicantCounts[school.schoolId]} applying
+                            </span>
+                          )}
+                        </div>
                       </button>
                     </td>
 
                     <td className="p-4 text-right space-x-1">
                       <button
-                        onClick={() => handleOpenEnrolledStudents(school)}
-                        title="View Enrolled Students (Roster)"
+                        onClick={() => handleOpenEnrolledStudents(school, 'enrolled')}
+                        title="View Enrolled Students & Scholarship Applicants"
                         className="p-1.5 rounded-lg text-blue-600 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
                       >
-                        <GraduationCap className="h-4 w-4" />
+                        <Users className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => setViewingSchool(school)}
@@ -1312,43 +1439,57 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
           </div>
         </Modal>
       )}
-      {/* Enrolled Students Roster Modal (School Coordinator Drilldown) */}
+      {/* Enrolled Students & Scholarship Applicants Modal */}
       {selectedSchoolForStudents && (
         <Modal
           isOpen={!!selectedSchoolForStudents}
           onClose={() => setSelectedSchoolForStudents(null)}
-          title={`Enrolled Scholars Roster: ${selectedSchoolForStudents.schoolName}`}
+          title={`Students & Applicants: ${selectedSchoolForStudents.schoolName}`}
           description={`Institution ID: ${selectedSchoolForStudents.schoolId} • Classification: ${selectedSchoolForStudents.schoolType} • Quota: ${selectedSchoolForStudents.scholarshipSlots} Slots`}
           footer={
-            <div className="flex items-center justify-between w-full pt-2">
-              <span className="text-xs text-slate-500 font-semibold">
-                Total Enrolled Scholars: <strong>{schoolScholars.length}</strong>
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExportSchoolRoster(selectedSchoolForStudents)}
-                  className="font-bold text-xs"
-                  leftIcon={<Download className="h-4 w-4" />}
-                >
-                  Export School Roster (CSV)
-                </Button>
+            <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 pt-2">
+              <div className="text-xs text-slate-500 font-semibold flex items-center gap-3">
+                <span>Enrolled Scholars: <strong>{schoolScholars.length}</strong></span>
+                <span>•</span>
+                <span>Active Applicants: <strong>{schoolApplicants.length}</strong></span>
+              </div>
+              <div className="flex items-center gap-2">
+                {activeRosterTab === 'enrolled' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportSchoolRoster(selectedSchoolForStudents)}
+                    className="font-bold text-xs"
+                    leftIcon={<Download className="h-4 w-4" />}
+                  >
+                    Export Enrolled (CSV)
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExportApplicantsRoster(selectedSchoolForStudents)}
+                    className="font-bold text-xs"
+                    leftIcon={<Download className="h-4 w-4" />}
+                  >
+                    Export Applicants (CSV)
+                  </Button>
+                )}
                 <Button
                   variant="primary"
                   size="sm"
                   onClick={() => setSelectedSchoolForStudents(null)}
                   className="bg-blue-600 text-white font-bold"
                 >
-                  Close Roster
+                  Close
                 </Button>
               </div>
             </div>
           }
         >
           <div className="space-y-4 text-xs">
-            {/* Header Banner */}
-            <div className="p-3 bg-blue-50 dark:bg-slate-800 rounded-2xl border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            {/* Header Banner & Quick Navigation Links */}
+            <div className="p-3 bg-blue-50/80 dark:bg-slate-800 rounded-2xl border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <span className="font-bold text-blue-950 dark:text-blue-200 text-sm block">
                   {selectedSchoolForStudents.schoolName}
@@ -1357,30 +1498,103 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                   Campus Coordinator: {selectedSchoolForStudents.contactPerson} ({selectedSchoolForStudents.email})
                 </span>
               </div>
-              <Badge variant="primary" size="sm">
-                Active Enrolled: {schoolScholars.length} / {selectedSchoolForStudents.scholarshipSlots}
-              </Badge>
+
+              {/* Direct System Navigation Links */}
+              <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSchoolForStudents(null);
+                    navigate('/admin/master-students');
+                  }}
+                  className="text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-100"
+                  leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
+                >
+                  Master Student DB
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedSchoolForStudents(null);
+                    navigate(isCoordinator ? '/school/endorsements' : '/admin/applications');
+                  }}
+                  className="text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-100"
+                  leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
+                >
+                  {isCoordinator ? 'Review Endorsements' : 'All Applications'}
+                </Button>
+              </div>
             </div>
 
-            {/* Search Input within School */}
+            {/* TAB SELECTOR */}
+            <div className="flex border-b border-slate-200 dark:border-slate-700 gap-2">
+              <button
+                type="button"
+                onClick={() => setActiveRosterTab('enrolled')}
+                className={`pb-2.5 px-4 font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                  activeRosterTab === 'enrolled'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span>Currently Enrolled Scholars</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                  activeRosterTab === 'enrolled'
+                    ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
+                  {schoolScholars.length}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveRosterTab('applicants')}
+                className={`pb-2.5 px-4 font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                  activeRosterTab === 'applicants'
+                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                }`}
+              >
+                <FileText className="h-4 w-4" />
+                <span>Scholarship Applicants</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
+                  activeRosterTab === 'applicants'
+                    ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}>
+                  {schoolApplicants.length}
+                </span>
+              </button>
+            </div>
+
+            {/* Search Input */}
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search student by name, ID number, course, or grant status..."
+                placeholder={
+                  activeRosterTab === 'enrolled'
+                    ? 'Search enrolled student by name, student ID, course, or grant status...'
+                    : 'Search applicant by name, reference ID, track, or application status...'
+                }
                 value={scholarSearchQuery}
                 onChange={(e) => setScholarSearchQuery(e.target.value)}
                 className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white"
               />
             </div>
 
-            {/* Scholars Table */}
-            {loadingScholars ? (
+            {/* Content Loader */}
+            {loadingStudentsData ? (
               <div className="p-10 text-center text-slate-400">
                 <Clock className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                <p className="font-bold">Fetching enrolled scholars from registry...</p>
+                <p className="font-bold">Fetching records from student database & applications...</p>
               </div>
-            ) : (
+            ) : activeRosterTab === 'enrolled' ? (
+              /* TAB 1: ENROLLED SCHOLARS TABLE */
               <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl max-h-[350px]">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 dark:border-slate-700">
@@ -1435,9 +1649,122 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                     {schoolScholars.length === 0 && (
                       <tr>
                         <td colSpan={6} className="p-8 text-center text-slate-400">
-                          <Users className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                          <GraduationCap className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
                           <p className="font-bold text-slate-700 dark:text-slate-300">No scholars currently enrolled for this institution</p>
-                          <p className="text-xs text-slate-400">Enrolled students will appear once applications are approved for this school.</p>
+                          <p className="text-xs text-slate-400 mt-1">Enrolled students will appear here once applications are officially approved for this partner school.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              /* TAB 2: SCHOLARSHIP APPLICANTS TABLE */
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl max-h-[350px]">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="p-3">Applicant & Ref ID</th>
+                      <th className="p-3">Track / Program</th>
+                      <th className="p-3">Course & Year</th>
+                      <th className="p-3 text-center">GWA</th>
+                      <th className="p-3">Date Applied</th>
+                      <th className="p-3">Application Status</th>
+                      <th className="p-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {schoolApplicants
+                      .filter((app) => {
+                        if (!scholarSearchQuery) return true;
+                        const q = scholarSearchQuery.toLowerCase();
+                        const fd = app.form_data || (app as any).formData || {};
+                        const name = (
+                          app.applicant_name ||
+                          fd.fullName ||
+                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
+                          (app as any).student_name ||
+                          app.applicant_email ||
+                          (app as any).email ||
+                          ''
+                        ).toLowerCase();
+                        const ref = String(app.reference_id || app.id).toLowerCase();
+                        const prog = (app.program_name || app.title || '').toLowerCase();
+                        const stat = String(app.status || '').toLowerCase();
+                        return name.includes(q) || ref.includes(q) || prog.includes(q) || stat.includes(q);
+                      })
+                      .map((app) => {
+                        const fd = app.form_data || (app as any).formData || {};
+                        const applicantName =
+                          app.applicant_name ||
+                          fd.fullName ||
+                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
+                          (app as any).student_name ||
+                          'Applicant (Pending Name)';
+                        const email = app.applicant_email || (app as any).email || fd.email || '';
+                        const course = fd.course || fd.program || 'Academic Program';
+                        const yearLevel = fd.yearLevel || 'Undergraduate';
+                        const gwa = fd.gwa || 'N/A';
+                        const dateApplied = app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Recent';
+
+                        const getAppBadge = (statusStr: string) => {
+                          const s = statusStr?.toLowerCase() || '';
+                          if (s.includes('approve')) return <Badge variant="success" size="sm">Approved</Badge>;
+                          if (s.includes('endorse') || s.includes('pending')) return <Badge variant="warning" size="sm">{statusStr}</Badge>;
+                          if (s.includes('reject')) return <Badge variant="destructive" size="sm">Rejected</Badge>;
+                          return <Badge variant="primary" size="sm">{statusStr || 'Submitted'}</Badge>;
+                        };
+
+                        return (
+                          <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                            <td className="p-3">
+                              <div className="font-bold text-slate-900 dark:text-white">{applicantName}</div>
+                              <code className="text-[10px] text-blue-600 font-mono font-semibold">
+                                {app.reference_id || `APP-${app.id}`}
+                              </code>
+                              {email && <div className="text-[10px] text-slate-400">{email}</div>}
+                            </td>
+                            <td className="p-3">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200 block">
+                                {app.program_name || app.title || 'QCSP Scholarship'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-slate-600 dark:text-slate-300">
+                              <div>{course}</div>
+                              <div className="text-[10px] text-slate-400">{yearLevel}</div>
+                            </td>
+                            <td className="p-3 text-center font-bold text-blue-600">
+                              {gwa}
+                            </td>
+                            <td className="p-3 text-slate-500 text-[11px]">
+                              {dateApplied}
+                            </td>
+                            <td className="p-3">
+                              {getAppBadge(app.status || 'Submitted')}
+                            </td>
+                            <td className="p-3 text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedSchoolForStudents(null);
+                                  navigate(isCoordinator ? '/school/endorsements' : '/admin/applications');
+                                }}
+                                className="font-bold text-[11px] border-blue-300 text-blue-700 hover:bg-blue-50"
+                                rightIcon={<ArrowRight className="h-3 w-3" />}
+                              >
+                                {isCoordinator ? 'Review & Endorse' : 'Review App'}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    {schoolApplicants.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-slate-400">
+                          <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                          <p className="font-bold text-slate-700 dark:text-slate-300">No applicants currently applying from this institution</p>
+                          <p className="text-xs text-slate-400 mt-1">Students who select {selectedSchoolForStudents.schoolName} in their application form will show up here.</p>
                         </td>
                       </tr>
                     )}
