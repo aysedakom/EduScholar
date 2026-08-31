@@ -18,7 +18,7 @@ router.get('/', async (req, res) => {
         ps.contact_number,
         ps.email,
         ps.partnership_status,
-        GREATEST(COALESCE(ps.active_scholars, 0), COALESCE(sr.real_active, 0))::int AS active_scholars,
+        COALESCE(sr.real_active, 0)::int AS active_scholars,
         ps.scholarship_slots,
         ps.programs_offered,
         ps.partnership_start,

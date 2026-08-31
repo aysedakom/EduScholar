@@ -61,7 +61,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSCS, BSCpE, BSBA, BSHM, BSED, BEED, BSCRIM',
     scholarshipSlots: 2500,
-    activeScholarsCount: 480,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-002',
@@ -76,7 +76,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSCS, BSA, BSBA, BSIE, BECED',
     scholarshipSlots: 3000,
-    activeScholarsCount: 620,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-003',
@@ -91,7 +91,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSBA, BSA, BSED',
     scholarshipSlots: 1500,
-    activeScholarsCount: 310,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-004',
@@ -106,7 +106,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSBA, BSIE',
     scholarshipSlots: 1200,
-    activeScholarsCount: 240,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-005',
@@ -121,7 +121,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'All Priority STEM, Social Sciences, Allied Health, Engineering',
     scholarshipSlots: 1500,
-    activeScholarsCount: 350,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-006',
@@ -136,7 +136,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSBA, BPA, BSED, BS Accountancy',
     scholarshipSlots: 1000,
-    activeScholarsCount: 290,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-007',
@@ -151,7 +151,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Nursing, BS Pharmacy, BS Medical Tech, BS Physical Therapy, BSIT, BSBA',
     scholarshipSlots: 1200,
-    activeScholarsCount: 210,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-008',
@@ -166,7 +166,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Architecture, BS Civil Engg, BS Computer Science, BSIT, BS Tourism',
     scholarshipSlots: 800,
-    activeScholarsCount: 180,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-009',
@@ -181,7 +181,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Computer Engg, BSEE, BSME, BSCE, BSCS, BSIT',
     scholarshipSlots: 1000,
-    activeScholarsCount: 220,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-010',
@@ -196,7 +196,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Accountancy, BSBA, BSIT, Senior High School Academic Track',
     scholarshipSlots: 600,
-    activeScholarsCount: 140,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-011',
@@ -211,7 +211,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Medical Technology, BS Physical Therapy, BS Radiologic Tech, BS Nursing',
     scholarshipSlots: 500,
-    activeScholarsCount: 160,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-012',
@@ -226,7 +226,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Nursing, BS Medical Tech, BS Psychology, BSBA, BSED, BSIT',
     scholarshipSlots: 700,
-    activeScholarsCount: 175,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-013',
@@ -241,7 +241,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-06-01',
     programsOffered: 'BS Management, BS Computer Science, BS Applied Math, AB Economics',
     scholarshipSlots: 500,
-    activeScholarsCount: 120,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-014',
@@ -256,7 +256,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Civil Engg, BSEE, BS Accountancy, BS Nursing, BSIT, BS Medical Tech',
     scholarshipSlots: 900,
-    activeScholarsCount: 190,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-015',
@@ -271,7 +271,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Child Development, BS International Studies, BS Communication',
     scholarshipSlots: 400,
-    activeScholarsCount: 95,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-016',
@@ -286,7 +286,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSBA, AB Communication, Senior High School Academic Track',
     scholarshipSlots: 500,
-    activeScholarsCount: 110,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-017',
@@ -301,7 +301,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Nursing, BS Psychology, BSBA, BSED, BS Tourism',
     scholarshipSlots: 450,
-    activeScholarsCount: 85,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-018',
@@ -316,7 +316,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Nursing, BS Medical Tech, BS Aeronautical Engg, BS Aviation',
     scholarshipSlots: 600,
-    activeScholarsCount: 130,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-019',
@@ -331,7 +331,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSCS, BS Information Systems, BS Tourism, BS Hospitality',
     scholarshipSlots: 800,
-    activeScholarsCount: 260,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-020',
@@ -346,7 +346,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Computer Science, BSIT, BS Computer Engg, BS Cybersecurity',
     scholarshipSlots: 650,
-    activeScholarsCount: 145,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-021',
@@ -361,7 +361,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Criminology, BEED, BSED, BSBA, BSIT, BSHM',
     scholarshipSlots: 800,
-    activeScholarsCount: 170,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-022',
@@ -376,7 +376,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BSIT, BSBA, BS Hotel and Restaurant Management, Associate in Computer Tech',
     scholarshipSlots: 500,
-    activeScholarsCount: 115,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-023',
@@ -391,7 +391,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Nursing, BS Medical Tech, BS Radiologic Tech',
     scholarshipSlots: 400,
-    activeScholarsCount: 90,
+    activeScholarsCount: 0,
   },
   {
     schoolId: 'SCH-QC-024',
@@ -406,7 +406,7 @@ export const DEFAULT_PARTNER_SCHOOLS: AdminPartnerSchool[] = [
     partnershipEnd: '2028-12-31',
     programsOffered: 'BS Industrial Tech, BS Electrical Tech, BS Electronics Tech, BS Mechanical Tech, BSED',
     scholarshipSlots: 700,
-    activeScholarsCount: 185,
+    activeScholarsCount: 0,
   },
 ];
 
