@@ -6,18 +6,13 @@ import {
   Plus,
   Edit2,
   Trash2,
-  Eye,
   Download,
-  Upload,
   CheckCircle2,
   XCircle,
   Clock,
   AlertTriangle,
   Mail,
-  Phone,
-  MapPin,
   GraduationCap,
-  FileSpreadsheet,
   Users,
   ExternalLink,
   FileText,
@@ -448,171 +443,111 @@ export const matchPartnerSchool = (schoolInput: string | undefined | null, partn
     (tName.includes('earist') && s.includes('earist'))
   );
 };
-
 export const AdminPartnerSchoolsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isCoordinator = user?.role === 'school_coordinator';
+
   const [schools, setSchools] = useState<AdminPartnerSchool[]>(DEFAULT_PARTNER_SCHOOLS);
-  const [applicantCounts, setApplicantCounts] = useState<Record<string, number>>({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>('SCH-QC-001');
+  const [activeRosterTab, setActiveRosterTab] = useState<'enrolled' | 'applicants'>('enrolled');
+  const [allScholars, setAllScholars] = useState<ScholarRegistryRecord[]>([]);
+  const [allApplications, setAllApplications] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [scholarSearchQuery, setScholarSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'students' | 'directory'>('students');
+
+  // Modals for admin management
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<AdminPartnerSchool | null>(null);
+  const [deletingSchool, setDeletingSchool] = useState<AdminPartnerSchool | null>(null);
+
+  // Form State
+  const defaultFormState: AdminPartnerSchool = {
+    schoolId: '',
+    schoolName: '',
+    schoolType: 'LGU State University',
+    address: '',
+    contactPerson: '',
+    contactNumber: '',
+    email: '',
+    partnershipStatus: 'Active',
+    partnershipStart: new Date().toISOString().split('T')[0],
+    partnershipEnd: '2028-12-31',
+    programsOffered: '',
+    scholarshipSlots: 100,
+    activeScholarsCount: 0,
+  };
+  const [form, setForm] = useState<AdminPartnerSchool>(defaultFormState);
+  const [directorySearchQuery, setDirectorySearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [typeFilter, setTypeFilter] = useState<string>('All');
 
   useEffect(() => {
     let isMounted = true;
-    const fetchSchoolsAndApps = async () => {
+    const fetchAllData = async () => {
+      setLoading(true);
       try {
-        const [partnersRes, appsRes] = await Promise.allSettled([
+        const [partnersRes, scholarsRes, appsRes] = await Promise.allSettled([
           getPartners(),
+          getScholars(),
           getMyApplications(),
         ]);
 
         let loadedSchools: AdminPartnerSchool[] = DEFAULT_PARTNER_SCHOOLS;
 
         if (partnersRes.status === 'fulfilled' && partnersRes.value?.data && partnersRes.value.data.length > 0) {
-          loadedSchools = partnersRes.value.data.map(p => {
-            const rawStatus = String(p.partnership_status || '').toLowerCase();
-            const status: 'Active' | 'Inactive' | 'Pending' | 'Expired' = 
-              rawStatus.includes('accredited') || rawStatus.includes('active')
-                ? 'Active'
-                : rawStatus.includes('pending')
-                ? 'Pending'
-                : rawStatus.includes('expired')
-                ? 'Expired'
-                : 'Inactive';
-
-            const formatCleanDate = (dateVal: any, fallback: string) => {
-              if (!dateVal) return fallback;
-              try {
-                const d = new Date(dateVal);
-                return !isNaN(d.getTime()) ? d.toISOString().split('T')[0] : fallback;
-              } catch {
-                return fallback;
-              }
-            };
-
-            return {
-              schoolId: p.school_id,
-              schoolName: p.name,
-              schoolType: p.school_type,
-              address: p.address,
-              contactPerson: p.contact_person || 'N/A',
-              contactNumber: p.contact_number || 'N/A',
-              email: p.email || 'N/A',
-              partnershipStatus: status,
-              partnershipStart: formatCleanDate(p.partnership_start, '2024-01-01'),
-              partnershipEnd: formatCleanDate(p.partnership_end, '2028-12-31'),
-              programsOffered: p.programs_offered || 'All Accredited Degree Programs',
-              scholarshipSlots: p.scholarship_slots || 500,
-              activeScholarsCount: Number(p.active_scholars) || 0,
-            };
-          });
+          loadedSchools = partnersRes.value.data.map((p: any) => ({
+            schoolId: p.school_id,
+            schoolName: p.name,
+            schoolType: p.school_type,
+            address: p.address,
+            contactPerson: p.contact_person || 'N/A',
+            contactNumber: p.contact_number || 'N/A',
+            email: p.email || 'N/A',
+            partnershipStatus: p.partnership_status || 'Active',
+            partnershipStart: p.partnership_start || '2024-01-01',
+            partnershipEnd: p.partnership_end || '2028-12-31',
+            programsOffered: p.programs_offered || '',
+            scholarshipSlots: p.scholarship_slots || 100,
+            activeScholarsCount: Number(p.active_scholars) || 0,
+          }));
         }
 
         if (isMounted) {
           setSchools(loadedSchools);
-
-          // Compute applying students per school from live applications
+          if (scholarsRes.status === 'fulfilled' && scholarsRes.value?.data) {
+            setAllScholars(scholarsRes.value.data);
+          }
           if (appsRes.status === 'fulfilled' && appsRes.value?.data) {
-            const apps = appsRes.value.data;
-            const counts: Record<string, number> = {};
-            loadedSchools.forEach(sch => {
-              const matched = apps.filter(app => {
-                const fd = app.form_data || (app as any).formData || {};
-                const appSchool = (
-                  fd.school ||
-                  fd.university ||
-                  fd.schoolName ||
-                  fd.institution ||
-                  (app as any).school ||
-                  app.notes ||
-                  ''
-                );
-                return matchPartnerSchool(appSchool, sch);
-              });
-              counts[sch.schoolId] = matched.length;
-            });
-            setApplicantCounts(counts);
+            setAllApplications(appsRes.value.data);
           }
         }
       } catch (e) {
-        console.error('Failed to load partner schools data:', e);
-        if (isMounted) setSchools(DEFAULT_PARTNER_SCHOOLS);
+        console.error('Failed to load partner school database:', e);
+      } finally {
+        if (isMounted) setLoading(false);
       }
     };
-    fetchSchoolsAndApps();
+
+    fetchAllData();
     return () => { isMounted = false; };
   }, []);
 
-  const { user } = useAuth();
-  const isCoordinator = user?.role === 'school_coordinator';
+  const currentSchool = schools.find(s => s.schoolId === selectedSchoolId) || schools[0] || DEFAULT_PARTNER_SCHOOLS[0];
 
-  // Modals
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [editingSchool, setEditingSchool] = useState<AdminPartnerSchool | null>(null);
-  const [viewingSchool, setViewingSchool] = useState<AdminPartnerSchool | null>(null);
-  const [deletingSchool, setDeletingSchool] = useState<AdminPartnerSchool | null>(null);
-  const [showImportModal, setShowImportModal] = useState(false);
+  const currentSchoolScholars = allScholars.filter(s => matchPartnerSchool(s.school, currentSchool));
 
-  // Enrolled Students & Scholarship Applicants Drilldown Modal
-  const [selectedSchoolForStudents, setSelectedSchoolForStudents] = useState<AdminPartnerSchool | null>(null);
-  const [activeRosterTab, setActiveRosterTab] = useState<'enrolled' | 'applicants'>('enrolled');
-  const [schoolScholars, setSchoolScholars] = useState<ScholarRegistryRecord[]>([]);
-  const [schoolApplicants, setSchoolApplicants] = useState<Application[]>([]);
-  const [loadingStudentsData, setLoadingStudentsData] = useState(false);
-  const [scholarSearchQuery, setScholarSearchQuery] = useState('');
-
-  const handleOpenEnrolledStudents = async (
-    school: AdminPartnerSchool,
-    initialTab: 'enrolled' | 'applicants' = 'enrolled'
-  ) => {
-    setSelectedSchoolForStudents(school);
-    setActiveRosterTab(initialTab);
-    setLoadingStudentsData(true);
-    setScholarSearchQuery('');
-
-    try {
-      const [scholarsRes, appsRes] = await Promise.allSettled([
-        getScholars(),
-        getMyApplications(),
-      ]);
-
-      if (scholarsRes.status === 'fulfilled' && scholarsRes.value?.data) {
-        const matched = scholarsRes.value.data.filter((s) => matchPartnerSchool(s.school, school));
-        setSchoolScholars(matched);
-      } else {
-        setSchoolScholars([]);
-      }
-
-      if (appsRes.status === 'fulfilled' && appsRes.value?.data) {
-        const matched = appsRes.value.data.filter((app) => {
-          const fd = app.form_data || (app as any).formData || {};
-          const appSchool = (
-            fd.school ||
-            fd.university ||
-            fd.schoolName ||
-            fd.institution ||
-            (app as any).school ||
-            app.notes ||
-            ''
-          );
-          return matchPartnerSchool(appSchool, school);
-        });
-        setSchoolApplicants(matched);
-      } else {
-        setSchoolApplicants([]);
-      }
-    } catch (e) {
-      console.error('Failed to load roster data:', e);
-      toast.error(`Failed to load student data for ${school.schoolName}`);
-    } finally {
-      setLoadingStudentsData(false);
-    }
-  };
+  const currentSchoolApplicants = allApplications.filter(app => {
+    const fd = app.form_data || (app as any).formData || {};
+    const appSchool = fd.school || fd.university || fd.schoolName || fd.institution || (app as any).school || app.notes || '';
+    return matchPartnerSchool(appSchool, currentSchool);
+  });
 
   const handleExportSchoolRoster = (school: AdminPartnerSchool) => {
     toast.success(`Exporting Enrolled Scholars Roster for ${school.schoolName}...`);
     const headers = 'Student ID,Full Name,Email,School,Program / Course,Current Term,GWA,Grant Amount,Disbursement Status,Status\n';
-    const rows = schoolScholars
+    const rows = currentSchoolScholars
       .map(
         (s) =>
           `"${s.student_id}","${s.full_name}","${s.email}","${s.school}","${s.program_name}","${s.current_term}",${s.gwa},${s.grant_amount},"${s.disbursement_status}","${s.status}"`
@@ -628,7 +563,7 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
   const handleExportApplicantsRoster = (school: AdminPartnerSchool) => {
     toast.success(`Exporting Scholarship Applicants List for ${school.schoolName}...`);
     const headers = 'Reference ID,Applicant Name,Email,School,Program Applied,Year Level,GWA,Income,Date Submitted,Status\n';
-    const rows = schoolApplicants
+    const rows = currentSchoolApplicants
       .map((app) => {
         const fd = app.form_data || (app as any).formData || {};
         const name =
@@ -655,39 +590,6 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     link.click();
   };
 
-  // Form State
-  const defaultFormState: AdminPartnerSchool = {
-    schoolId: '',
-    schoolName: '',
-    schoolType: 'LGU State University',
-    address: '',
-    contactPerson: '',
-    contactNumber: '',
-    email: '',
-    partnershipStatus: 'Active',
-    partnershipStart: new Date().toISOString().split('T')[0],
-    partnershipEnd: '2028-12-31',
-    programsOffered: '',
-    scholarshipSlots: 100,
-    activeScholarsCount: 0,
-  };
-
-  const [form, setForm] = useState<AdminPartnerSchool>(defaultFormState);
-  const [importFile, setImportFile] = useState<File | null>(null);
-
-  const filteredSchools = schools.filter((school) => {
-    const matchesSearch =
-      school.schoolName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      school.schoolId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      school.contactPerson.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      school.programsOffered.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesStatus = statusFilter === 'All' || school.partnershipStatus === statusFilter;
-    const matchesType = typeFilter === 'All' || school.schoolType === typeFilter;
-
-    return matchesSearch && matchesStatus && matchesType;
-  });
-
   const handleOpenAddModal = () => {
     setForm({
       ...defaultFormState,
@@ -696,34 +598,18 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     setShowAddModal(true);
   };
 
-  const handleOpenEditModal = (school: AdminPartnerSchool) => {
-    setEditingSchool(school);
-    setForm({ ...school });
-  };
-
   const handleSaveAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.schoolName.trim()) {
-      toast.error('Please enter the school name');
-      return;
-    }
-    const newSchool: AdminPartnerSchool = {
-      ...form,
-      schoolId: form.schoolId || `sch-qc-${Date.now()}`,
-      activeScholarsCount: form.activeScholarsCount || 0,
-    };
-    setSchools([newSchool, ...schools]);
+    if (!form.schoolName.trim()) return;
+    setSchools([form, ...schools]);
     setShowAddModal(false);
     toast.success(`Partner School "${form.schoolName}" successfully added!`);
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.schoolName.trim()) {
-      toast.error('Please enter the school name');
-      return;
-    }
-    setSchools(schools.map((s) => (s.schoolId === editingSchool?.schoolId ? { ...form } : s)));
+    if (!editingSchool) return;
+    setSchools(schools.map((s) => (s.schoolId === editingSchool.schoolId ? { ...form } : s)));
     setEditingSchool(null);
     toast.success(`Partner School "${form.schoolName}" updated successfully!`);
   };
@@ -735,20 +621,9 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     toast.success(`Partner School "${deletingSchool.schoolName}" removed from active registry.`);
   };
 
-  const handleExportData = () => {
-    toast.success('Partner Schools database exported (Excel/PDF generated)');
-    const headers = 'School ID,School Name,School Type,Contact Officer,Email,Phone,Active Scholars,Quota Slots,Status\n';
-    const rows = schools
-      .map(
-        (s) =>
-          `"${s.schoolId}","${s.schoolName}","${s.schoolType}","${s.contactPerson}","${s.email}","${s.contactNumber}",${s.activeScholarsCount || 0},${s.scholarshipSlots},"${s.partnershipStatus}"`
-      )
-      .join('\n');
-    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `QC_Partner_Schools_${new Date().toISOString().split('T')[0]}.csv`;
-    link.click();
+  const handleOpenEditModal = (school: AdminPartnerSchool) => {
+    setEditingSchool(school);
+    setForm({ ...school });
   };
 
   const updateForm = (key: keyof AdminPartnerSchool, value: any) => {
@@ -760,19 +635,19 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
       case 'Active':
         return (
           <Badge variant="success" size="sm">
-            <CheckCircle2 className="h-3 w-3 mr-1" /> Active MOU
+            <CheckCircle2 className="h-3 w-3 mr-1" /> Active
           </Badge>
         );
       case 'Pending':
         return (
           <Badge variant="warning" size="sm">
-            <Clock className="h-3 w-3 mr-1" /> Renewal Pending
+            <Clock className="h-3 w-3 mr-1" /> Pending
           </Badge>
         );
       case 'Expired':
         return (
           <Badge variant="destructive" size="sm">
-            <AlertTriangle className="h-3 w-3 mr-1" /> Expired MOU
+            <AlertTriangle className="h-3 w-3 mr-1" /> Expired
           </Badge>
         );
       default:
@@ -784,279 +659,547 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     }
   };
 
+  const filteredDirectorySchools = schools.filter((school) => {
+    const matchesSearch =
+      school.schoolName.toLowerCase().includes(directorySearchQuery.toLowerCase()) ||
+      school.schoolId.toLowerCase().includes(directorySearchQuery.toLowerCase()) ||
+      school.contactPerson.toLowerCase().includes(directorySearchQuery.toLowerCase()) ||
+      school.programsOffered.toLowerCase().includes(directorySearchQuery.toLowerCase());
+
+    const matchesStatus = statusFilter === 'All' || school.partnershipStatus === statusFilter;
+    const matchesType = typeFilter === 'All' || school.schoolType === typeFilter;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
-        <div>
-          <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Partner School Database</h1>
+    <div className="space-y-5 animate-in fade-in duration-300">
+      {/* Top Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
+        <div className="space-y-1">
+          <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+            Students & Applicants: {currentSchool.schoolName}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+            Institution ID: <strong className="text-slate-700 dark:text-slate-300 font-mono">{currentSchool.schoolId}</strong> • Classification: <strong className="text-slate-700 dark:text-slate-300">{currentSchool.schoolType}</strong> • Quota: <strong className="text-blue-600 dark:text-blue-400">{currentSchool.scholarshipSlots} Slots</strong>
+          </p>
         </div>
+
+        {/* Institution Switcher & Top Actions */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* School Selector Dropdown */}
+          <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
+            <Building2 className="h-4 w-4 text-slate-400" />
+            <select
+              value={selectedSchoolId}
+              onChange={(e) => setSelectedSchoolId(e.target.value)}
+              className="text-xs font-bold bg-transparent text-slate-800 dark:text-white focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[240px] truncate"
+              title="Select Partner School"
+            >
+              {schools.map((s) => (
+                <option key={s.schoolId} value={s.schoolId} className="dark:bg-slate-900 dark:text-white">
+                  {s.schoolName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {!isCoordinator && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setViewMode(viewMode === 'students' ? 'directory' : 'students')}
+              className="font-bold text-xs"
+              leftIcon={<Building2 className="h-4 w-4 text-slate-600" />}
+            >
+              {viewMode === 'students' ? 'All Institutions' : 'Students & Applicants'}
+            </Button>
+          )}
+
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setShowImportModal(true)}
-            leftIcon={<Upload className="h-4 w-4 text-slate-600" />}
-            className="font-bold"
+            onClick={() => navigate('/admin/master-students')}
+            className="font-bold text-xs border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-50"
+            leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
           >
-            Import CSV
+            Master Student DB
           </Button>
+
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportData}
-            leftIcon={<Download className="h-4 w-4 text-slate-600" />}
-            className="font-bold"
+            onClick={() => navigate(isCoordinator ? '/school/endorsements' : '/admin/applications')}
+            className="font-bold text-xs border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-50"
+            leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
           >
-            Export List
+            {isCoordinator ? 'Review Endorsements' : 'All Applications'}
           </Button>
+
           <Button
             variant="primary"
             size="sm"
-            onClick={handleOpenAddModal}
-            leftIcon={<Plus className="h-4 w-4" />}
-            className="font-bold bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={() => (activeRosterTab === 'enrolled' ? handleExportSchoolRoster(currentSchool) : handleExportApplicantsRoster(currentSchool))}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs"
+            leftIcon={<Download className="h-4 w-4" />}
           >
-            Add Partner School
+            Export CSV
           </Button>
         </div>
       </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <CardContent className="p-4 flex items-center justify-between">
+      {viewMode === 'students' ? (
+        /* MAIN FULL-PAGE STUDENTS & APPLICANTS VIEW */
+        <div className="space-y-4">
+          {/* Institution Info Card / Banner */}
+          <div className="p-4 bg-blue-50/70 dark:bg-slate-900/80 rounded-3xl border border-blue-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
             <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Institutions</p>
-              <h3 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white mt-0.5">{schools.length}</h3>
-              <p className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold mt-1">Accredited HEIs</p>
+              <span className="font-heading font-extrabold text-blue-950 dark:text-blue-200 text-base block">
+                {currentSchool.schoolName}
+              </span>
+              <span className="text-slate-600 dark:text-slate-400 text-xs font-medium mt-0.5 block">
+                Campus Coordinator: <strong>{currentSchool.contactPerson}</strong> ({currentSchool.email})
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-500 mt-1 block">
+                📍 {currentSchool.address} • MOU Validity: {currentSchool.partnershipStart} to {currentSchool.partnershipEnd}
+              </span>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200 dark:border-blue-800">
-              <Building2 className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Active MOU Partnerships</p>
-              <h3 className="font-heading font-extrabold text-2xl text-emerald-600 dark:text-emerald-400 mt-0.5">
-                {schools.filter((s) => s.partnershipStatus === 'Active').length}
-              </h3>
-              <p className="text-[11px] text-emerald-600 font-semibold mt-1">Certified Campuses</p>
+            <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin/master-students')}
+                className="text-xs font-bold border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
+              >
+                Master Student DB
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(isCoordinator ? '/school/endorsements' : '/admin/applications')}
+                className="text-xs font-bold border-blue-200 dark:border-blue-900/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
+              >
+                {isCoordinator ? 'Review Endorsements' : 'Review Applications'}
+              </Button>
             </div>
-            <div className="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-200 dark:border-emerald-800">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Total Quota Slots</p>
-              <h3 className="font-heading font-extrabold text-2xl text-indigo-600 dark:text-indigo-400 mt-0.5">
-                {schools.reduce((sum, s) => sum + s.scholarshipSlots, 0).toLocaleString()}
-              </h3>
-              <p className="text-[11px] text-indigo-600 font-semibold mt-1">Enrolled Capacity</p>
-            </div>
-            <div className="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-200 dark:border-indigo-800">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+          {/* DUAL TABS */}
+          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setActiveRosterTab('enrolled')}
+              className={`pb-3 px-5 font-bold text-xs sm:text-sm flex items-center gap-2.5 border-b-2 transition-all cursor-pointer ${
+                activeRosterTab === 'enrolled'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <GraduationCap className="h-4 w-4" />
+              <span>Currently Enrolled Scholars</span>
+              <span
+                className={`text-[11px] px-2.5 py-0.5 rounded-full font-extrabold ${
+                  activeRosterTab === 'enrolled'
+                    ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                {currentSchoolScholars.length}
+              </span>
+            </button>
 
-        <Card hoverEffect className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Pending / Expired</p>
-              <h3 className="font-heading font-extrabold text-2xl text-amber-600 dark:text-amber-400 mt-0.5">
-                {schools.filter((s) => s.partnershipStatus === 'Pending' || s.partnershipStatus === 'Expired').length}
-              </h3>
-              <p className="text-[11px] text-amber-600 font-semibold mt-1">Review Required</p>
-            </div>
-            <div className="h-10 w-10 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800">
-              <Clock className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <button
+              type="button"
+              onClick={() => setActiveRosterTab('applicants')}
+              className={`pb-3 px-5 font-bold text-xs sm:text-sm flex items-center gap-2.5 border-b-2 transition-all cursor-pointer ${
+                activeRosterTab === 'applicants'
+                  ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Scholarship Applicants</span>
+              <span
+                className={`text-[11px] px-2.5 py-0.5 rounded-full font-extrabold ${
+                  activeRosterTab === 'applicants'
+                    ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                }`}
+              >
+                {currentSchoolApplicants.length}
+              </span>
+            </button>
+          </div>
 
-      {/* Filter and Search Bar */}
-      <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-        <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-          <div className="relative flex-1 w-full">
+          {/* Search Bar */}
+          <div className="relative">
             <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
             <input
               type="text"
-              placeholder="Search partner school by name, ID, contact coordinator, or eligible programs..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400"
+              placeholder={
+                activeRosterTab === 'enrolled'
+                  ? 'Search enrolled student by name, student ID, course, or grant status...'
+                  : 'Search applicant by name, reference ID, track, or application status...'
+              }
+              value={scholarSearchQuery}
+              onChange={(e) => setScholarSearchQuery(e.target.value)}
+              className="w-full h-10 pl-10 pr-4 text-xs bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white shadow-xs"
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">MOU:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
-              >
-                <option value="All" className="dark:bg-slate-900 dark:text-white">All Statuses</option>
-                <option value="Active" className="dark:bg-slate-900 dark:text-white">Active</option>
-                <option value="Pending" className="dark:bg-slate-900 dark:text-white">Pending</option>
-                <option value="Expired" className="dark:bg-slate-900 dark:text-white">Expired</option>
-              </select>
+          {/* Data Table */}
+          {loading ? (
+            <div className="p-12 text-center text-slate-400 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800">
+              <Clock className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+              <p className="font-bold text-sm">Loading institution database & records...</p>
+            </div>
+          ) : activeRosterTab === 'enrolled' ? (
+            /* TAB 1: ENROLLED SCHOLARS TABLE */
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="p-4">Student & ID</th>
+                      <th className="p-4">Course / Program</th>
+                      <th className="p-4">Term / Year</th>
+                      <th className="p-4 text-center">GWA</th>
+                      <th className="p-4">Grant Amount</th>
+                      <th className="p-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {currentSchoolScholars
+                      .filter((s) => {
+                        if (!scholarSearchQuery) return true;
+                        const q = scholarSearchQuery.toLowerCase();
+                        return (
+                          s.full_name.toLowerCase().includes(q) ||
+                          s.student_id.toLowerCase().includes(q) ||
+                          s.program_name.toLowerCase().includes(q) ||
+                          s.email.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((scholar) => (
+                        <tr key={scholar.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="p-4">
+                            <div className="font-bold text-slate-900 dark:text-white text-sm">{scholar.full_name}</div>
+                            <code className="text-[11px] text-blue-600 font-mono font-semibold">{scholar.student_id}</code>
+                            <div className="text-[11px] text-slate-400">{scholar.email}</div>
+                          </td>
+                          <td className="p-4">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 block">{scholar.program_name}</span>
+                          </td>
+                          <td className="p-4 text-slate-500 dark:text-slate-400 text-xs">
+                            {scholar.current_term || '1st Sem AY 2026-2027'}
+                          </td>
+                          <td className="p-4 text-center font-bold text-emerald-600 text-sm">
+                            {scholar.gwa ? Number(scholar.gwa).toFixed(2) : '1.75'}
+                          </td>
+                          <td className="p-4 font-bold text-slate-900 dark:text-white">
+                            {formatCurrency(scholar.grant_amount || 15000)}
+                            <div className="text-[10px] text-emerald-600 font-semibold">{scholar.disbursement_status || 'Scheduled'}</div>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant={scholar.status?.includes('Active') ? 'success' : 'primary'} size="sm">
+                              {scholar.status || 'Active Good Standing'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    {currentSchoolScholars.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-12 text-center text-slate-400">
+                          <GraduationCap className="h-10 w-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                          <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No scholars currently enrolled for this institution</p>
+                          <p className="text-xs text-slate-400 mt-1">Enrolled students will appear here once applications are officially approved for this partner school.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            /* TAB 2: SCHOLARSHIP APPLICANTS TABLE */
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                    <tr>
+                      <th className="p-4">Applicant & Ref ID</th>
+                      <th className="p-4">Track / Program</th>
+                      <th className="p-4">Course & Year</th>
+                      <th className="p-4 text-center">GWA</th>
+                      <th className="p-4">Date Applied</th>
+                      <th className="p-4">Application Status</th>
+                      <th className="p-4 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {currentSchoolApplicants
+                      .filter((app) => {
+                        if (!scholarSearchQuery) return true;
+                        const q = scholarSearchQuery.toLowerCase();
+                        const fd = app.form_data || (app as any).formData || {};
+                        const name = (
+                          app.applicant_name ||
+                          fd.fullName ||
+                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
+                          (app as any).student_name ||
+                          'Applicant (Pending Name)'
+                        ).toLowerCase();
+                        const ref = String(app.reference_id || app.id).toLowerCase();
+                        const prog = (app.program_name || app.title || '').toLowerCase();
+                        const stat = String(app.status || '').toLowerCase();
+                        return name.includes(q) || ref.includes(q) || prog.includes(q) || stat.includes(q);
+                      })
+                      .map((app) => {
+                        const fd = app.form_data || (app as any).formData || {};
+                        const applicantName =
+                          app.applicant_name ||
+                          fd.fullName ||
+                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
+                          (app as any).student_name ||
+                          'Applicant (Pending Name)';
+                        const email = app.applicant_email || (app as any).email || fd.email || '';
+                        const course = fd.course || fd.program || 'Academic Program';
+                        const yearLevel = fd.yearLevel || 'Undergraduate';
+                        const gwa = fd.gwa || 'N/A';
+                        const dateApplied = app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Recent';
+
+                        const getAppBadge = (statusStr: string) => {
+                          const s = statusStr?.toLowerCase() || '';
+                          if (s.includes('approve')) return <Badge variant="success" size="sm">Approved</Badge>;
+                          if (s.includes('endorse') || s.includes('pending')) return <Badge variant="warning" size="sm">{statusStr}</Badge>;
+                          if (s.includes('reject')) return <Badge variant="destructive" size="sm">Rejected</Badge>;
+                          return <Badge variant="primary" size="sm">{statusStr || 'Submitted'}</Badge>;
+                        };
+
+                        return (
+                          <tr key={app.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                            <td className="p-4">
+                              <div className="font-bold text-slate-900 dark:text-white text-sm">{applicantName}</div>
+                              <code className="text-[11px] text-blue-600 font-mono font-semibold">
+                                {app.reference_id || `APP-${app.id}`}
+                              </code>
+                              {email && <div className="text-[11px] text-slate-400">{email}</div>}
+                            </td>
+                            <td className="p-4">
+                              <span className="font-semibold text-slate-800 dark:text-slate-200 block">
+                                {app.program_name || app.title || 'QCSP Scholarship'}
+                              </span>
+                            </td>
+                            <td className="p-4 text-slate-600 dark:text-slate-300">
+                              <div className="font-medium">{course}</div>
+                              <div className="text-[11px] text-slate-400">{yearLevel}</div>
+                            </td>
+                            <td className="p-4 text-center font-bold text-blue-600 text-sm">
+                              {gwa}
+                            </td>
+                            <td className="p-4 text-slate-500 text-xs">
+                              {dateApplied}
+                            </td>
+                            <td className="p-4">
+                              {getAppBadge(app.status || 'Submitted')}
+                            </td>
+                            <td className="p-4 text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(isCoordinator ? '/school/endorsements' : '/admin/applications')}
+                                className="font-bold text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
+                                rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
+                              >
+                                {isCoordinator ? 'Review & Endorse' : 'Review App'}
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    {currentSchoolApplicants.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="p-12 text-center text-slate-400">
+                          <FileText className="h-10 w-10 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                          <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No applicants currently applying from this institution</p>
+                          <p className="text-xs text-slate-400 mt-1">Students who select {currentSchool.schoolName} in their application form will show up here.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Page Footer Summary Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 shadow-soft">
+            <div className="flex items-center gap-3">
+              <span>Enrolled Scholars: <strong className="text-slate-900 dark:text-white font-extrabold">{currentSchoolScholars.length}</strong></span>
+              <span>•</span>
+              <span>Active Applicants: <strong className="text-slate-900 dark:text-white font-extrabold">{currentSchoolApplicants.length}</strong></span>
+              <span>•</span>
+              <span>Institution Quota: <strong className="text-blue-600 font-extrabold">{currentSchool.scholarshipSlots}</strong></span>
             </div>
 
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Type:</span>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
-              >
-                <option value="All" className="dark:bg-slate-900 dark:text-white">All Types</option>
-                <option value="LGU State University" className="dark:bg-slate-900 dark:text-white">LGU State University</option>
-                <option value="State University" className="dark:bg-slate-900 dark:text-white">State University</option>
-                <option value="National University" className="dark:bg-slate-900 dark:text-white">National University</option>
-                <option value="Private HEI" className="dark:bg-slate-900 dark:text-white">Private HEI</option>
-                <option value="Private Medical HEI" className="dark:bg-slate-900 dark:text-white">Private Medical HEI</option>
-                <option value="Private University" className="dark:bg-slate-900 dark:text-white">Private University</option>
-              </select>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (activeRosterTab === 'enrolled' ? handleExportSchoolRoster(currentSchool) : handleExportApplicantsRoster(currentSchool))}
+              className="font-bold text-xs"
+              leftIcon={<Download className="h-4 w-4" />}
+            >
+              Export {activeRosterTab === 'enrolled' ? 'Enrolled' : 'Applicants'} (CSV)
+            </Button>
           </div>
-        </CardHeader>
+        </div>
+      ) : (
+        /* ALL INSTITUTIONS DIRECTORY OVERVIEW (FOR ADMINS) */
+        <div className="space-y-4">
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search partner school by name, ID, contact coordinator, or eligible programs..."
+                  value={directorySearchQuery}
+                  onChange={(e) => setDirectorySearchQuery(e.target.value)}
+                  className="w-full h-10 pl-10 pr-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 shadow-xs placeholder:text-slate-400"
+                />
+              </div>
 
-        {/* Data Table */}
-        <CardContent className="p-0 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-700">
-              <tr>
-                <th className="p-4">School ID & Name</th>
-                <th className="p-4">Type</th>
-                <th className="p-4">Contact Officer</th>
-                <th className="p-4">Status</th>
-                <th className="p-4">MOU Validity</th>
-                <th className="p-4 text-center">Quota Slots</th>
-                <th className="p-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredSchools.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-12 text-center text-slate-400">
-                    <Building2 className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-                    <p className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No partner schools found</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Try searching with a different term or filter.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredSchools.map((school) => (
-                  <tr key={school.schoolId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="p-4">
-                      <button
-                        onClick={() => handleOpenEnrolledStudents(school)}
-                        className="text-left group/btn cursor-pointer block"
-                        title="Click to view students enrolled in this school"
-                      >
-                        <div className="font-bold text-slate-900 dark:text-white text-sm group-hover/btn:text-blue-600 dark:group-hover/btn:text-blue-400 transition-colors flex items-center gap-1.5">
-                          {school.schoolName}
-                          <ExternalLink className="h-3 w-3 text-slate-400 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-                        </div>
-                        <code className="text-[11px] text-blue-700 dark:text-blue-400 font-mono font-semibold">{school.schoolId}</code>
-                      </button>
-                    </td>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">MOU:</span>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Expired">Expired</option>
+                  </select>
+                </div>
 
-                    <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
-                      <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md text-[11px]">
-                        {school.schoolType}
-                      </span>
-                    </td>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Type:</span>
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => setTypeFilter(e.target.value)}
+                    className="h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
+                  >
+                    <option value="All">All Types</option>
+                    <option value="Private">Private</option>
+                    <option value="LGU University">LGU University</option>
+                    <option value="SUC">SUC</option>
+                  </select>
+                </div>
 
-                    <td className="p-4 space-y-0.5">
-                      <div className="font-bold text-slate-900 dark:text-white">{school.contactPerson}</div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <Mail className="h-3 w-3 text-slate-400" /> {school.email}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                        <Phone className="h-3 w-3 text-slate-400" /> {school.contactNumber}
-                      </div>
-                    </td>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleOpenAddModal}
+                  leftIcon={<Plus className="h-4 w-4" />}
+                  className="font-bold bg-blue-600 text-white"
+                >
+                  Add Partner School
+                </Button>
+              </div>
+            </CardHeader>
 
-                    <td className="p-4">{getStatusBadge(school.partnershipStatus)}</td>
-
-                    <td className="p-4 text-slate-600 dark:text-slate-400 text-[11px]">
-                      <div className="font-semibold">{school.partnershipStart}</div>
-                      <div className="text-slate-400">to {school.partnershipEnd}</div>
-                    </td>
-
-                    <td className="p-4 text-center">
-                      <button
-                        onClick={() => handleOpenEnrolledStudents(school, 'enrolled')}
-                        className="hover:scale-105 transition-transform cursor-pointer block mx-auto text-center"
-                        title="Click to view Enrolled Scholars and Scholarship Applicants"
-                      >
-                        <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
-                          {school.scholarshipSlots} <span className="text-[10px] text-slate-400 font-normal">slots</span>
-                        </span>
-                        <div className="flex items-center justify-center gap-1.5 mt-1 flex-wrap">
-                          <span className="text-[10px] text-emerald-700 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                            {school.activeScholarsCount ?? 0} enrolled
-                          </span>
-                          {(applicantCounts[school.schoolId] || 0) > 0 && (
-                            <span className="text-[10px] text-amber-700 dark:text-amber-300 font-bold bg-amber-50 dark:bg-amber-950/60 px-1.5 py-0.5 rounded border border-amber-200 dark:border-amber-800">
-                              {applicantCounts[school.schoolId]} applying
-                            </span>
-                          )}
-                        </div>
-                      </button>
-                    </td>
-
-                    <td className="p-4 text-right space-x-1">
-                      <button
-                        onClick={() => handleOpenEnrolledStudents(school, 'enrolled')}
-                        title="View Enrolled Students & Scholarship Applicants"
-                        className="p-1.5 rounded-lg text-blue-600 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
-                      >
-                        <Users className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setViewingSchool(school)}
-                        title="View Full Profile"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      {!isCoordinator && (
-                        <>
-                          <button
-                            onClick={() => handleOpenEditModal(school)}
-                            title="Edit Institution Record"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeletingSchool(school)}
-                            title="Delete Record"
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </>
-                      )}
-                    </td>
+            <CardContent className="p-0 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="p-4">School ID & Name</th>
+                    <th className="p-4">Type</th>
+                    <th className="p-4">Contact Officer</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4">MOU Validity</th>
+                    <th className="p-4 text-center">Quota Slots</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </CardContent>
-      </Card>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredDirectorySchools.map((school) => (
+                    <tr key={school.schoolId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                      <td className="p-4">
+                        <button
+                          onClick={() => {
+                            setSelectedSchoolId(school.schoolId);
+                            setViewMode('students');
+                          }}
+                          className="text-left group/btn cursor-pointer block"
+                          title="Click to view students and applicants for this school"
+                        >
+                          <div className="font-bold text-slate-900 dark:text-white text-sm group-hover/btn:text-blue-600 transition-colors flex items-center gap-1.5">
+                            {school.schoolName}
+                            <ExternalLink className="h-3 w-3 text-slate-400 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                          </div>
+                          <code className="text-[11px] text-blue-700 dark:text-blue-400 font-mono font-semibold">{school.schoolId}</code>
+                        </button>
+                      </td>
+                      <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
+                        <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md text-[11px]">
+                          {school.schoolType}
+                        </span>
+                      </td>
+                      <td className="p-4 space-y-0.5">
+                        <div className="font-bold text-slate-900 dark:text-white">{school.contactPerson}</div>
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                          <Mail className="h-3 w-3 text-slate-400" /> {school.email}
+                        </div>
+                      </td>
+                      <td className="p-4">{getStatusBadge(school.partnershipStatus)}</td>
+                      <td className="p-4 text-slate-600 dark:text-slate-400 text-[11px]">
+                        <div className="font-semibold">{school.partnershipStart}</div>
+                        <div className="text-slate-400">to {school.partnershipEnd}</div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
+                          {school.scholarshipSlots} slots
+                        </span>
+                      </td>
+                      <td className="p-4 text-right space-x-1">
+                        <button
+                          onClick={() => {
+                            setSelectedSchoolId(school.schoolId);
+                            setViewMode('students');
+                          }}
+                          title="View Students & Applicants"
+                          className="p-1.5 rounded-lg text-blue-600 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
+                        >
+                          <Users className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleOpenEditModal(school)}
+                          title="Edit Institution Record"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDeletingSchool(school)}
+                          title="Delete Record"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Add School Modal */}
       {showAddModal && (
@@ -1099,7 +1242,7 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                 <select
                   value={form.schoolType}
                   onChange={(e) => updateForm('schoolType', e.target.value)}
-                  className="w-full h-11 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600"
                 >
                   <option value="LGU State University">LGU State University</option>
                   <option value="State University">State University</option>
@@ -1107,28 +1250,20 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                   <option value="Private HEI">Private HEI</option>
                   <option value="Private Medical HEI">Private Medical HEI</option>
                   <option value="Private University">Private University</option>
-                  <option value="Private College">Private College</option>
                 </select>
               </div>
-
-              <div className="space-y-1.5">
-                <label className="block font-semibold text-slate-700 dark:text-slate-300">Partnership Status</label>
-                <select
-                  value={form.partnershipStatus}
-                  onChange={(e) => updateForm('partnershipStatus', e.target.value as any)}
-                  className="w-full h-11 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 cursor-pointer"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Expired">Expired</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+              <Input
+                label="Total Scholarship Slots Allocation *"
+                type="number"
+                value={form.scholarshipSlots}
+                onChange={(e) => updateForm('scholarshipSlots', parseInt(e.target.value) || 0)}
+                required
+              />
             </div>
 
             <Input
               label="Campus Address *"
-              placeholder="e.g. Quirino Highway, San Bartolome, Novaliches, QC"
+              placeholder="e.g. Quirino Highway, Novaliches, Quezon City"
               value={form.address}
               onChange={(e) => updateForm('address', e.target.value)}
               required
@@ -1136,58 +1271,25 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
-                label="Contact Person / Officer *"
-                placeholder="Dr. Full Name"
+                label="Campus Coordinator *"
+                placeholder="e.g. Dr. Maria Santos"
                 value={form.contactPerson}
                 onChange={(e) => updateForm('contactPerson', e.target.value)}
                 required
               />
               <Input
+                label="Contact Number"
+                placeholder="e.g. (02) 8806-3000"
+                value={form.contactNumber}
+                onChange={(e) => updateForm('contactNumber', e.target.value)}
+              />
+              <Input
                 label="Official Email *"
                 type="email"
-                placeholder="registrar@school.edu.ph"
+                placeholder="e.g. registrar@school.edu.ph"
                 value={form.email}
                 onChange={(e) => updateForm('email', e.target.value)}
                 required
-              />
-              <Input
-                label="Contact Number *"
-                placeholder="(02) 8806-3000"
-                value={form.contactNumber}
-                onChange={(e) => updateForm('contactNumber', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Input
-                label="MOU Validity Start"
-                type="date"
-                value={form.partnershipStart}
-                onChange={(e) => updateForm('partnershipStart', e.target.value)}
-              />
-              <Input
-                label="MOU Validity Expiry"
-                type="date"
-                value={form.partnershipEnd}
-                onChange={(e) => updateForm('partnershipEnd', e.target.value)}
-              />
-              <Input
-                label="Scholarship Quota Slots"
-                type="number"
-                value={String(form.scholarshipSlots)}
-                onChange={(e) => updateForm('scholarshipSlots', parseInt(e.target.value) || 0)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block font-semibold text-slate-700 dark:text-slate-300">Programs Offered & Priority Courses</label>
-              <input
-                type="text"
-                placeholder="e.g. BS Information Technology, BS Computer Science, BS Nursing"
-                value={form.programsOffered}
-                onChange={(e) => updateForm('programsOffered', e.target.value)}
-                className="w-full h-11 px-4 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600"
               />
             </div>
           </form>
@@ -1199,8 +1301,8 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
         <Modal
           isOpen={!!editingSchool}
           onClose={() => setEditingSchool(null)}
-          title={`Edit Partner School: ${editingSchool.schoolName}`}
-          description="Update institution accreditations, coordinator details, and quota allocations."
+          title={`Edit Institution: ${editingSchool.schoolName}`}
+          description="Update partner school information, quota, or accreditation status."
           footer={
             <div className="flex gap-2 w-full justify-end">
               <Button variant="outline" size="sm" onClick={() => setEditingSchool(null)}>
@@ -1214,12 +1316,7 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
         >
           <form onSubmit={handleSaveEdit} className="space-y-4 text-xs">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input
-                label="School ID"
-                value={form.schoolId}
-                disabled
-                className="bg-slate-100 dark:bg-slate-800 font-mono text-xs"
-              />
+              <Input label="School ID" value={form.schoolId} disabled className="bg-slate-100 dark:bg-slate-800 font-mono text-xs" />
               <Input
                 label="Institution Name *"
                 value={form.schoolName}
@@ -1230,145 +1327,27 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="block font-semibold text-slate-700 dark:text-slate-300">Institution Classification</label>
-                <select
-                  value={form.schoolType}
-                  onChange={(e) => updateForm('schoolType', e.target.value)}
-                  className="w-full h-11 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600"
-                >
-                  <option value="LGU State University">LGU State University</option>
-                  <option value="State University">State University</option>
-                  <option value="National University">National University</option>
-                  <option value="Private HEI">Private HEI</option>
-                  <option value="Private Medical HEI">Private Medical HEI</option>
-                  <option value="Private University">Private University</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
                 <label className="block font-semibold text-slate-700 dark:text-slate-300">Partnership Status</label>
                 <select
                   value={form.partnershipStatus}
-                  onChange={(e) => updateForm('partnershipStatus', e.target.value as any)}
-                  className="w-full h-11 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600"
+                  onChange={(e) => updateForm('partnershipStatus', e.target.value)}
+                  className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600"
                 >
-                  <option value="Active">Active</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Expired">Expired</option>
+                  <option value="Active">Active MOU</option>
+                  <option value="Pending">Renewal Pending</option>
+                  <option value="Expired">Expired MOU</option>
                   <option value="Inactive">Inactive</option>
                 </select>
               </div>
-            </div>
-
-            <Input
-              label="Campus Address"
-              value={form.address}
-              onChange={(e) => updateForm('address', e.target.value)}
-            />
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input
-                label="Contact Officer"
-                value={form.contactPerson}
-                onChange={(e) => updateForm('contactPerson', e.target.value)}
-              />
-              <Input
-                label="Email"
-                type="email"
-                value={form.email}
-                onChange={(e) => updateForm('email', e.target.value)}
-              />
-              <Input
-                label="Phone"
-                value={form.contactNumber}
-                onChange={(e) => updateForm('contactNumber', e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Input
-                label="MOU Start"
-                type="date"
-                value={form.partnershipStart}
-                onChange={(e) => updateForm('partnershipStart', e.target.value)}
-              />
-              <Input
-                label="MOU Expiry"
-                type="date"
-                value={form.partnershipEnd}
-                onChange={(e) => updateForm('partnershipEnd', e.target.value)}
-              />
-              <Input
-                label="Quota Slots"
+                label="Quota Slots *"
                 type="number"
-                value={String(form.scholarshipSlots)}
+                value={form.scholarshipSlots}
                 onChange={(e) => updateForm('scholarshipSlots', parseInt(e.target.value) || 0)}
+                required
               />
             </div>
           </form>
-        </Modal>
-      )}
-
-      {/* View School Details Modal */}
-      {viewingSchool && (
-        <Modal
-          isOpen={!!viewingSchool}
-          onClose={() => setViewingSchool(null)}
-          title={viewingSchool.schoolName}
-          description={`School ID: ${viewingSchool.schoolId} | Type: ${viewingSchool.schoolType}`}
-          footer={
-            <Button variant="outline" size="sm" onClick={() => setViewingSchool(null)}>
-              Close
-            </Button>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Partnership Status</span>
-                {getStatusBadge(viewingSchool.partnershipStatus)}
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Scholarship Quota</span>
-                <span className="font-heading font-extrabold text-lg text-blue-700 dark:text-blue-300">
-                  {viewingSchool.scholarshipSlots} slots
-                </span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <MapPin className="h-4 w-4 text-blue-600" /> Campus Address
-              </h4>
-              <p className="text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-700">
-                {viewingSchool.address}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Contact Person</span>
-                <span className="font-bold text-slate-900 dark:text-white">{viewingSchool.contactPerson}</span>
-              </div>
-              <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Email & Phone</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 block">{viewingSchool.email}</span>
-                <span className="text-slate-500 block">{viewingSchool.contactNumber}</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-blue-50/60 dark:bg-blue-950/60 rounded-xl border border-blue-200 dark:border-blue-800 space-y-1">
-              <h4 className="font-bold text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
-                <GraduationCap className="h-4 w-4 text-blue-600" /> Programs Offered & Eligible Courses
-              </h4>
-              <p className="text-blue-900 dark:text-blue-300 leading-relaxed font-medium">{viewingSchool.programsOffered}</p>
-            </div>
-
-            <div className="flex items-center justify-between text-slate-500 text-[11px] pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>MOU Start: <strong>{viewingSchool.partnershipStart}</strong></span>
-              <span>MOU Expiry: <strong>{viewingSchool.partnershipEnd}</strong></span>
-            </div>
-          </div>
         </Modal>
       )}
 
@@ -1392,386 +1371,6 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
         >
           <div className="p-4 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-2xl text-xs text-rose-900 dark:text-rose-200">
             Warning: Deleting this partner school will unassign active quotas for {deletingSchool.schoolName}. This action cannot be undone.
-          </div>
-        </Modal>
-      )}
-
-      {/* Import Modal */}
-      {showImportModal && (
-        <Modal
-          isOpen={showImportModal}
-          onClose={() => setShowImportModal(false)}
-          title="Bulk Import Partner Schools"
-          description="Upload an official CSV or Excel file containing accredited colleges, contacts, and quota allocations."
-          footer={
-            <div className="flex gap-2 w-full justify-end">
-              <Button variant="outline" size="sm" onClick={() => setShowImportModal(false)}>
-                Cancel
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  setShowImportModal(false);
-                  toast.success('Bulk partner schools CSV processed! 3 new institutions imported.');
-                }}
-                className="bg-blue-600 text-white font-bold"
-              >
-                Upload & Process
-              </Button>
-            </div>
-          }
-        >
-          <div className="p-6 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-center space-y-3">
-            <FileSpreadsheet className="h-10 w-10 text-slate-400 mx-auto" />
-            <p className="font-bold text-xs text-slate-800 dark:text-slate-200">
-              Drag and drop your partner schools CSV here, or browse files
-            </p>
-            <input
-              type="file"
-              accept=".csv, .xlsx"
-              onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-              className="text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-            {importFile && (
-              <p className="text-xs font-bold text-emerald-600">Selected file: {importFile.name}</p>
-            )}
-          </div>
-        </Modal>
-      )}
-      {/* Enrolled Students & Scholarship Applicants Modal */}
-      {selectedSchoolForStudents && (
-        <Modal
-          isOpen={!!selectedSchoolForStudents}
-          onClose={() => setSelectedSchoolForStudents(null)}
-          title={`Students & Applicants: ${selectedSchoolForStudents.schoolName}`}
-          description={`Institution ID: ${selectedSchoolForStudents.schoolId} • Classification: ${selectedSchoolForStudents.schoolType} • Quota: ${selectedSchoolForStudents.scholarshipSlots} Slots`}
-          footer={
-            <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 pt-2">
-              <div className="text-xs text-slate-500 font-semibold flex items-center gap-3">
-                <span>Enrolled Scholars: <strong>{schoolScholars.length}</strong></span>
-                <span>•</span>
-                <span>Active Applicants: <strong>{schoolApplicants.length}</strong></span>
-              </div>
-              <div className="flex items-center gap-2">
-                {activeRosterTab === 'enrolled' ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExportSchoolRoster(selectedSchoolForStudents)}
-                    className="font-bold text-xs"
-                    leftIcon={<Download className="h-4 w-4" />}
-                  >
-                    Export Enrolled (CSV)
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleExportApplicantsRoster(selectedSchoolForStudents)}
-                    className="font-bold text-xs"
-                    leftIcon={<Download className="h-4 w-4" />}
-                  >
-                    Export Applicants (CSV)
-                  </Button>
-                )}
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setSelectedSchoolForStudents(null)}
-                  className="bg-blue-600 text-white font-bold"
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            {/* Header Banner & Quick Navigation Links */}
-            <div className="p-3 bg-blue-50/80 dark:bg-slate-800 rounded-2xl border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <span className="font-bold text-blue-950 dark:text-blue-200 text-sm block">
-                  {selectedSchoolForStudents.schoolName}
-                </span>
-                <span className="text-slate-500 text-[11px]">
-                  Campus Coordinator: {selectedSchoolForStudents.contactPerson} ({selectedSchoolForStudents.email})
-                </span>
-              </div>
-
-              {/* Direct System Navigation Links */}
-              <div className="flex items-center gap-2 self-stretch sm:self-auto justify-end">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSchoolForStudents(null);
-                    navigate('/admin/master-students');
-                  }}
-                  className="text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-100"
-                  leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
-                >
-                  Master Student DB
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setSelectedSchoolForStudents(null);
-                    navigate(isCoordinator ? '/school/endorsements' : '/admin/applications');
-                  }}
-                  className="text-[11px] font-bold border-blue-200 text-blue-700 hover:bg-blue-100"
-                  leftIcon={<ExternalLink className="h-3.5 w-3.5" />}
-                >
-                  {isCoordinator ? 'Review Endorsements' : 'All Applications'}
-                </Button>
-              </div>
-            </div>
-
-            {/* TAB SELECTOR */}
-            <div className="flex border-b border-slate-200 dark:border-slate-700 gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveRosterTab('enrolled')}
-                className={`pb-2.5 px-4 font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                  activeRosterTab === 'enrolled'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
-              >
-                <GraduationCap className="h-4 w-4" />
-                <span>Currently Enrolled Scholars</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                  activeRosterTab === 'enrolled'
-                    ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}>
-                  {schoolScholars.length}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveRosterTab('applicants')}
-                className={`pb-2.5 px-4 font-bold text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
-                  activeRosterTab === 'applicants'
-                    ? 'border-blue-600 text-blue-600 dark:text-blue-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
-                }`}
-              >
-                <FileText className="h-4 w-4" />
-                <span>Scholarship Applicants</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full font-extrabold ${
-                  activeRosterTab === 'applicants'
-                    ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
-                }`}>
-                  {schoolApplicants.length}
-                </span>
-              </button>
-            </div>
-
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder={
-                  activeRosterTab === 'enrolled'
-                    ? 'Search enrolled student by name, student ID, course, or grant status...'
-                    : 'Search applicant by name, reference ID, track, or application status...'
-                }
-                value={scholarSearchQuery}
-                onChange={(e) => setScholarSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white"
-              />
-            </div>
-
-            {/* Content Loader */}
-            {loadingStudentsData ? (
-              <div className="p-10 text-center text-slate-400">
-                <Clock className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
-                <p className="font-bold">Fetching records from student database & applications...</p>
-              </div>
-            ) : activeRosterTab === 'enrolled' ? (
-              /* TAB 1: ENROLLED SCHOLARS TABLE */
-              <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl max-h-[350px]">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <th className="p-3">Student & ID</th>
-                      <th className="p-3">Course / Program</th>
-                      <th className="p-3">Term / Year</th>
-                      <th className="p-3 text-center">GWA</th>
-                      <th className="p-3">Grant Amount</th>
-                      <th className="p-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {schoolScholars
-                      .filter((s) => {
-                        if (!scholarSearchQuery) return true;
-                        const q = scholarSearchQuery.toLowerCase();
-                        return (
-                          s.full_name.toLowerCase().includes(q) ||
-                          s.student_id.toLowerCase().includes(q) ||
-                          s.program_name.toLowerCase().includes(q) ||
-                          s.email.toLowerCase().includes(q)
-                        );
-                      })
-                      .map((scholar) => (
-                        <tr key={scholar.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                          <td className="p-3">
-                            <div className="font-bold text-slate-900 dark:text-white">{scholar.full_name}</div>
-                            <code className="text-[10px] text-blue-600 font-mono font-semibold">{scholar.student_id}</code>
-                            <div className="text-[10px] text-slate-400">{scholar.email}</div>
-                          </td>
-                          <td className="p-3">
-                            <span className="font-semibold text-slate-800 dark:text-slate-200 block">{scholar.program_name}</span>
-                          </td>
-                          <td className="p-3 text-slate-500 text-[11px]">
-                            {scholar.current_term || '1st Sem AY 2026-2027'}
-                          </td>
-                          <td className="p-3 text-center font-bold text-emerald-600">
-                            {scholar.gwa ? Number(scholar.gwa).toFixed(2) : '1.75'}
-                          </td>
-                          <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
-                            {formatCurrency(scholar.grant_amount || 15000)}
-                            <div className="text-[10px] text-emerald-600 font-semibold">{scholar.disbursement_status || 'Scheduled'}</div>
-                          </td>
-                          <td className="p-3">
-                            <Badge variant={scholar.status?.includes('Active') ? 'success' : 'primary'} size="sm">
-                              {scholar.status || 'Active Good Standing'}
-                            </Badge>
-                          </td>
-                        </tr>
-                      ))}
-                    {schoolScholars.length === 0 && (
-                      <tr>
-                        <td colSpan={6} className="p-8 text-center text-slate-400">
-                          <GraduationCap className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                          <p className="font-bold text-slate-700 dark:text-slate-300">No scholars currently enrolled for this institution</p>
-                          <p className="text-xs text-slate-400 mt-1">Enrolled students will appear here once applications are officially approved for this partner school.</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              /* TAB 2: SCHOLARSHIP APPLICANTS TABLE */
-              <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl max-h-[350px]">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 dark:border-slate-700">
-                    <tr>
-                      <th className="p-3">Applicant & Ref ID</th>
-                      <th className="p-3">Track / Program</th>
-                      <th className="p-3">Course & Year</th>
-                      <th className="p-3 text-center">GWA</th>
-                      <th className="p-3">Date Applied</th>
-                      <th className="p-3">Application Status</th>
-                      <th className="p-3 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {schoolApplicants
-                      .filter((app) => {
-                        if (!scholarSearchQuery) return true;
-                        const q = scholarSearchQuery.toLowerCase();
-                        const fd = app.form_data || (app as any).formData || {};
-                        const name = (
-                          app.applicant_name ||
-                          fd.fullName ||
-                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
-                          (app as any).student_name ||
-                          app.applicant_email ||
-                          (app as any).email ||
-                          ''
-                        ).toLowerCase();
-                        const ref = String(app.reference_id || app.id).toLowerCase();
-                        const prog = (app.program_name || app.title || '').toLowerCase();
-                        const stat = String(app.status || '').toLowerCase();
-                        return name.includes(q) || ref.includes(q) || prog.includes(q) || stat.includes(q);
-                      })
-                      .map((app) => {
-                        const fd = app.form_data || (app as any).formData || {};
-                        const applicantName =
-                          app.applicant_name ||
-                          fd.fullName ||
-                          (fd.firstName ? `${fd.firstName} ${fd.lastName || ''}`.trim() : '') ||
-                          (app as any).student_name ||
-                          'Applicant (Pending Name)';
-                        const email = app.applicant_email || (app as any).email || fd.email || '';
-                        const course = fd.course || fd.program || 'Academic Program';
-                        const yearLevel = fd.yearLevel || 'Undergraduate';
-                        const gwa = fd.gwa || 'N/A';
-                        const dateApplied = app.created_at ? new Date(app.created_at).toLocaleDateString() : 'Recent';
-
-                        const getAppBadge = (statusStr: string) => {
-                          const s = statusStr?.toLowerCase() || '';
-                          if (s.includes('approve')) return <Badge variant="success" size="sm">Approved</Badge>;
-                          if (s.includes('endorse') || s.includes('pending')) return <Badge variant="warning" size="sm">{statusStr}</Badge>;
-                          if (s.includes('reject')) return <Badge variant="destructive" size="sm">Rejected</Badge>;
-                          return <Badge variant="primary" size="sm">{statusStr || 'Submitted'}</Badge>;
-                        };
-
-                        return (
-                          <tr key={app.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                            <td className="p-3">
-                              <div className="font-bold text-slate-900 dark:text-white">{applicantName}</div>
-                              <code className="text-[10px] text-blue-600 font-mono font-semibold">
-                                {app.reference_id || `APP-${app.id}`}
-                              </code>
-                              {email && <div className="text-[10px] text-slate-400">{email}</div>}
-                            </td>
-                            <td className="p-3">
-                              <span className="font-semibold text-slate-800 dark:text-slate-200 block">
-                                {app.program_name || app.title || 'QCSP Scholarship'}
-                              </span>
-                            </td>
-                            <td className="p-3 text-slate-600 dark:text-slate-300">
-                              <div>{course}</div>
-                              <div className="text-[10px] text-slate-400">{yearLevel}</div>
-                            </td>
-                            <td className="p-3 text-center font-bold text-blue-600">
-                              {gwa}
-                            </td>
-                            <td className="p-3 text-slate-500 text-[11px]">
-                              {dateApplied}
-                            </td>
-                            <td className="p-3">
-                              {getAppBadge(app.status || 'Submitted')}
-                            </td>
-                            <td className="p-3 text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedSchoolForStudents(null);
-                                  navigate(isCoordinator ? '/school/endorsements' : '/admin/applications');
-                                }}
-                                className="font-bold text-[11px] border-blue-300 text-blue-700 hover:bg-blue-50"
-                                rightIcon={<ArrowRight className="h-3 w-3" />}
-                              >
-                                {isCoordinator ? 'Review & Endorse' : 'Review App'}
-                              </Button>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    {schoolApplicants.length === 0 && (
-                      <tr>
-                        <td colSpan={7} className="p-8 text-center text-slate-400">
-                          <FileText className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
-                          <p className="font-bold text-slate-700 dark:text-slate-300">No applicants currently applying from this institution</p>
-                          <p className="text-xs text-slate-400 mt-1">Students who select {selectedSchoolForStudents.schoolName} in their application form will show up here.</p>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
         </Modal>
       )}
