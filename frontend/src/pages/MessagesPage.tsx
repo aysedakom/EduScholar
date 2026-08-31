@@ -602,7 +602,10 @@ export const MessagesPage: React.FC = () => {
                 return (
                   <div
                     key={c.conversation_id}
-                    onClick={() => setSelectedConv(c)}
+                    onClick={() => {
+                      setSelectedConv(c);
+                      loadMessagesForSelected(c.conversation_id);
+                    }}
                     className={`p-3 rounded-2xl flex items-center gap-3 cursor-pointer transition-all border ${
                       isSelected
                         ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 shadow-xs'
@@ -791,13 +794,32 @@ export const MessagesPage: React.FC = () => {
                 Loading messages...
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs text-center space-y-1">
-                <ShieldCheck className="h-8 w-8 text-slate-300 opacity-60" />
-                <p className="font-semibold text-slate-600 dark:text-slate-300">
-                  Official Quezon City Scholarship Helpdesk
-                </p>
-                <p className="text-[11px]">Send a message to inquire about grant applications or disbursements.</p>
-              </div>
+              selectedConv?.is_ticket ? (
+                <div className="p-4 rounded-2xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-2.5 my-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-xs text-blue-950 dark:text-blue-200">
+                      Ticket #{selectedConv.ticket_code}
+                    </span>
+                    <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                      {selectedConv.ticket_category}
+                    </span>
+                  </div>
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+                    {selectedConv.ticket_subject || selectedConv.participant_role}
+                  </h4>
+                  <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 whitespace-pre-line leading-relaxed shadow-xs">
+                    {selectedConv.last_message || 'Student inquiry registered. You can type a response below to assist the applicant.'}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 text-xs text-center space-y-1">
+                  <ShieldCheck className="h-8 w-8 text-slate-300 opacity-60" />
+                  <p className="font-semibold text-slate-600 dark:text-slate-300">
+                    Official Quezon City Scholarship Helpdesk
+                  </p>
+                  <p className="text-[11px]">Send a message to inquire about grant applications or disbursements.</p>
+                </div>
+              )
             ) : (
               messages.map((c) => {
                 const isMe = String(c.sender_id) === String(user?.id) || (isAdminOrStaff && c.sender_role === 'admin') || (!isAdminOrStaff && c.sender_role === 'student');

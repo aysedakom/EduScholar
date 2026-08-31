@@ -308,7 +308,7 @@ class CommunicationService {
    */
   async getMessages(conversationId, currentUser) {
     try {
-      const res = await pool.query(
+      let res = await pool.query(
         `SELECT id, conversation_id, sender_id, sender_name, sender_role, recipient_id, recipient_role, message, is_read, created_at
          FROM chat_messages
          WHERE conversation_id = $1
@@ -316,8 +316,42 @@ class CommunicationService {
         [conversationId]
       );
 
+      let messages = res.rows;
+
+      // If this is a support ticket and no chat messages exist yet, auto-populate the ticket inquiry
+      if (messages.length === 0 && (conversationId.startsWith('conv_ticket_') || conversationId.toLowerCase().includes('tkt-'))) {
+        try {
+          const rawCode = conversationId.replace('conv_ticket_', '').toUpperCase();
+          const ticketRes = await pool.query(
+            `SELECT t.*, u.name as user_name, u.role as user_role
+             FROM support_tickets t
+             LEFT JOIN users u ON t.user_id = u.id
+             WHERE t.conversation_id = $1 OR t.ticket_code ILIKE $2 OR LOWER(t.ticket_code) = LOWER($3)`,
+            [conversationId, `%${rawCode}%`, rawCode]
+          );
+
+          if (ticketRes.rows[0]) {
+            const t = ticketRes.rows[0];
+            const senderName = t.applicant_name || t.user_name || 'Applicant';
+            const senderRole = t.user_role || 'student';
+            const initialText = `[Ticket #${t.ticket_code}] ${t.subject}\nCategory: ${t.category} | Priority: ${t.priority}\n\n${t.description}`;
+
+            const insertRes = await pool.query(
+              `INSERT INTO chat_messages (conversation_id, sender_id, sender_name, sender_role, message, is_read, created_at)
+               VALUES ($1, $2, $3, $4, $5, FALSE, $6)
+               RETURNING *`,
+              [conversationId, t.user_id, senderName, senderRole, initialText, t.created_at || new Date().toISOString()]
+            );
+
+            messages = insertRes.rows;
+          }
+        } catch (fillErr) {
+          console.warn('[CommunicationService.getMessages] Ticket backfill note:', fillErr.message);
+        }
+      }
+
       // Auto mark messages as read for recipient
-      if (currentUser) {
+      if (currentUser && messages.length > 0) {
         await pool.query(
           `UPDATE chat_messages SET is_read = TRUE 
            WHERE conversation_id = $1 AND sender_id != $2`,
@@ -325,7 +359,7 @@ class CommunicationService {
         );
       }
 
-      return res.rows;
+      return messages;
     } catch (err) {
       console.error('[CommunicationService.getMessages] Error:', err);
       throw err;
