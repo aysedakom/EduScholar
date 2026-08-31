@@ -145,7 +145,9 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   };
 
   const navigateAfterLogin = (roleToUse: UserRole) => {
-    if (roleToUse === 'admin' || roleToUse === 'supervisor') {
+    if (redirectParam && redirectParam !== '/login' && redirectParam !== '/') {
+      navigate(redirectParam, { replace: true });
+    } else if (roleToUse === 'admin' || roleToUse === 'supervisor') {
       navigate('/admin/review-queue', { replace: true });
     } else if (roleToUse === 'system_admin') {
       navigate('/admin/super', { replace: true });
@@ -153,10 +155,8 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
       navigate('/treasury/reconciliation', { replace: true });
     } else if (roleToUse === 'school_coordinator') {
       navigate('/school/portal', { replace: true });
-    } else if (redirectParam && redirectParam !== '/education-scholarship') {
-      navigate(redirectParam, { replace: true });
     } else {
-      navigate('/education-scholarship', { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   };
 
@@ -197,8 +197,8 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
           otpInputRefs.current[0]?.focus();
         }, 150);
       } else {
-        // Fallback or direct token issued
-        const roleToUse = getRoleFromEmail(email);
+        // Direct token issued -> Navigate directly to designated dashboard
+        const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
         toast.success(`Signed in successfully as ${roleToUse.toUpperCase().replace('_', ' ')}!`);
         navigateAfterLogin(roleToUse);
       }

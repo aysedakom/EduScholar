@@ -13,6 +13,8 @@ interface LoginRequestResult {
   email: string;
   devOtp?: string;
   message?: string;
+  token?: string;
+  user?: any;
 }
 
 interface AuthContextType {
@@ -142,6 +144,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setApiError(null);
     try {
       const res = await authApi.login(email, password);
+
+      // If direct authenticated token and user returned, initialize session immediately
+      if (res.data?.token && res.data?.user) {
+        const respUser = res.data.user;
+        const fullUser: User = {
+          ...respUser,
+          id: String(respUser.id),
+          hasCompletedBasicForm: true,
+        };
+        setUser(fullUser);
+        setRole(respUser.role);
+        setToken(res.data.token);
+        localStorage.setItem('token', res.data.token);
+        localStorage.setItem('user_profile', JSON.stringify(fullUser));
+        localStorage.setItem('user_role', respUser.role);
+        setApiError(null);
+      }
+
       return {
         requireOtp: res.data.requireOtp,
         requirePasswordReset: res.data.requirePasswordReset || res.data.mustResetPassword,
@@ -150,6 +170,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         email: res.data.email || email,
         devOtp: res.data.devOtp,
         message: res.data.message,
+        token: res.data.token,
+        user: res.data.user,
       };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Unable to sign in. Please verify your credentials.';
