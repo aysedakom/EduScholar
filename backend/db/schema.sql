@@ -358,6 +358,74 @@ CREATE TABLE system_logs (
 );
 
 -- ============================================================
+-- 15. SUPPORT TICKETS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS support_tickets (
+  id SERIAL PRIMARY KEY,
+  ticket_code VARCHAR(50) UNIQUE NOT NULL,
+  user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+  applicant_name VARCHAR(150),
+  applicant_email VARCHAR(200),
+  subject VARCHAR(255) NOT NULL,
+  category VARCHAR(100) NOT NULL DEFAULT 'General Inquiry',
+  priority VARCHAR(30) DEFAULT 'Medium',
+  status VARCHAR(30) DEFAULT 'Open',
+  description TEXT NOT NULL,
+  conversation_id VARCHAR(100),
+  admin_notes TEXT,
+  resolution_remarks TEXT,
+  closed_at TIMESTAMPTZ,
+  closed_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_support_tickets_code ON support_tickets(ticket_code);
+
+-- ============================================================
+-- 16. CHAT MESSAGES & ANNOUNCEMENTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id SERIAL PRIMARY KEY,
+  conversation_id VARCHAR(100) NOT NULL,
+  sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  sender_name VARCHAR(150),
+  sender_role VARCHAR(50) DEFAULT 'student',
+  recipient_id INTEGER,
+  recipient_role VARCHAR(50),
+  message TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversation_id, created_at);
+
+CREATE TABLE IF NOT EXISTS announcements (
+  id SERIAL PRIMARY KEY,
+  announcement_code VARCHAR(50) UNIQUE,
+  title VARCHAR(255) NOT NULL,
+  target_group VARCHAR(100) DEFAULT 'All Students',
+  message TEXT NOT NULL,
+  priority VARCHAR(30) DEFAULT 'normal',
+  sent_by VARCHAR(150),
+  created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  status VARCHAR(30) DEFAULT 'active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status, created_at);
+
+-- ============================================================
+-- 17. PORTAL SETTINGS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS portal_settings (
+  id SERIAL PRIMARY KEY,
+  setting_key VARCHAR(100) UNIQUE NOT NULL,
+  setting_value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- 18. REAL-TIME EVENT STREAMING (PostgreSQL NOTIFY TRIGGERS)
+-- ============================================================
 -- 15. REAL-TIME EVENT STREAMING (PostgreSQL NOTIFY TRIGGERS)
 -- ============================================================
 CREATE OR REPLACE FUNCTION notify_eduscholar_events()

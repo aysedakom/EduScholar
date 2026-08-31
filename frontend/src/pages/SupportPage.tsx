@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HelpCircle, Search, Plus, ChevronDown, ChevronUp, Ticket, Bot, PhoneCall } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/cn';
-import { createTicket } from '../api/tickets';
+import { createTicket, getTickets } from '../api/tickets';
 
 interface FAQItem {
   id: string;
@@ -177,6 +177,30 @@ export const SupportPage: React.FC = () => {
   };
 
   const [tickets, setTickets] = useState<SupportTicket[]>(getInitialTickets());
+
+  useEffect(() => {
+    const fetchDbTickets = async () => {
+      try {
+        const res = await getTickets();
+        if (res.data?.data && res.data.data.length > 0) {
+          const mapped: SupportTicket[] = res.data.data.map((t) => ({
+            id: t.ticket_code,
+            title: t.subject,
+            category: t.category,
+            priority: (t.priority as any) || 'Medium',
+            status: (t.status as any) || 'Open',
+            date: t.created_at ? t.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
+            description: t.description,
+          }));
+          setTickets(mapped);
+        }
+      } catch (err) {
+        console.warn('Failed to load tickets from API:', err);
+      }
+    };
+    fetchDbTickets();
+  }, [user]);
+
   const [faqCategory, setFaqCategory] = useState<string>('all');
   const [faqSearch, setFaqSearch] = useState('');
   const [expandedFaqId, setExpandedFaqId] = useState<string | null>(null);

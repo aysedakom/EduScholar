@@ -226,17 +226,22 @@ export const MessagesPage: React.FC = () => {
       });
 
       if (res.data?.data) {
-        toast.success(`Support Ticket #${res.data.data.ticket_code} created successfully! Our team has been notified.`);
+        const createdTkt = res.data.data;
+        toast.success(`Support Ticket #${createdTkt.ticket_code} created successfully! Our team has been notified.`);
         setShowNewTicketModal(false);
         setTicketSubject('');
         setTicketDesc('');
         setTicketPriority('Medium');
-        await loadConversations(false);
-        const createdThread = conversations.find(
-          (c) => c.ticket_code === res.data.data.ticket_code || c.conversation_id === res.data.data.conversation_id
+        
+        const resConvs = await getConversations();
+        const updatedThreads = resConvs.data?.data || [];
+        setConversations(updatedThreads);
+        const createdThread = updatedThreads.find(
+          (c) => c.ticket_code === createdTkt.ticket_code || c.conversation_id === createdTkt.conversation_id
         );
         if (createdThread) {
           setSelectedConv(createdThread);
+          loadMessagesForSelected(createdThread.conversation_id);
         }
       }
     } catch (err: any) {

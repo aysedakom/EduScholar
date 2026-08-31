@@ -123,7 +123,37 @@ async function ensureTables() {
         CREATE INDEX IF NOT EXISTS idx_support_tickets_user ON support_tickets(user_id, status);
         CREATE INDEX IF NOT EXISTS idx_support_tickets_code ON support_tickets(ticket_code);
 
-        -- 2. Portal Settings Table
+        -- 2. Chat Messages Table
+        CREATE TABLE IF NOT EXISTS chat_messages (
+          id SERIAL PRIMARY KEY,
+          conversation_id VARCHAR(100) NOT NULL,
+          sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          sender_name VARCHAR(150),
+          sender_role VARCHAR(50) DEFAULT 'student',
+          recipient_id INTEGER,
+          recipient_role VARCHAR(50),
+          message TEXT NOT NULL,
+          is_read BOOLEAN DEFAULT FALSE,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversation_id, created_at);
+
+        -- 3. Announcements Table
+        CREATE TABLE IF NOT EXISTS announcements (
+          id SERIAL PRIMARY KEY,
+          announcement_code VARCHAR(50) UNIQUE,
+          title VARCHAR(255) NOT NULL,
+          target_group VARCHAR(100) DEFAULT 'All Students',
+          message TEXT NOT NULL,
+          priority VARCHAR(30) DEFAULT 'normal',
+          sent_by VARCHAR(150),
+          created_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          status VARCHAR(30) DEFAULT 'active',
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status, created_at);
+
+        -- 4. Portal Settings Table
         CREATE TABLE IF NOT EXISTS portal_settings (
           id SERIAL PRIMARY KEY,
           setting_key VARCHAR(100) UNIQUE NOT NULL,

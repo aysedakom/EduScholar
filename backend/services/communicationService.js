@@ -357,29 +357,40 @@ class CommunicationService {
       // Create notification for the other party
       try {
         if (currentUser.role === 'student') {
-          // Notify admin
-          const adminUserRes = await pool.query(`SELECT id FROM users WHERE role = 'admin' LIMIT 1`);
-          if (adminUserRes.rows[0]) {
+          // Notify admins
+          const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin', 'supervisor')");
+          for (const admin of adminUsers.rows) {
             await pool.query(
-              `INSERT INTO notifications (user_id, title, message, type, is_read, category)
-               VALUES ($1, $2, $3, 'info', FALSE, 'chat_inquiry')`,
+              `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+               VALUES ($1, $2, $3, 'info', FALSE, 'chat_inquiry', '/messages')`,
               [
-                adminUserRes.rows[0].id,
-                `💬 New Inquiry from ${currentUser.name}`,
+                admin.id,
+                `💬 New Message from ${currentUser.name || 'Scholar'}`,
                 message.length > 150 ? `${message.substring(0, 147)}...` : message,
               ]
             );
           }
         } else {
-          // Admin replying to student: extract student id from convId e.g. conv-student-8
+          // Admin replying to student: extract student id from convId or support_tickets
+          let targetStudentId = null;
           const studentIdMatch = conversationId.match(/conv-student-(\d+)/);
           if (studentIdMatch && studentIdMatch[1]) {
-            const studentId = parseInt(studentIdMatch[1]);
+            targetStudentId = parseInt(studentIdMatch[1]);
+          } else if (recipientId) {
+            targetStudentId = parseInt(recipientId);
+          } else {
+            const ticketOwner = await pool.query('SELECT user_id FROM support_tickets WHERE conversation_id = $1', [conversationId]);
+            if (ticketOwner.rows[0]) {
+              targetStudentId = ticketOwner.rows[0].user_id;
+            }
+          }
+
+          if (targetStudentId) {
             await pool.query(
-              `INSERT INTO notifications (user_id, title, message, type, is_read, category)
-               VALUES ($1, $2, $3, 'success', FALSE, 'chat_response')`,
+              `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+               VALUES ($1, $2, $3, 'success', FALSE, 'chat_response', '/messages')`,
               [
-                studentId,
+                targetStudentId,
                 '📩 New Message from Financial Aid Desk',
                 message.length > 150 ? `${message.substring(0, 147)}...` : message,
               ]
