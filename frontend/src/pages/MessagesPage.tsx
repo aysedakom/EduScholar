@@ -350,6 +350,12 @@ export const MessagesPage: React.FC = () => {
     }
   };
 
+  const isScholarshipAdmin = user?.role === 'admin' || user?.role === 'system_admin';
+  const isTreasury = user?.role === 'treasury';
+  const isSupervisor = user?.role === 'supervisor';
+  const isSchoolCoordinator = user?.role === 'school_coordinator';
+  const isStudent = user?.role === 'student';
+
   // Filter conversations
   const filteredConversations = conversations.filter((c) => {
     const q = searchQuery.toLowerCase();
@@ -370,6 +376,7 @@ export const MessagesPage: React.FC = () => {
   });
 
   const totalOpenTickets = conversations.filter((c) => c.is_ticket && c.ticket_status !== 'Closed').length;
+  const hasTickets = conversations.some((c) => c.is_ticket);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -378,21 +385,43 @@ export const MessagesPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-              Official Communication Center & Support Tickets
+              {isTreasury
+                ? 'Treasury Communications & Inter-Agency Hotlines'
+                : isSupervisor
+                ? 'Academic Evaluation & Supervisor Hotlines'
+                : isSchoolCoordinator
+                ? 'School Coordinator & Institutional Communications'
+                : isScholarshipAdmin
+                ? 'Official Communication Center & Support Tickets'
+                : 'Help Desk & Student Support Center'}
             </h1>
             <Badge variant="primary" size="sm">
-              Live Helpdesk
+              {isTreasury
+                ? 'Treasury Desk'
+                : isSupervisor
+                ? 'Supervisor Desk'
+                : isSchoolCoordinator
+                ? 'Coordinator Desk'
+                : isScholarshipAdmin
+                ? 'Live Helpdesk'
+                : 'Student Support'}
             </Badge>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            {isAdminOrStaff
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+            {isTreasury
+              ? 'Direct coordination hotlines with the Scholarship Board Administration, COA Audit Office, and University Bursars regarding budget drawdowns and disbursement reconciliations.'
+              : isSupervisor
+              ? 'Direct coordination hotlines with Scholarship Administration, School Registrars, and Evaluation Advisory Desks.'
+              : isSchoolCoordinator
+              ? 'Direct coordination hotlines with Scholarship Administration and City Treasury for certified masterlists and institutional billing.'
+              : isScholarshipAdmin
               ? 'Manage applicant inquiries, resolve and close support tickets, and broadcast citywide scholarship advisories.'
               : 'Direct communication hotline with the Quezon City Scholarship Helpdesk and track support ticket resolutions.'}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {!isAdminOrStaff && (
+          {isStudent && (
             <Button
               variant="primary"
               size="sm"
@@ -404,7 +433,7 @@ export const MessagesPage: React.FC = () => {
             </Button>
           )}
 
-          {isAdminOrStaff && (
+          {isScholarshipAdmin && (
             <Button
               variant="primary"
               size="sm"
@@ -450,23 +479,21 @@ export const MessagesPage: React.FC = () => {
               </CardDescription>
             </div>
           </div>
-          <button className="text-slate-400 hover:text-slate-600 transition-colors p-1">
-            {showAnnouncements ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+          <button className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
+            {showAnnouncements ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           </button>
         </CardHeader>
 
         {showAnnouncements && (
-          <CardContent className="pt-0 space-y-3">
+          <CardContent className="pt-0 border-t border-blue-100 dark:border-blue-900/30">
             {announcements.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-                No active announcements right now.
-              </div>
+              <p className="text-xs text-slate-400 py-3 text-center">No active announcements currently posted.</p>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-3 pt-3">
                 {announcements.map((anc) => (
                   <div
                     key={anc.id}
-                    className="p-3.5 bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700/80 rounded-2xl shadow-xs space-y-2"
+                    className="p-3 rounded-2xl bg-white dark:bg-slate-800/80 border border-blue-100 dark:border-blue-900/40 space-y-1.5 shadow-xs"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -508,72 +535,82 @@ export const MessagesPage: React.FC = () => {
         <Card className="p-3.5 space-y-3 flex flex-col border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <div className="flex items-center justify-between px-1">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              {isAdminOrStaff ? 'Student Inquiries & Tickets' : 'My Support Channels'}
+              {isTreasury
+                ? 'Official Treasury Hotlines'
+                : isSupervisor
+                ? 'Supervisor Hotlines'
+                : isSchoolCoordinator
+                ? 'School & Board Hotlines'
+                : isScholarshipAdmin
+                ? 'Student Inquiries & Tickets'
+                : 'My Support Channels'}
             </span>
             <Badge variant="primary" size="sm">
-              {conversations.length} Threads
+              {conversations.length} Channels
             </Badge>
           </div>
 
-          {/* Quick Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-[11px] font-bold">
-            <button
-              type="button"
-              onClick={() => setActiveTabFilter('all')}
-              className={`flex-1 py-1 rounded-lg transition-all ${
-                activeTabFilter === 'all'
-                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTabFilter('tickets')}
-              className={`flex-1 py-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
-                activeTabFilter === 'tickets'
-                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Ticket className="h-3 w-3" />
-              <span>Tickets</span>
-              {totalOpenTickets > 0 && (
-                <span className="bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold">
-                  {totalOpenTickets}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTabFilter('open')}
-              className={`flex-1 py-1 rounded-lg transition-all ${
-                activeTabFilter === 'open'
-                  ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTabFilter('closed')}
-              className={`flex-1 py-1 rounded-lg transition-all ${
-                activeTabFilter === 'closed'
-                  ? 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              Closed
-            </button>
-          </div>
+          {/* Quick Filter Tabs for Admin/Student/Tickets */}
+          {hasTickets && (
+            <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-[11px] font-bold">
+              <button
+                type="button"
+                onClick={() => setActiveTabFilter('all')}
+                className={`flex-1 py-1 rounded-lg transition-all ${
+                  activeTabFilter === 'all'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTabFilter('tickets')}
+                className={`flex-1 py-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
+                  activeTabFilter === 'tickets'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <Ticket className="h-3 w-3" />
+                <span>Tickets</span>
+                {totalOpenTickets > 0 && (
+                  <span className="bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold">
+                    {totalOpenTickets}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTabFilter('open')}
+                className={`flex-1 py-1 rounded-lg transition-all ${
+                  activeTabFilter === 'open'
+                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTabFilter('closed')}
+                className={`flex-1 py-1 rounded-lg transition-all ${
+                  activeTabFilter === 'closed'
+                    ? 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Closed
+              </button>
+            </div>
+          )}
 
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
-              placeholder={isAdminOrStaff ? 'Search student, ID, or ticket #...' : 'Search messages & tickets...'}
+              placeholder={isScholarshipAdmin ? 'Search student, ID, or ticket #...' : 'Search channels & messages...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full h-8 pl-8 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
