@@ -187,7 +187,7 @@ async function ensureTables() {
           major: 'Disbursement & Fund Settlement',
         },
         {
-          name: 'School Coordinator',
+          name: 'John Steaven Balansag',
           email: 'sr.edu2026@gmail.com',
           role: 'school_coordinator',
           dept: 'Quezon City University & Partner Schools',
@@ -227,7 +227,7 @@ async function ensureTables() {
         await pool.query(`
           INSERT INTO users (name, email, password, role, department, major, financial_aid_year, status, is_email_verified)
           VALUES ($1, $2, $3, $4, $5, $6, '2026-2027', 'active', true)
-          ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'
+          ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, password = $3, role = $4, is_email_verified = true, status = 'active'
         `, [u.name, u.email.toLowerCase().trim(), defaultPassHash, u.role, u.dept, u.major]);
       }
       console.log('[db] Primary system accounts (Admin, Treasury, Coordinator, Supervisor, SysAdmin, Student) synchronized with password "January10"');

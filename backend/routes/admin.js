@@ -40,7 +40,7 @@ router.post('/users/sync-passwords', authMiddleware, async (req, res) => {
     const officialAccounts = [
       { name: 'ADMIN', email: 'support.edu2026@gmail.com', role: 'admin', dept: 'Quezon City Youth Development Office (QCYDO)' },
       { name: 'City Treasury Disbursing Officer', email: 'treasury.edu2026@gmail.com', role: 'treasury', dept: 'Quezon City Hall Treasury Office' },
-      { name: 'School Coordinator', email: 'sr.edu2026@gmail.com', role: 'school_coordinator', dept: 'Quezon City University & Partner Schools' },
+      { name: 'John Steaven Balansag', email: 'sr.edu2026@gmail.com', role: 'school_coordinator', dept: 'Quezon City University & Partner Schools' },
       { name: 'Scholarship Program Supervisor', email: 'sv.edu2026@gmail.com', role: 'supervisor', dept: 'Quezon City Youth Development Office (QCYDO)' },
       { name: 'System Administrator', email: 'sysadmin.edu2026@gmail.com', role: 'system_admin', dept: 'Quezon City IT & System Services' },
       { name: 'Juan Dela Cruz (Student Scholar)', email: 'student.edu2026@gmail.com', role: 'student', dept: 'Quezon City University' },
@@ -51,7 +51,7 @@ router.post('/users/sync-passwords', authMiddleware, async (req, res) => {
       await pool.query(`
         INSERT INTO users (name, email, password, role, department, status, is_email_verified)
         VALUES ($1, $2, $3, $4, $5, 'active', true)
-        ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'
+        ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, password = $3, role = $4, is_email_verified = true, status = 'active'
       `, [u.name, u.email.toLowerCase().trim(), defaultPassHash, u.role, u.dept]);
     }
 

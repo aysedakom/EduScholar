@@ -29,7 +29,7 @@ async function seed() {
       phone: '+63 918 234 5679',
     },
     {
-      name: 'School Coordinator',
+      name: 'John Steaven Balansag',
       email: 'sr.edu2026@gmail.com',
       role: 'school_coordinator',
       dept: 'Quezon City University & Partner Schools',

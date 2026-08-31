@@ -34,8 +34,8 @@ export const MOCK_USERS: Record<string, User> = {
   },
   school_coordinator: {
     id: '4',
-    name: 'Dr. Aris Ramos',
-    email: 'school@demo.edu',
+    name: 'John Steaven Balansag',
+    email: 'sr.edu2026@gmail.com',
     role: 'school_coordinator',
     department: 'Quezon City University (QCU)',
     avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=250&q=80',
