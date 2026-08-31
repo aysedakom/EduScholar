@@ -61,15 +61,29 @@ const findByUser = async (userId) => {
 
 const findById = async (id) => {
   try {
-    const res = await pool.query(
-      `SELECT t.*, u.name as user_name, u.email as user_email, u.student_id, u.department, u.major,
-              cb.name as closed_by_name
-       FROM support_tickets t
-       LEFT JOIN users u ON t.user_id = u.id
-       LEFT JOIN users cb ON t.closed_by = cb.id
-       WHERE t.id = $1 OR t.ticket_code = $1`,
-      [id]
-    );
+    const isNumeric = !isNaN(Number(id)) && /^\d+$/.test(String(id));
+    let res;
+    if (isNumeric) {
+      res = await pool.query(
+        `SELECT t.*, u.name as user_name, u.email as user_email, u.student_id, u.department, u.major,
+                cb.name as closed_by_name
+         FROM support_tickets t
+         LEFT JOIN users u ON t.user_id = u.id
+         LEFT JOIN users cb ON t.closed_by = cb.id
+         WHERE t.id = $1::integer`,
+        [parseInt(id, 10)]
+      );
+    } else {
+      res = await pool.query(
+        `SELECT t.*, u.name as user_name, u.email as user_email, u.student_id, u.department, u.major,
+                cb.name as closed_by_name
+         FROM support_tickets t
+         LEFT JOIN users u ON t.user_id = u.id
+         LEFT JOIN users cb ON t.closed_by = cb.id
+         WHERE t.ticket_code ILIKE $1::varchar OR t.conversation_id = $1::varchar`,
+        [String(id)]
+      );
+    }
     return res.rows[0] || null;
   } catch (err) {
     console.error('[ticketModel.findById] Error:', err.message);
@@ -147,21 +161,49 @@ const create = async (data, user) => {
 const updateStatus = async (id, { status, adminNotes, resolutionRemarks, adminUser }) => {
   try {
     const isClosed = status === 'Closed' || status === 'Resolved';
-    const closedAt = isClosed ? new Date() : null;
     const closedBy = isClosed && adminUser ? adminUser.id : null;
+    const isNumeric = !isNaN(Number(id)) && /^\d+$/.test(String(id));
 
-    const res = await pool.query(
-      `UPDATE support_tickets
-       SET status = $2,
-           admin_notes = COALESCE($3, admin_notes),
-           resolution_remarks = COALESCE($4, resolution_remarks),
-           closed_at = CASE WHEN $2 = 'Closed' OR $2 = 'Resolved' THEN NOW() ELSE closed_at END,
-           closed_by = CASE WHEN $2 = 'Closed' OR $2 = 'Resolved' THEN $5 ELSE closed_by END,
-           updated_at = NOW()
-       WHERE id = $1 OR ticket_code = $1::text
-       RETURNING *`,
-      [id, status, adminNotes || null, resolutionRemarks || null, closedBy]
-    );
+    let res;
+    if (isNumeric) {
+      res = await pool.query(
+        `UPDATE support_tickets
+         SET status = $2::varchar,
+             admin_notes = COALESCE($3::text, admin_notes),
+             resolution_remarks = COALESCE($4::text, resolution_remarks),
+             closed_at = CASE WHEN $2::varchar IN ('Closed', 'Resolved') THEN NOW() ELSE closed_at END,
+             closed_by = CASE WHEN $2::varchar IN ('Closed', 'Resolved') THEN $5::integer ELSE closed_by END,
+             updated_at = NOW()
+         WHERE id = $1::integer
+         RETURNING *`,
+        [
+          parseInt(id, 10),
+          String(status),
+          adminNotes ? String(adminNotes) : null,
+          resolutionRemarks ? String(resolutionRemarks) : null,
+          closedBy ? parseInt(closedBy, 10) : null,
+        ]
+      );
+    } else {
+      res = await pool.query(
+        `UPDATE support_tickets
+         SET status = $2::varchar,
+             admin_notes = COALESCE($3::text, admin_notes),
+             resolution_remarks = COALESCE($4::text, resolution_remarks),
+             closed_at = CASE WHEN $2::varchar IN ('Closed', 'Resolved') THEN NOW() ELSE closed_at END,
+             closed_by = CASE WHEN $2::varchar IN ('Closed', 'Resolved') THEN $5::integer ELSE closed_by END,
+             updated_at = NOW()
+         WHERE ticket_code ILIKE $1::varchar OR conversation_id = $1::varchar
+         RETURNING *`,
+        [
+          String(id),
+          String(status),
+          adminNotes ? String(adminNotes) : null,
+          resolutionRemarks ? String(resolutionRemarks) : null,
+          closedBy ? parseInt(closedBy, 10) : null,
+        ]
+      );
+    }
 
     const ticket = res.rows[0];
     if (!ticket) return null;
