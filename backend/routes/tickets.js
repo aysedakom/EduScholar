@@ -12,5 +12,7 @@ router.get('/:id', ticketController.getTicketById);
 router.post('/', ticketController.createTicket);
 router.patch('/:id/status', ticketController.updateStatus);
 router.post('/:id/close', ticketController.closeTicket);
+router.post('/:id/inactivity-timeout', ticketController.handleInactivityTimeout);
 
 module.exports = router;
+

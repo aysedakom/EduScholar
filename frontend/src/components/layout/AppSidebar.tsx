@@ -83,6 +83,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'School Portal',
     items: [
+      { label: 'Partner School Database', to: '/admin/partner-schools', icon: Building2, roles: ['school_coordinator'] as const },
       { label: 'Academic Monitoring', to: '/school/academic-monitoring', icon: BookOpen, roles: ['school_coordinator'] as const },
       { label: 'Batch Verification', to: '/school/batch-verification', icon: CheckSquare, roles: ['school_coordinator'] as const },
     ],

@@ -41,6 +41,8 @@ export interface ReviewApplication {
   documentsUploaded: ReviewDocItem[];
   notes?: string;
   schoolEndorsed?: boolean;
+  formData?: any;
+  phone?: string;
 }
 
 export interface ApplicationReviewQueuePageProps {
@@ -52,7 +54,7 @@ export interface ApplicationReviewQueuePageProps {
 const INITIAL_REVIEW_QUEUE: ReviewApplication[] = [];
 
 function mapDbApplicationToReview(app: Application): ReviewApplication {
-  const formData = app.form_data || {};
+  const formData = typeof app.form_data === 'string' ? JSON.parse(app.form_data) : (app.form_data || {});
   const rawGpa = typeof formData.gwa === 'number' || typeof formData.gwa === 'string'
     ? formData.gwa
     : (app as any).gpa;
@@ -124,6 +126,8 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
     documentsUploaded: documentsUploaded,
     notes: app.notes || 'Submitted through E-SCHOLAR Portal with complete attachments.',
     schoolEndorsed: isSchoolEndorsed,
+    formData: formData,
+    phone: formData.mobileNumber || formData.phone || 'N/A',
   };
 }
 
@@ -822,6 +826,53 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                 <span className="font-bold text-blue-600 dark:text-blue-400">{selectedApp.status}</span>
               </div>
             </div>
+
+            {/* Applicant Profile & Submitted Form Breakdown */}
+            {selectedApp.formData && Object.keys(selectedApp.formData).length > 0 && (
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+                <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+                  Detailed Applicant Profile & Submitted Form Data
+                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">Phone / Mobile</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedApp.formData.mobileNumber || selectedApp.phone || 'N/A'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">Barangay & District</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedApp.formData.barangay || 'Batasan Hills'}, District {selectedApp.formData.district || '2'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">Annual Household Income</span>
+                    <span className="font-bold text-emerald-600">
+                      {selectedApp.formData.annualFamilyIncome ? `₱${Number(selectedApp.formData.annualFamilyIncome).toLocaleString()}` : '₱180,000.00'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">Year Level / Term</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedApp.formData.yearLevel || '3rd Year'} ({selectedApp.formData.semester || '1st Sem'})
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">Disbursement Channel</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedApp.formData.payoutMethod || 'Landbank ATM Cash Card'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold block">4Ps / Solo Parent Status</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200">
+                      {selectedApp.formData.is4PsBeneficiary ? '4Ps Registered' : 'Non-4Ps'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {selectedApp.complianceFlags.length > 0 && (
               <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl space-y-1">

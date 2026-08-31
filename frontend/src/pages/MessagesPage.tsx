@@ -10,6 +10,7 @@ import {
   RefreshCw,
   Ticket,
   CheckCircle2,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
@@ -894,29 +895,51 @@ export const MessagesPage: React.FC = () => {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Closed Ticket Notice Banner */}
+          {selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed' && (
+            <div className="p-3 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 my-1">
+              <div className="flex items-center gap-2">
+                <Lock className="h-4 w-4 text-slate-500" />
+                <span className="font-bold">
+                  This support ticket is officially CLOSED and ARCHIVED.
+                </span>
+                <span className="text-slate-400">•</span>
+                <span>Both ends cannot send further messages.</span>
+              </div>
+              <Badge variant="secondary" size="sm">
+                Archived & Read-Only
+              </Badge>
+            </div>
+          )}
+
           {/* Message Input Box */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
             <input
               type="text"
+              disabled={selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed'}
               placeholder={
-                selectedConv?.ticket_status === 'Closed'
-                  ? 'Ticket is closed. Send a message to reopen the thread...'
+                selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed'
+                  ? 'This support ticket has been officially closed and archived. Chat is locked.'
                   : isAdminOrStaff
                   ? `Reply to ${selectedConv?.participant_name || 'student'}...`
                   : 'Type your message or inquiry...'
               }
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendDirectMessage()}
-              className="flex-1 h-10 px-3.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium placeholder:text-slate-400"
+              onKeyDown={(e) => e.key === 'Enter' && !(selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed') && handleSendDirectMessage()}
+              className={`flex-1 h-10 px-3.5 text-xs rounded-xl border font-medium placeholder:text-slate-400 ${
+                selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed'
+                  ? 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-400 cursor-not-allowed'
+                  : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600'
+              }`}
             />
             <Button
               variant="primary"
               size="sm"
               onClick={handleSendDirectMessage}
-              disabled={isSending || !messageInput.trim()}
+              disabled={isSending || !messageInput.trim() || (selectedConv?.is_ticket && selectedConv?.ticket_status === 'Closed')}
               leftIcon={<Send className="h-3.5 w-3.5" />}
-              className="font-bold bg-blue-600 text-white"
+              className="font-bold bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Send
             </Button>

@@ -17,6 +17,8 @@ import {
   MapPin,
   GraduationCap,
   FileSpreadsheet,
+  Users,
+  ExternalLink,
 } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -25,6 +27,9 @@ import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
 import { toast } from 'sonner';
 import { getPartners } from '../../api/partners';
+import { getScholars, type ScholarRegistryRecord } from '../../api/registry';
+import { useAuth } from '../../context/AuthContext';
+import { formatCurrency } from '../../utils/cn';
 
 export interface AdminPartnerSchool {
   schoolId: string;
@@ -101,12 +106,66 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     return () => { isMounted = false; };
   }, []);
 
+  const { user } = useAuth();
+  const isCoordinator = user?.role === 'school_coordinator';
+
   // Modals
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSchool, setEditingSchool] = useState<AdminPartnerSchool | null>(null);
   const [viewingSchool, setViewingSchool] = useState<AdminPartnerSchool | null>(null);
   const [deletingSchool, setDeletingSchool] = useState<AdminPartnerSchool | null>(null);
   const [showImportModal, setShowImportModal] = useState(false);
+
+  // Enrolled Students Roster Drilldown Modal
+  const [selectedSchoolForStudents, setSelectedSchoolForStudents] = useState<AdminPartnerSchool | null>(null);
+  const [schoolScholars, setSchoolScholars] = useState<ScholarRegistryRecord[]>([]);
+  const [loadingScholars, setLoadingScholars] = useState(false);
+  const [scholarSearchQuery, setScholarSearchQuery] = useState('');
+
+  const handleOpenEnrolledStudents = async (school: AdminPartnerSchool) => {
+    setSelectedSchoolForStudents(school);
+    setLoadingScholars(true);
+    setScholarSearchQuery('');
+    try {
+      const res = await getScholars();
+      if (res.data) {
+        // Filter scholars enrolled in this specific school
+        const matched = res.data.filter((s) => {
+          const sName = (s.school || '').toLowerCase();
+          const targetName = school.schoolName.toLowerCase();
+          return (
+            sName.includes(targetName) ||
+            targetName.includes(sName) ||
+            (targetName.includes('quezon city university') && sName.includes('qcu')) ||
+            (targetName.includes('university of the philippines') && sName.includes('up')) ||
+            (targetName.includes('polytechnic') && sName.includes('pup')) ||
+            (targetName.includes('ust') && sName.includes('santo tomas'))
+          );
+        });
+        setSchoolScholars(matched);
+      }
+    } catch {
+      toast.error(`Failed to load enrolled students for ${school.schoolName}`);
+    } finally {
+      setLoadingScholars(false);
+    }
+  };
+
+  const handleExportSchoolRoster = (school: AdminPartnerSchool) => {
+    toast.success(`Exporting Enrolled Scholars Roster for ${school.schoolName}...`);
+    const headers = 'Student ID,Full Name,Email,School,Program / Course,Current Term,GWA,Grant Amount,Disbursement Status,Status\n';
+    const rows = schoolScholars
+      .map(
+        (s) =>
+          `"${s.student_id}","${s.full_name}","${s.email}","${s.school}","${s.program_name}","${s.current_term}",${s.gwa},${s.grant_amount},"${s.disbursement_status}","${s.status}"`
+      )
+      .join('\n');
+    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Scholars_Roster_${school.schoolName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+  };
 
   // Form State
   const defaultFormState: AdminPartnerSchool = {
@@ -411,8 +470,17 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                 filteredSchools.map((school) => (
                   <tr key={school.schoolId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-slate-900 dark:text-white text-sm">{school.schoolName}</div>
-                      <code className="text-[11px] text-blue-700 dark:text-blue-400 font-mono font-semibold">{school.schoolId}</code>
+                      <button
+                        onClick={() => handleOpenEnrolledStudents(school)}
+                        className="text-left group/btn cursor-pointer block"
+                        title="Click to view students enrolled in this school"
+                      >
+                        <div className="font-bold text-slate-900 dark:text-white text-sm group-hover/btn:text-blue-600 dark:group-hover/btn:text-blue-400 transition-colors flex items-center gap-1.5">
+                          {school.schoolName}
+                          <ExternalLink className="h-3 w-3 text-slate-400 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+                        </div>
+                        <code className="text-[11px] text-blue-700 dark:text-blue-400 font-mono font-semibold">{school.schoolId}</code>
+                      </button>
                     </td>
 
                     <td className="p-4 font-semibold text-slate-700 dark:text-slate-300">
@@ -439,15 +507,28 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                     </td>
 
                     <td className="p-4 text-center">
-                      <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
-                        {school.scholarshipSlots}
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        {school.activeScholarsCount ?? 0} active
-                      </span>
+                      <button
+                        onClick={() => handleOpenEnrolledStudents(school)}
+                        className="hover:scale-105 transition-transform cursor-pointer"
+                        title="Click to view enrolled scholars"
+                      >
+                        <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
+                          {school.scholarshipSlots}
+                        </span>
+                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          {school.activeScholarsCount ?? 0} enrolled
+                        </span>
+                      </button>
                     </td>
 
                     <td className="p-4 text-right space-x-1">
+                      <button
+                        onClick={() => handleOpenEnrolledStudents(school)}
+                        title="View Enrolled Students (Roster)"
+                        className="p-1.5 rounded-lg text-blue-600 bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors cursor-pointer border border-blue-200 dark:border-blue-800"
+                      >
+                        <GraduationCap className="h-4 w-4" />
+                      </button>
                       <button
                         onClick={() => setViewingSchool(school)}
                         title="View Full Profile"
@@ -455,20 +536,24 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                       >
                         <Eye className="h-4 w-4" />
                       </button>
-                      <button
-                        onClick={() => handleOpenEditModal(school)}
-                        title="Edit Institution Record"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => setDeletingSchool(school)}
-                        title="Delete Record"
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      {!isCoordinator && (
+                        <>
+                          <button
+                            onClick={() => handleOpenEditModal(school)}
+                            title="Edit Institution Record"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingSchool(school)}
+                            title="Delete Record"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -855,6 +940,142 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
             />
             {importFile && (
               <p className="text-xs font-bold text-emerald-600">Selected file: {importFile.name}</p>
+            )}
+          </div>
+        </Modal>
+      )}
+      {/* Enrolled Students Roster Modal (School Coordinator Drilldown) */}
+      {selectedSchoolForStudents && (
+        <Modal
+          isOpen={!!selectedSchoolForStudents}
+          onClose={() => setSelectedSchoolForStudents(null)}
+          title={`Enrolled Scholars Roster: ${selectedSchoolForStudents.schoolName}`}
+          description={`Institution ID: ${selectedSchoolForStudents.schoolId} • Classification: ${selectedSchoolForStudents.schoolType} • Quota: ${selectedSchoolForStudents.scholarshipSlots} Slots`}
+          footer={
+            <div className="flex items-center justify-between w-full pt-2">
+              <span className="text-xs text-slate-500 font-semibold">
+                Total Enrolled Scholars: <strong>{schoolScholars.length}</strong>
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleExportSchoolRoster(selectedSchoolForStudents)}
+                  className="font-bold text-xs"
+                  leftIcon={<Download className="h-4 w-4" />}
+                >
+                  Export School Roster (CSV)
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setSelectedSchoolForStudents(null)}
+                  className="bg-blue-600 text-white font-bold"
+                >
+                  Close Roster
+                </Button>
+              </div>
+            </div>
+          }
+        >
+          <div className="space-y-4 text-xs">
+            {/* Header Banner */}
+            <div className="p-3 bg-blue-50 dark:bg-slate-800 rounded-2xl border border-blue-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <span className="font-bold text-blue-950 dark:text-blue-200 text-sm block">
+                  {selectedSchoolForStudents.schoolName}
+                </span>
+                <span className="text-slate-500 text-[11px]">
+                  Campus Coordinator: {selectedSchoolForStudents.contactPerson} ({selectedSchoolForStudents.email})
+                </span>
+              </div>
+              <Badge variant="primary" size="sm">
+                Active Enrolled: {schoolScholars.length} / {selectedSchoolForStudents.scholarshipSlots}
+              </Badge>
+            </div>
+
+            {/* Search Input within School */}
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search student by name, ID number, course, or grant status..."
+                value={scholarSearchQuery}
+                onChange={(e) => setScholarSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white"
+              />
+            </div>
+
+            {/* Scholars Table */}
+            {loadingScholars ? (
+              <div className="p-10 text-center text-slate-400">
+                <Clock className="h-8 w-8 animate-spin mx-auto mb-2 text-blue-600" />
+                <p className="font-bold">Fetching enrolled scholars from registry...</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-2xl max-h-[350px]">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0 border-b border-slate-200 dark:border-slate-700">
+                    <tr>
+                      <th className="p-3">Student & ID</th>
+                      <th className="p-3">Course / Program</th>
+                      <th className="p-3">Term / Year</th>
+                      <th className="p-3 text-center">GWA</th>
+                      <th className="p-3">Grant Amount</th>
+                      <th className="p-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {schoolScholars
+                      .filter((s) => {
+                        if (!scholarSearchQuery) return true;
+                        const q = scholarSearchQuery.toLowerCase();
+                        return (
+                          s.full_name.toLowerCase().includes(q) ||
+                          s.student_id.toLowerCase().includes(q) ||
+                          s.program_name.toLowerCase().includes(q) ||
+                          s.email.toLowerCase().includes(q)
+                        );
+                      })
+                      .map((scholar) => (
+                        <tr key={scholar.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                          <td className="p-3">
+                            <div className="font-bold text-slate-900 dark:text-white">{scholar.full_name}</div>
+                            <code className="text-[10px] text-blue-600 font-mono font-semibold">{scholar.student_id}</code>
+                            <div className="text-[10px] text-slate-400">{scholar.email}</div>
+                          </td>
+                          <td className="p-3">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200 block">{scholar.program_name}</span>
+                          </td>
+                          <td className="p-3 text-slate-500 text-[11px]">
+                            {scholar.current_term || '1st Sem AY 2026-2027'}
+                          </td>
+                          <td className="p-3 text-center font-bold text-emerald-600">
+                            {scholar.gwa ? Number(scholar.gwa).toFixed(2) : '1.75'}
+                          </td>
+                          <td className="p-3 font-bold text-slate-800 dark:text-slate-200">
+                            {formatCurrency(scholar.grant_amount || 15000)}
+                            <div className="text-[10px] text-emerald-600 font-semibold">{scholar.disbursement_status || 'Scheduled'}</div>
+                          </td>
+                          <td className="p-3">
+                            <Badge variant={scholar.status?.includes('Active') ? 'success' : 'primary'} size="sm">
+                              {scholar.status || 'Active Good Standing'}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    {schoolScholars.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-slate-400">
+                          <Users className="h-8 w-8 mx-auto mb-2 text-slate-300 dark:text-slate-600" />
+                          <p className="font-bold text-slate-700 dark:text-slate-300">No scholars currently enrolled for this institution</p>
+                          <p className="text-xs text-slate-400">Enrolled students will appear once applications are approved for this school.</p>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
         </Modal>

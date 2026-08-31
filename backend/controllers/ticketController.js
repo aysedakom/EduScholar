@@ -157,4 +157,41 @@ const closeTicket = async (req, res) => {
   }
 };
 
-module.exports = { getTickets, getTicketById, createTicket, updateStatus, closeTicket };
+// @desc   Auto-close ticket on inactivity timeout (2 minutes)
+// @route  POST /api/tickets/:id/inactivity-timeout
+// @access Authenticated
+const handleInactivityTimeout = async (req, res) => {
+  try {
+    const ticket = await ticketModel.updateStatus(req.params.id, {
+      status: 'Closed',
+      resolutionRemarks: 'Auto-closed due to applicant inactivity (2-minute session timeout).',
+      adminUser: { id: 1, name: 'System Auto-Guardian' },
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ success: false, message: 'Ticket not found' });
+    }
+
+    try {
+      broadcast({
+        type: 'TICKET_STATUS_UPDATED',
+        data: ticket,
+        updatedBy: 'System Auto-Guardian',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (wsErr) {
+      // ws optional
+    }
+
+    res.json({
+      success: true,
+      message: `Ticket #${ticket.ticket_code} has been automatically closed due to 2 minutes of applicant inactivity.`,
+      data: ticket,
+    });
+  } catch (error) {
+    console.error('[ticketController] handleInactivityTimeout error:', error);
+    res.status(500).json({ success: false, message: 'Failed to auto-close ticket: ' + error.message });
+  }
+};
+
+module.exports = { getTickets, getTicketById, createTicket, updateStatus, closeTicket, handleInactivityTimeout };

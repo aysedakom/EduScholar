@@ -756,6 +756,21 @@ class CommunicationService {
         recipientRole = 'student';
       }
 
+      if (conversationId && conversationId.startsWith('conv_ticket_')) {
+        const tktCheck = await pool.query(
+          `SELECT status, ticket_code FROM support_tickets WHERE conversation_id = $1`,
+          [conversationId]
+        );
+        if (tktCheck.rows.length > 0) {
+          const tktStatus = tktCheck.rows[0].status;
+          if (tktStatus === 'Closed' || tktStatus === 'Resolved') {
+            const err = new Error(`Ticket #${tktCheck.rows[0].ticket_code} is permanently CLOSED and ARCHIVED. No further messages can be sent.`);
+            err.statusCode = 403;
+            throw err;
+          }
+        }
+      }
+
       const res = await pool.query(
         `INSERT INTO chat_messages (conversation_id, sender_id, sender_name, sender_role, recipient_id, recipient_role, message, is_read)
          VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
