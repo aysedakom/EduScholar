@@ -26,6 +26,8 @@ import {
   Sun,
   Moon,
   Info,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -207,11 +209,20 @@ export const ApplicationForm: React.FC = () => {
   // Hidden File Input Refs stored by document ID
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
+  // Offline Resilience & Auto-Draft Persistence State
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+
+  const DRAFT_STORAGE_KEY = `eduscholar_app_draft_${selectedProgramId}_${user?.email || 'guest'}`;
+
   const {
     register,
     handleSubmit,
     trigger,
     watch,
+    reset,
     formState: { errors },
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema) as any,
@@ -245,6 +256,127 @@ export const ApplicationForm: React.FC = () => {
       termsAccepted: true,
     },
   });
+
+  // 1. Connectivity Event Listeners (Online / Offline detection)
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      toast.success('Internet Connection Restored 🟢', {
+        description: 'You are back online! All your filled information and attached documents are held safe.',
+        duration: 5000,
+      });
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      toast.warning('Internet Connection Lost 📡', {
+        description: 'You are currently offline. Do not worry — all your form inputs and attached files are safely held in local storage and will stay intact.',
+        duration: 8000,
+      });
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // 2. Restore Draft on initial component mount
+  useEffect(() => {
+    try {
+      const savedRaw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (savedRaw) {
+        const parsed = JSON.parse(savedRaw);
+        if (parsed.formData) {
+          reset(parsed.formData);
+        }
+        if (parsed.currentStep) {
+          setCurrentStep(parsed.currentStep);
+        }
+        if (parsed.uploadedDocs) {
+          setUploadedDocs(parsed.uploadedDocs);
+        }
+        if (parsed.videoUrl) {
+          setVideoUrl(parsed.videoUrl);
+        }
+        if (parsed.videoMode) {
+          setVideoMode(parsed.videoMode);
+        }
+        if (parsed.savedAt) {
+          setDraftSavedAt(parsed.savedAt);
+        }
+      }
+    } catch (e) {
+      console.warn('Could not restore saved application draft:', e);
+    }
+  }, [DRAFT_STORAGE_KEY, reset]);
+
+  // 3. Continuously auto-save filled form data, step, and attachments
+  const formValues = watch();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const draftPayload = {
+          formData: formValues,
+          currentStep,
+          uploadedDocs,
+          videoUrl,
+          videoMode,
+          savedAt: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        };
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftPayload));
+        setDraftSavedAt(draftPayload.savedAt);
+      } catch (err) {
+        // Local storage write failsafe
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [formValues, currentStep, uploadedDocs, videoUrl, videoMode, DRAFT_STORAGE_KEY]);
+
+  const handleClearDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setDraftSavedAt(null);
+      reset({
+        firstName: user?.name?.split(' ')[0] || '',
+        lastName: user?.name?.split(' ').slice(1).join(' ') || '',
+        email: user?.email || '',
+        city: 'Quezon City',
+        province: 'Metro Manila',
+        barangay: 'Barangay Central',
+        zipCode: '1100',
+        school: QC_SCHOOLS[0],
+        department: INSTALLED_DEPARTMENTS[0],
+        disbursementChannel: 'Landbank ATM / Cash Card',
+        accountNumber: '',
+        accountName: user?.name || '',
+        annualIncome: 0,
+        numberOfSiblings: 0,
+        gender: 'Female',
+        civilStatus: 'Single',
+        schoolType: selectedProgram.categoryId === 'shs' ? 'Public' : 'SUC',
+        yearLevel: selectedProgram.categoryId === 'shs' ? 'Grade 11' : selectedProgram.categoryId === 'postgrad' ? 'Postgraduate / Reviewee' : '1st Year',
+        incomeBracket: 'Low',
+        financialSupport: 'Parents',
+        nationality: 'Filipino',
+        isPWD: false,
+        isIndigenous: false,
+        is4Ps: false,
+        isSoloParent: false,
+        isKasambahayOrToda: false,
+        termsAccepted: true,
+      });
+      setCurrentStep(1);
+      toast.success('Application draft cleared. You can start with a fresh form.');
+    } catch (e) {
+      console.warn('Error clearing draft:', e);
+    }
+  };
 
   const isPWD = watch('isPWD');
   const isIndigenous = watch('isIndigenous');
@@ -501,6 +633,12 @@ export const ApplicationForm: React.FC = () => {
       } catch (notifErr) {
         console.warn('System notification record note:', notifErr);
       }
+
+      // Clear saved draft from local storage upon successful completion
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+        setDraftSavedAt(null);
+      } catch (e) {}
 
       setSubmittedApp(newApplicationRecord);
       setShowSuccessModal(true);
@@ -837,7 +975,65 @@ export const ApplicationForm: React.FC = () => {
       </div>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        {/* NETWORK & OFFLINE PERSISTENCE STATUS BAR */}
+        {!isOnline ? (
+          <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-pulse">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-amber-500 text-white rounded-xl shadow-xs">
+                <WifiOff className="h-5 w-5 animate-bounce" />
+              </div>
+              <div>
+                <div className="font-extrabold text-sm flex items-center gap-2">
+                  <span>OFFLINE MODE ACTIVE</span>
+                  <span className="text-[10px] uppercase bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded-full font-black">
+                    Zero Data Loss Protection
+                  </span>
+                </div>
+                <div className="text-xs text-amber-800 dark:text-amber-300 mt-0.5">
+                  You have temporarily lost your internet connection. All filled information and attachments are safely held in local storage. You can continue filling out your form — all your data will stay intact when your internet comes back.
+                </div>
+              </div>
+            </div>
+            {draftSavedAt && (
+              <span className="text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 whitespace-nowrap self-start sm:self-auto text-amber-900 dark:text-amber-200">
+                Held safely on device ({draftSavedAt})
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs ${
+            isDark ? 'bg-slate-900/80 border-slate-800 text-slate-300' : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+          }`}>
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <Wifi className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <span className="font-extrabold text-emerald-700 dark:text-emerald-400">Offline Resilience Protected:</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-400">
+                All form fields & attached files are continuously held in local storage. If you lose internet, you will never start over.
+              </span>
+            </div>
+            {draftSavedAt && (
+              <div className="flex items-center gap-3 self-end sm:self-auto">
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Auto-Saved: {draftSavedAt}</span>
+                <button
+                  type="button"
+                  onClick={handleClearDraft}
+                  className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline cursor-pointer font-bold"
+                  title="Clear all saved data and start fresh"
+                >
+                  Clear Draft
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* MILESTONE PROGRESS TRACKER */}
         <div className={`p-4 sm:p-6 rounded-2xl border shadow-sm space-y-4 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200/90'}`}>
           <div className="flex items-center justify-between text-xs font-bold pb-2 border-b border-slate-100 dark:border-slate-800">
