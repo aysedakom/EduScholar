@@ -5,7 +5,9 @@ import {
   Clock,
   UploadCloud,
   Lock,
-  Calendar
+  Calendar,
+  ArrowLeft,
+  Building2,
 } from 'lucide-react';
 import { getMyApplications, resubmitApplicationDocument } from '../api/applications';
 import { Card } from '../components/ui/Card';
@@ -213,8 +215,24 @@ export const ApplicationsPage: React.FC = () => {
     }
   };
 
+  const isStaffOrCoordinator = user?.role === 'school_coordinator' || user?.role === 'admin' || user?.role === 'system_admin' || user?.role === 'supervisor';
+  const partnerSchoolRoute = user?.role === 'school_coordinator' ? '/school/partner-schools' : '/admin/partner-schools';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Back to Partner School Database Navigation for Staff & Coordinators */}
+      {isStaffOrCoordinator && (
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => navigate(partnerSchoolRoute)}
+            className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer bg-blue-50 dark:bg-blue-950/60 px-4 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800 transition-all hover:shadow-xs shadow-xs"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>← Back to Partner School Database</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800">
         <div>
           <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">
@@ -225,6 +243,17 @@ export const ApplicationsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {isStaffOrCoordinator && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(partnerSchoolRoute)}
+              className="font-bold text-xs border-blue-200 dark:border-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950"
+              leftIcon={<Building2 className="h-4 w-4" />}
+            >
+              Partner Schools
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={() => navigate('/documents')}>
             Document Vault
           </Button>

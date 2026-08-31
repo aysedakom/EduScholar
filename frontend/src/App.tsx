@@ -200,6 +200,7 @@ export function App() {
                 <Route path="/admin/config" element={<SystemConfigPage />} />
                 <Route path="/admin/system-config" element={<SystemConfigPage />} />
                 <Route path="/admin/students" element={<MasterStudentDatabasePage />} />
+                <Route path="/admin/master-students" element={<MasterStudentDatabasePage />} />
                 <Route path="/admin/master-student-db" element={<MasterStudentDatabasePage />} />
                 <Route path="/admin/employers" element={<EmployerManagementPage />} />
                 <Route path="/admin/funds" element={<FundPoolsManagementPage />} />
