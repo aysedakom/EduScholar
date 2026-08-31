@@ -102,11 +102,11 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
     status = 'Approved';
   } else if (app.status === 'Rejected') {
     status = 'Rejected';
-  } else if (app.status === 'Under Review' || app.status === 'Interview Scheduled' || rawStatus.includes('Endorsed') || rawStatus.includes('Verified')) {
+  } else if (app.status === 'Under Review' || app.status === 'Interview Scheduled' || rawStatus.includes('Endorsed')) {
     status = 'Under Review';
   }
 
-  const isSchoolEndorsed = rawStatus.toLowerCase().includes('endorse') || rawStatus.toLowerCase().includes('verified');
+  const isSchoolEndorsed = rawStatus.toLowerCase().includes('endorse');
 
   return {
     id: app.reference_id || app.application_code || String(app.id),
@@ -595,8 +595,8 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                             {app.status}
                           </span>
                           {app.schoolEndorsed && (
-                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">
-                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" /> School Endorsed
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                              <CheckCircle2 className="h-2.5 w-2.5 text-emerald-600 dark:text-emerald-400" /> Endorsed by John Steaven Balansag
                             </span>
                           )}
                         </div>
