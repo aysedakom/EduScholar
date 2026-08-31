@@ -163,6 +163,8 @@ export function App() {
               {/* Supervisor Routes */}
               <Route element={<ProtectedRoute allowedRoles={['supervisor', 'admin', 'system_admin']} />}>
                 <Route path="/supervisor/evaluations" element={<StudentEvaluationsPage />} />
+                <Route path="/supervisor/enrollment-verification" element={<EnrollmentVerificationPage />} />
+                <Route path="/supervisor/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/supervisor/assigned-students" element={<MyAssignedStudentsPage />} />
               </Route>
 
@@ -177,7 +179,7 @@ export function App() {
               </Route>
 
               {/* Treasury Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['treasury', 'system_admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['treasury', 'system_admin', 'admin']} />}>
                 <Route path="/treasury/budget" element={<BudgetPage />} />
                 <Route path="/treasury/reports" element={<ReportsModulePage />} />
                 <Route path="/treasury/reconciliation" element={<ReconciliationPage />} />
@@ -186,15 +188,22 @@ export function App() {
               {/* Phase 7 System Administration Routes */}
               <Route element={<ProtectedRoute allowedRoles={['system_admin', 'admin']} />}>
                 <Route path="/admin/super" element={<SuperAdminPage />} />
+                <Route path="/admin/super-admin" element={<SuperAdminPage />} />
                 <Route path="/admin/users" element={<UserManagementPage />} />
                 <Route path="/admin/roles" element={<RolePermissionManagementPage />} />
+                <Route path="/admin/roles-permissions" element={<RolePermissionManagementPage />} />
                 <Route path="/admin/config" element={<SystemConfigPage />} />
+                <Route path="/admin/system-config" element={<SystemConfigPage />} />
                 <Route path="/admin/students" element={<MasterStudentDatabasePage />} />
+                <Route path="/admin/master-student-db" element={<MasterStudentDatabasePage />} />
                 <Route path="/admin/employers" element={<EmployerManagementPage />} />
                 <Route path="/admin/funds" element={<FundPoolsManagementPage />} />
+                <Route path="/admin/fund-pools" element={<FundPoolsManagementPage />} />
                 <Route path="/admin/workflows" element={<SystemWorkflowsPage />} />
                 <Route path="/admin/integrations" element={<ApiIntegrationsPage />} />
+                <Route path="/admin/api-integrations" element={<ApiIntegrationsPage />} />
                 <Route path="/admin/logs" element={<SystemLogsPage />} />
+                <Route path="/admin/system-logs" element={<SystemLogsPage />} />
                 <Route path="/admin/database" element={<DatabaseManagementPage />} />
                 <Route path="/admin/maintenance" element={<MaintenanceModePage />} />
                 <Route path="/admin/security" element={<SecurityManagementPage />} />

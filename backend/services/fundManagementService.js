@@ -1,4 +1,7 @@
 // backend/services/fundManagementService.js
+const { pool } = require('../config/db');
+const { broadcast } = require('../realtime/socketServer');
+
 /**
  * Scholarship Fund & Revenue Treasury Service
  * 
@@ -190,6 +193,30 @@ class FundManagementService {
     // Update committed amount in the fund pool
     fund.committed_amount = (fund.committed_amount || 0) + amount;
 
+    // Dispatch real-time in-app notification to City Treasury and Supervisors
+    try {
+      const treasuryUsers = await pool.query("SELECT id FROM users WHERE role IN ('treasury', 'system_admin')");
+      for (const tUser of treasuryUsers.rows) {
+        await pool.query(
+          `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+           VALUES ($1, $2, $3, 'warning', FALSE, 'fund_grant_request', '/treasury/budget')`,
+          [
+            tUser.id,
+            `🏛️ Grant Fund Request: ₱${amount.toLocaleString()} (${fund.name})`,
+            `Administrator requested a budget drawdown of ₱${amount.toLocaleString()} for "${newRequest.tranche_name}". Please review and authorize grant release in Treasury Portal.`,
+          ]
+        );
+      }
+
+      broadcast({
+        type: 'FUND_GRANT_REQUESTED',
+        data: newRequest,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (notifErr) {
+      console.warn('[fundManagementService] Treasury notification note:', notifErr.message);
+    }
+
     return {
       success: true,
       message: `Funder Drawdown Request ${reqId} for ₱${amount.toLocaleString()} successfully submitted to ${fund.funder_agency}!`,
@@ -218,6 +245,30 @@ class FundManagementService {
         fund.disbursed_amount = (fund.disbursed_amount || 0) + req.requested_amount;
         fund.tranches_released = (fund.tranches_released || 0) + 1;
         fund.last_drawdown_date = req.approved_date;
+      }
+
+      // Dispatch notification to Admins that funds have been credited
+      try {
+        const adminUsers = await pool.query("SELECT id FROM users WHERE role IN ('admin', 'system_admin')");
+        for (const aUser of adminUsers.rows) {
+          await pool.query(
+            `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)
+             VALUES ($1, $2, $3, 'success', FALSE, 'fund_credited', '/admin/funds')`,
+            [
+              aUser.id,
+              `✅ Funds Credited: ₱${req.requested_amount.toLocaleString()}`,
+              `City Treasury approved and credited ${req.tranche_name} (₱${req.requested_amount.toLocaleString()}) to active vault.`,
+            ]
+          );
+        }
+
+        broadcast({
+          type: 'FUND_CREDITED',
+          data: req,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (notifErr) {
+        console.warn('[fundManagementService] Admin notification note:', notifErr.message);
       }
     }
 
