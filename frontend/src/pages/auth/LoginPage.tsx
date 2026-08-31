@@ -621,6 +621,32 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                       <span className="font-bold text-slate-800 block text-[11px]">📋 Supervisor</span>
                       <span className="text-[9px] text-slate-400 font-mono">sv.edu2026</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmail('student.edu2026@gmail.com');
+                        setPassword('January10');
+                        setSelectedRole('student');
+                      }}
+                      className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200/70 text-left transition-all"
+                    >
+                      <span className="font-bold text-slate-800 block text-[11px]">🎓 Applicant / Scholar</span>
+                      <span className="text-[9px] text-slate-400 font-mono">student.edu2026</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEmail('sysadmin.edu2026@gmail.com');
+                        setPassword('January10');
+                        setSelectedRole('system_admin');
+                      }}
+                      className="p-2 rounded-xl bg-slate-50 hover:bg-blue-50 border border-slate-200/70 text-left transition-all"
+                    >
+                      <span className="font-bold text-slate-800 block text-[11px]">⚙️ System Admin</span>
+                      <span className="text-[9px] text-slate-400 font-mono">sysadmin.edu2026</span>
+                    </button>
                   </div>
                 </div>
               </form>
