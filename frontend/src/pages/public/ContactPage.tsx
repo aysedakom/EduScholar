@@ -30,10 +30,6 @@ export const ContactPage: React.FC = () => {
   const { t } = useLanguage();
   const [eservicesOpen, setEservicesOpen] = useState(false);
 
-  // Business Hours calculation (8:00 AM - 5:00 PM Philippine Time / UTC+8)
-  const currentPhtHour = (new Date().getUTCHours() + 8) % 24;
-  const isLiveSupportHours = currentPhtHour >= 8 && currentPhtHour < 17;
-
   // Active Desk Tabs: 'new-ticket' | 'my-tickets' | 'ticket-chat'
   const [activeDeskTab, setActiveDeskTab] = useState<'new-ticket' | 'my-tickets' | 'ticket-chat'>('new-ticket');
 
@@ -256,29 +252,29 @@ export const ContactPage: React.FC = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+        {/* Help Desk & Ticketing Notice */}
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold text-lg shrink-0 ${isLiveSupportHours ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950 text-amber-600 border border-amber-200 dark:border-amber-800'}`}>
-              {isLiveSupportHours ? '🟢' : '🌙'}
+            <div className="h-12 w-12 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-600 border border-blue-200 dark:border-blue-800 flex items-center justify-center font-bold text-lg shrink-0">
+              🎫
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
-                  {isLiveSupportHours ? 'Live Support Desk is ONLINE' : 'Live Support Desk is OFFLINE'}
+                  QCYDO Help Desk & Inquiry Ticketing
                 </h2>
-                <Badge variant={isLiveSupportHours ? 'success' : 'warning'} size="sm">
-                  {isLiveSupportHours ? 'Active Response Queue' : 'Offline Queue Mode'}
+                <Badge variant="primary" size="sm">
+                  Official Queuing Desk
                 </Badge>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Official Business Hours: <strong>Monday – Friday, 8:00 AM to 5:00 PM PHT</strong>.
-                {!isLiveSupportHours && ' Concerns submitted now are queued with priority for the 8:00 AM opening shift.'}
+                Submit an inquiry ticket to our help desk queue. For <strong>real-time Live Support</strong> during office hours (8:00 AM – 5:00 PM), registered scholars can access <strong>Live Support</strong> under <strong>Messages</strong> in the portal sidebar.
               </p>
             </div>
           </div>
           {user && (
             <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full md:w-auto">
-              <button onClick={() => setActiveDeskTab('new-ticket')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab === 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>Raise Ticket</button>
+              <button onClick={() => setActiveDeskTab('new-ticket')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab === 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>Submit Ticket</button>
               <button onClick={() => setActiveDeskTab('my-tickets')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab !== 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>My Tickets ({myTickets.length})</button>
             </div>
           )}

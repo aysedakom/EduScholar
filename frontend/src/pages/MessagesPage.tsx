@@ -11,6 +11,8 @@ import {
   Ticket,
   CheckCircle2,
   Lock,
+  Clock,
+  Archive,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
@@ -30,6 +32,7 @@ import {
   type ChatMessageItem,
 } from '../api/communication';
 import { createTicket, closeTicket, updateTicketStatus } from '../api/tickets';
+import api from '../api/axios';
 
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
@@ -54,6 +57,7 @@ export const MessagesPage: React.FC = () => {
   const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'tickets' | 'open' | 'closed'>('all');
   const [isSending, setIsSending] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [ticketSecondsLeft, setTicketSecondsLeft] = useState<number>(120);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Raise Ticket Modal State
@@ -144,6 +148,49 @@ export const MessagesPage: React.FC = () => {
     loadAnnouncements();
     loadConversations(true);
   }, [user]);
+
+  // 2-Minute Inactivity Auto-Close Timer for Active Live Support Ticket Session
+  useEffect(() => {
+    setTicketSecondsLeft(120);
+  }, [selectedConv?.conversation_id]);
+
+  useEffect(() => {
+    if (!selectedConv?.is_ticket || selectedConv?.ticket_status === 'Closed') {
+      return;
+    }
+
+    if (ticketSecondsLeft <= 0) {
+      handleLiveTicketInactivityTimeout();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTicketSecondsLeft((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [ticketSecondsLeft, selectedConv]);
+
+  const handleLiveTicketInactivityTimeout = async () => {
+    if (!selectedConv?.ticket_id || selectedConv?.ticket_status === 'Closed') return;
+    try {
+      await api.post(`/tickets/${selectedConv.ticket_id}/inactivity-timeout`);
+      toast.error(`Ticket #${selectedConv.ticket_code} auto-closed due to 2 minutes of applicant inactivity and moved to Archives.`);
+      setSelectedConv((prev) =>
+        prev
+          ? {
+              ...prev,
+              ticket_status: 'Closed',
+              status: 'Closed',
+              resolution_remarks: 'Auto-closed due to applicant inactivity (2-minute session timeout).',
+            }
+          : null
+      );
+      loadConversations(false);
+    } catch {
+      // fallback
+    }
+  };
 
   // When selected conversation changes, load messages
   useEffect(() => {
@@ -381,6 +428,34 @@ export const MessagesPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Live Support Operating Schedule Banner */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-base shrink-0 ${
+            ((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17
+              ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800'
+              : 'bg-amber-50 dark:bg-amber-950 text-amber-600 border border-amber-200 dark:border-amber-800'
+          }`}>
+            {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? '🟢' : '🌙'}
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17
+                  ? 'Live Support Chat is ONLINE'
+                  : 'Live Support Chat is OFFLINE'}
+              </span>
+              <Badge variant={((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? 'success' : 'warning'} size="sm">
+                {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? 'Live Queuing Active' : 'Off-Hours Queue'}
+              </Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Live Support Schedule: <strong>Monday to Friday, 8:00 AM – 5:00 PM PHT</strong>. (2-minute session inactivity timer applies to active live queues; closed tickets move to Archives).
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
@@ -596,13 +671,14 @@ export const MessagesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setActiveTabFilter('closed')}
-                className={`flex-1 py-1 rounded-lg transition-all ${
+                className={`flex-1 py-1 rounded-lg flex items-center justify-center gap-1 transition-all ${
                   activeTabFilter === 'closed'
-                    ? 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 shadow-xs'
+                    ? 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-xs font-bold'
                     : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                 }`}
               >
-                Closed
+                <Archive className="h-3 w-3" />
+                <span>Archives</span>
               </button>
             </div>
           )}
@@ -817,11 +893,22 @@ export const MessagesPage: React.FC = () => {
                   {selectedConv.ticket_subject || selectedConv.participant_role}
                 </span>
               </div>
-              {selectedConv.ticket_status === 'Closed' && selectedConv.resolution_remarks && (
-                <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 truncate max-w-xs">
-                  Resolution: {selectedConv.resolution_remarks}
-                </span>
-              )}
+              <div className="flex items-center gap-2">
+                {selectedConv.ticket_status !== 'Closed' && (
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800">
+                    <Clock className="h-3 w-3 text-blue-600 animate-spin" />
+                    <span className="text-[10px] text-slate-500 font-bold">Auto-Close:</span>
+                    <span className={`text-[11px] font-mono font-extrabold ${ticketSecondsLeft <= 30 ? 'text-rose-600 animate-pulse' : 'text-blue-700 dark:text-blue-300'}`}>
+                      {String(Math.floor(ticketSecondsLeft / 60)).padStart(2, '0')}:{String(ticketSecondsLeft % 60).padStart(2, '0')}
+                    </span>
+                  </div>
+                )}
+                {selectedConv.ticket_status === 'Closed' && selectedConv.resolution_remarks && (
+                  <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 truncate max-w-xs">
+                    Resolution: {selectedConv.resolution_remarks}
+                  </span>
+                )}
+              </div>
             </div>
           )}
 
