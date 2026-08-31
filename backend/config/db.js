@@ -167,7 +167,7 @@ async function ensureTables() {
         ON CONFLICT (setting_key) DO NOTHING;
       `);
 
-      // Ensure primary official accounts (Admin, Treasury, School Coordinator, Supervisor) have January10 password in cloud/local DB
+      // Ensure primary official accounts (Admin, Treasury, School Coordinator, Supervisor, System Admin, Student) have January10 password in cloud/local DB
       const bcrypt = require('bcryptjs');
       const defaultPassHash = await bcrypt.hash('January10', 10);
       
@@ -200,6 +200,27 @@ async function ensureTables() {
           dept: 'Quezon City Youth Development Office (QCYDO)',
           major: 'Evaluation Executive Reviewer',
         },
+        {
+          name: 'System Administrator',
+          email: 'sysadmin.edu2026@gmail.com',
+          role: 'system_admin',
+          dept: 'Quezon City IT & System Services',
+          major: 'Infrastructure & Security Admin',
+        },
+        {
+          name: 'Juan Dela Cruz (Student Scholar)',
+          email: 'student.edu2026@gmail.com',
+          role: 'student',
+          dept: 'Quezon City University',
+          major: 'B.S. Information Technology',
+        },
+        {
+          name: 'Demo Student Account',
+          email: 'student@gmail.com',
+          role: 'student',
+          dept: 'Quezon City University',
+          major: 'B.S. Computer Science',
+        },
       ];
 
       for (const u of seedUsers) {
@@ -207,9 +228,9 @@ async function ensureTables() {
           INSERT INTO users (name, email, password, role, department, major, financial_aid_year, status, is_email_verified)
           VALUES ($1, $2, $3, $4, $5, $6, '2026-2027', 'active', true)
           ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'
-        `, [u.name, u.email, defaultPassHash, u.role, u.dept, u.major]);
+        `, [u.name, u.email.toLowerCase().trim(), defaultPassHash, u.role, u.dept, u.major]);
       }
-      console.log('[db] Primary system accounts (Admin, Treasury, Coordinator, Supervisor) synchronized with password "January10"');
+      console.log('[db] Primary system accounts (Admin, Treasury, Coordinator, Supervisor, SysAdmin, Student) synchronized with password "January10"');
     }
   } catch (err) {
     console.warn('[db] ensureTables warning:', err.message);

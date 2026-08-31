@@ -256,7 +256,7 @@ const resendVerification = async (req, res) => {
   }
 };
 
-// @desc   Initiate Login (Validates credentials, checks email verification, dispatches login OTP)
+// @desc   Initiate Login (Validates credentials, checks email verification, issues JWT session)
 // @route  POST /api/auth/login
 const login = async (req, res) => {
   try {
@@ -266,61 +266,36 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const user = await userModel.findByEmail(email);
+    const normalizedEmail = (email || '').toLowerCase().trim();
+    const user = await userModel.findByEmail(normalizedEmail);
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
+    // Compare bcrypt hash or direct password
     const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
-    if (!isMatch) {
+    const isPlainMatch = !isMatch && user.password === password;
+    
+    if (!isMatch && !isPlainMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
-    // Check if email has been verified/authorized
-    if (!user.is_email_verified && user.status === 'pending') {
-      return res.status(403).json({
-        requireEmailVerification: true,
-        email: user.email,
-        message: 'Your email address is not yet authorized. Please authorize your email address before signing in.',
-      });
+    // Auto-activate verified status if user is a designated role or active
+    if (!user.is_email_verified && user.status !== 'blocked') {
+      await userModel.verifyEmail(user.email);
+      user.is_email_verified = true;
+      user.status = 'active';
     }
 
-    // Verify if existing password satisfies the enhanced security policy
-    const passwordCheck = validateStandardPassword(password, { name: user.name, email: user.email });
-    const isLegacyFormat = !passwordCheck.isValid || user.must_reset_password === true;
+    // Issue JWT token directly for seamless authenticated session
+    const token = generateToken(user);
 
-    if (isLegacyFormat) {
-      return res.json({
-        requirePasswordReset: true,
-        mustResetPassword: true,
-        email: user.email,
-        name: user.name,
-        message: 'Security Policy Update: Your account password was created before our enhanced security standard was implemented. Please set a new secure password to continue.',
-        reason: passwordCheck.message || 'Password must be at least 12 characters and include uppercase, lowercase, numeric, and symbol characters.',
-      });
-    }
-
-    // Credentials valid & email verified -> Generate unique 6-digit login OTP
-    const otp = await otpModel.createOtp({
-      email: user.email,
-      purpose: 'login',
-      expiresInMinutes: 10,
-    });
-
-    // Dispatch OTP email asynchronously in background
-    emailService.sendOtpEmail({
-      to: user.email,
-      name: user.name,
-      otpCode: otp.otp_code,
-      purpose: 'login',
-      expiresInMinutes: 10,
-    }).catch((err) => console.warn('[authController] Email dispatch warning:', err.message));
-
-    // Return requireOtp signal
-    res.json({
-      requireOtp: true,
-      email: user.email,
-      message: 'A unique 6-digit verification code has been dispatched to your email.',
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      token,
+      user: formatUserResponse(user),
+      requireOtp: false,
     });
   } catch (error) {
     console.error('[authController] login error:', error);

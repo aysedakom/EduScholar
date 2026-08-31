@@ -1,6 +1,7 @@
 // backend/routes/admin.js
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 const { resetDatabase } = require('../db/reset');
 const authMiddleware = require('../middleware/auth');
@@ -23,12 +24,75 @@ router.post('/reset-db', async (req, res) => {
 router.get('/users', authMiddleware, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, email, role, department, major, gpa, status, student_id, created_at FROM users ORDER BY id ASC'
+      'SELECT id, name, email, role, department, major, gpa, status, student_id, is_email_verified, created_at FROM users ORDER BY id ASC'
     );
     res.json(result.rows);
   } catch (error) {
     console.error('[admin] users error:', error);
     res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
+// POST /api/admin/users/sync-passwords - Synchronize all designated role passwords to January10
+router.post('/users/sync-passwords', authMiddleware, async (req, res) => {
+  try {
+    const defaultPassHash = await bcrypt.hash('January10', 10);
+    const officialAccounts = [
+      { name: 'ADMIN', email: 'support.edu2026@gmail.com', role: 'admin', dept: 'Quezon City Youth Development Office (QCYDO)' },
+      { name: 'City Treasury Disbursing Officer', email: 'treasury.edu2026@gmail.com', role: 'treasury', dept: 'Quezon City Hall Treasury Office' },
+      { name: 'School Coordinator', email: 'sr.edu2026@gmail.com', role: 'school_coordinator', dept: 'Quezon City University & Partner Schools' },
+      { name: 'Scholarship Program Supervisor', email: 'sv.edu2026@gmail.com', role: 'supervisor', dept: 'Quezon City Youth Development Office (QCYDO)' },
+      { name: 'System Administrator', email: 'sysadmin.edu2026@gmail.com', role: 'system_admin', dept: 'Quezon City IT & System Services' },
+      { name: 'Juan Dela Cruz (Student Scholar)', email: 'student.edu2026@gmail.com', role: 'student', dept: 'Quezon City University' },
+      { name: 'Demo Student Account', email: 'student@gmail.com', role: 'student', dept: 'Quezon City University' },
+    ];
+
+    for (const u of officialAccounts) {
+      await pool.query(`
+        INSERT INTO users (name, email, password, role, department, status, is_email_verified)
+        VALUES ($1, $2, $3, $4, $5, 'active', true)
+        ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'
+      `, [u.name, u.email.toLowerCase().trim(), defaultPassHash, u.role, u.dept]);
+    }
+
+    res.json({
+      success: true,
+      message: 'All system role accounts (Admin, Treasury, Coordinator, Supervisor, SysAdmin, Student) have been synchronized with password "January10" and active status.',
+    });
+  } catch (error) {
+    console.error('[admin] sync-passwords error:', error);
+    res.status(500).json({ message: 'Failed to synchronize role passwords: ' + error.message });
+  }
+});
+
+// PUT /api/admin/users/:id/password - Reset or set custom password for any user
+router.put('/users/:id/password', authMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const targetId = req.params.id;
+    const passwordToSet = newPassword || 'January10';
+    const hashedPassword = await bcrypt.hash(passwordToSet, 10);
+
+    const result = await pool.query(
+      `UPDATE users 
+       SET password = $1, is_email_verified = true, status = 'active', updated_at = NOW() 
+       WHERE id = $2 
+       RETURNING id, name, email, role, status`,
+      [hashedPassword, targetId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User account not found' });
+    }
+
+    res.json({
+      success: true,
+      message: `Password for ${result.rows[0].email} successfully updated to "${passwordToSet}".`,
+      user: result.rows[0],
+    });
+  } catch (error) {
+    console.error('[admin] update user password error:', error);
+    res.status(500).json({ message: 'Failed to update user password: ' + error.message });
   }
 });
 
