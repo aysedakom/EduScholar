@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   Building2,
   Search,
@@ -17,6 +17,7 @@ import {
   ExternalLink,
   FileText,
   ArrowRight,
+  ArrowLeft,
 } from 'lucide-react';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
@@ -677,6 +678,17 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div className="space-y-1">
+          {/* Breadcrumb Navigation Matching Exact Design */}
+          <div className="flex items-center gap-2 mb-1">
+            <Link
+              to={isCoordinator ? '/school/portal' : '/e-scholar'}
+              className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> {isCoordinator ? 'Coordinator Portal' : 'E-SCHOLAR Hub'}
+            </Link>
+            <span className="text-slate-400 text-xs">/</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Partner School Database</span>
+          </div>
           <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
             Students & Applicants: {currentSchool.schoolName}
           </h1>

@@ -15,7 +15,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { formatCurrency, formatDate } from '../utils/cn';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { ScholarshipAwardCertificateModal } from '../components/common/ScholarshipAwardCertificateModal';
@@ -220,21 +220,21 @@ export const ApplicationsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Back to Partner School Database Navigation for Staff & Coordinators */}
-      {isStaffOrCoordinator && (
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => navigate(partnerSchoolRoute)}
-            className="inline-flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline cursor-pointer bg-blue-50 dark:bg-blue-950/60 px-4 py-2.5 rounded-xl border border-blue-200 dark:border-blue-800 transition-all hover:shadow-xs shadow-xs"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            <span>← Back to Partner School Database</span>
-          </button>
-        </div>
-      )}
-
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800">
         <div>
+          {/* Breadcrumb Navigation Matching Exact Design */}
+          {isStaffOrCoordinator && (
+            <div className="flex items-center gap-2 mb-1.5">
+              <Link
+                to={partnerSchoolRoute}
+                className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Partner School Database
+              </Link>
+              <span className="text-slate-400 text-xs">/</span>
+              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Applications & Document Tracker</span>
+            </div>
+          )}
           <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">
             Application Progress & Document Vault Tracker
           </h1>
