@@ -226,7 +226,11 @@ export const OneClickRenewalPage: React.FC = () => {
                   <div className="absolute right-0 top-11 w-48 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1.5 shadow-xl z-50 animate-in fade-in duration-150">
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                       <p className="text-xs font-extrabold text-slate-900 dark:text-white">{user.name}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">{user.role}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono">
+                        {user.role === 'student'
+                          ? `Applicant ID: ${user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                          : user.role}
+                      </p>
                     </div>
                     <button
                       onClick={logout}

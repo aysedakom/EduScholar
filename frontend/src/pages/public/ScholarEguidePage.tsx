@@ -190,7 +190,11 @@ export const ScholarEguidePage: React.FC = () => {
                   <div className="absolute right-0 top-11 w-48 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-xl z-50">
                     <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1">
                       <p className="text-xs font-bold truncate">{user.name}</p>
-                      <p className="text-[10px] text-slate-400 capitalize">{user.role?.replace('_', ' ')}</p>
+                      <p className="text-[10px] text-slate-400 capitalize font-mono">
+                        {user.role === 'student'
+                          ? `Applicant ID: ${user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                          : user.role?.replace('_', ' ')}
+                      </p>
                     </div>
                     <Link
                       to="/dashboard"

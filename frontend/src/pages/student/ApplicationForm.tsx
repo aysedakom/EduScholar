@@ -904,7 +904,11 @@ export const ApplicationForm: React.FC = () => {
                   }`}>
                     <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-800 mb-1">
                       <p className="text-xs font-bold truncate">{user.name}</p>
-                      <p className="text-[10px] text-slate-400 capitalize">{user.role?.replace('_', ' ')}</p>
+                      <p className="text-[10px] text-slate-400 capitalize font-mono">
+                        {user.role === 'student'
+                          ? `Applicant ID: ${user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                          : user.role?.replace('_', ' ')}
+                      </p>
                     </div>
                     <Link
                       to="/dashboard"

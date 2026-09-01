@@ -264,7 +264,9 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                 {user?.name || 'PIA MARIE FANER'}
               </p>
               <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 capitalize mt-0.5">
-                {user?.role === 'student' ? 'Citizen' : (user?.role ? user.role.replace('_', ' ') : 'Citizen')}
+                {user?.role === 'student'
+                  ? (user?.student_id || user?.studentId || (user?.id ? `APP-QC-2026-${user.id}` : '23010366'))
+                  : (user?.role ? user.role.replace('_', ' ') : 'Administrator')}
               </p>
             </div>
 
@@ -280,7 +282,9 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
               <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                 <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate">{user?.name}</p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold capitalize">
-                  {user?.role === 'student' ? 'Citizen' : (user?.role ? user.role.replace('_', ' ') : 'Citizen')}
+                  {user?.role === 'student'
+                    ? `Applicant ID: ${user?.student_id || user?.studentId || (user?.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                    : (user?.role ? user.role.replace('_', ' ') : 'Administrator')}
                 </p>
                 {user?.email && (
                   <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>

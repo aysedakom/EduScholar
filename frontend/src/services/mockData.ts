@@ -7,6 +7,7 @@ export const MOCK_USERS: Record<string, User> = {
     email: 'piamariefaner2004@gmail.com',
     role: 'student',
     studentId: '23010366',
+    student_id: '23010366',
     department: 'Bestlink College of the Philippines (BCP)',
     major: 'B.S. Information Technology',
     gpa: 1.50,
