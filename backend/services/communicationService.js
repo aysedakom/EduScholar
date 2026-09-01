@@ -132,48 +132,34 @@ class CommunicationService {
             last_message: lastMsg.message,
             last_message_time: lastMsg.created_at,
             unread_count: 0,
-            status: 'Active Response Desk',
+            status: 'Active Live Response Desk',
+            is_ticket: false,
+          },
+          {
+            conversation_id: `conv-student-eval-${currentUser.id}`,
+            participant_id: 3,
+            participant_name: 'Scholarship Application Review Desk',
+            participant_role: 'Admissions & Document Evaluator',
+            avatar: '📋',
+            last_message: 'Direct channel for document verification, eligibility assessments, and evaluation questions.',
+            last_message_time: new Date().toISOString(),
+            unread_count: 0,
+            status: 'Live Evaluation Desk',
+            is_ticket: false,
+          },
+          {
+            conversation_id: `conv-student-disb-${currentUser.id}`,
+            participant_id: 4,
+            participant_name: 'Disbursement & Payout Hotline',
+            participant_role: 'City Treasury & GCash Support',
+            avatar: '💰',
+            last_message: 'Inquiries regarding stipend release schedules, ATM verification, and Landbank crediting.',
+            last_message_time: new Date().toISOString(),
+            unread_count: 0,
+            status: 'Treasury Live Hotline',
             is_ticket: false,
           },
         ];
-
-        // Fetch student's support tickets as conversation threads
-        try {
-          const ticketsRes = await pool.query(
-            `SELECT t.*, 
-                    (SELECT message FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_ticket_msg,
-                    (SELECT created_at FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_msg_time
-             FROM support_tickets t
-             WHERE t.user_id = $1
-             ORDER BY t.created_at DESC`,
-            [currentUser.id]
-          );
-
-          for (const tkt of ticketsRes.rows) {
-            threads.push({
-              conversation_id: tkt.conversation_id || `conv_ticket_${tkt.ticket_code.toLowerCase()}`,
-              participant_id: 2,
-              participant_name: `Ticket #${tkt.ticket_code}: ${tkt.subject}`,
-              participant_role: `${tkt.category} (${tkt.priority} Priority)`,
-              avatar: '🎫',
-              last_message: tkt.last_ticket_msg || tkt.description,
-              last_message_time: tkt.last_msg_time || tkt.updated_at || tkt.created_at,
-              unread_count: 0,
-              status: tkt.status === 'Closed' ? 'Closed / Resolved' : `Ticket ${tkt.status}`,
-              is_ticket: true,
-              ticket_id: tkt.id,
-              ticket_code: tkt.ticket_code,
-              ticket_status: tkt.status,
-              ticket_priority: tkt.priority,
-              ticket_category: tkt.category,
-              ticket_subject: tkt.subject,
-              resolution_remarks: tkt.resolution_remarks,
-              closed_at: tkt.closed_at,
-            });
-          }
-        } catch (tktErr) {
-          console.warn('[communicationService] Student tickets fetch note:', tktErr.message);
-        }
 
         return threads;
       }
@@ -244,48 +230,6 @@ class CommunicationService {
             thread.last_message_time = new Date().toISOString();
           }
           thread.unread_count = parseInt(unreadRes.rows[0]?.count || 0);
-        }
-
-        // Fetch any tickets explicitly classified as Disbursement/Payout
-        try {
-          const payoutTicketsRes = await pool.query(
-            `SELECT t.*, u.name as user_name, u.student_id,
-                    (SELECT message FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_ticket_msg,
-                    (SELECT created_at FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_msg_time,
-                    (SELECT COUNT(*) FROM chat_messages WHERE conversation_id = t.conversation_id AND sender_role != 'treasury' AND is_read = FALSE) as unread_tkt_count
-             FROM support_tickets t
-             LEFT JOIN users u ON t.user_id = u.id
-             WHERE t.category ILIKE '%disbursement%' OR t.category ILIKE '%payout%' OR t.category ILIKE '%stipend%'
-             ORDER BY CASE WHEN t.status = 'Open' THEN 1 WHEN t.status = 'In Progress' THEN 2 ELSE 3 END, t.created_at DESC`
-          );
-
-          for (const tkt of payoutTicketsRes.rows) {
-            treasuryThreads.push({
-              conversation_id: tkt.conversation_id || `conv_ticket_${tkt.ticket_code.toLowerCase()}`,
-              participant_id: tkt.user_id,
-              participant_name: `${tkt.user_name || 'Scholar'} [${tkt.ticket_code}]`,
-              participant_role: `Disbursement Ticket: ${tkt.subject}`,
-              student_id: tkt.student_id || `STU-2026-${String(tkt.user_id).padStart(4, '0')}`,
-              avatar: '🎫',
-              last_message: tkt.last_ticket_msg || tkt.description,
-              last_message_time: tkt.last_msg_time || tkt.created_at,
-              unread_count: parseInt(tkt.unread_tkt_count || 0),
-              academic_status: `Ticket: ${tkt.status}`,
-              status_badge_variant: tkt.status === 'Closed' ? 'secondary' : tkt.status === 'Open' ? 'danger' : 'warning',
-              status: tkt.status === 'Closed' ? 'Closed' : `Ticket ${tkt.status} (${tkt.priority})`,
-              is_ticket: true,
-              ticket_id: tkt.id,
-              ticket_code: tkt.ticket_code,
-              ticket_status: tkt.status,
-              ticket_priority: tkt.priority,
-              ticket_category: tkt.category,
-              ticket_subject: tkt.subject,
-              resolution_remarks: tkt.resolution_remarks,
-              closed_at: tkt.closed_at,
-            });
-          }
-        } catch (tktErr) {
-          console.warn('[communicationService] Treasury tickets fetch note:', tktErr.message);
         }
 
         return treasuryThreads;
@@ -489,48 +433,7 @@ class CommunicationService {
         threads.push(thread);
       }
 
-      // B. Fetch support tickets as dedicated high-priority threads
-      try {
-        const adminTicketsRes = await pool.query(
-          `SELECT t.*, u.name as user_name, u.student_id, u.email as user_email,
-                  (SELECT message FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_ticket_msg,
-                  (SELECT created_at FROM chat_messages WHERE conversation_id = t.conversation_id ORDER BY created_at DESC LIMIT 1) as last_msg_time,
-                  (SELECT COUNT(*) FROM chat_messages WHERE conversation_id = t.conversation_id AND sender_role = 'student' AND is_read = FALSE) as unread_tkt_count
-           FROM support_tickets t
-           LEFT JOIN users u ON t.user_id = u.id
-           ORDER BY CASE WHEN t.status = 'Open' THEN 1 WHEN t.status = 'In Progress' THEN 2 ELSE 3 END, t.created_at DESC`
-        );
-
-        for (const tkt of adminTicketsRes.rows) {
-          threads.push({
-            conversation_id: tkt.conversation_id || `conv_ticket_${tkt.ticket_code.toLowerCase()}`,
-            participant_id: tkt.user_id,
-            participant_name: `${tkt.user_name || 'Applicant'} [${tkt.ticket_code}]`,
-            participant_role: `Ticket: ${tkt.subject} (${tkt.category})`,
-            student_id: tkt.student_id || `STU-2026-${String(tkt.user_id).padStart(4, '0')}`,
-            avatar: '🎫',
-            last_message: tkt.last_ticket_msg || tkt.description,
-            last_message_time: tkt.last_msg_time || tkt.created_at,
-            unread_count: parseInt(tkt.unread_tkt_count || 0),
-            academic_status: `Ticket: ${tkt.status}`,
-            status_badge_variant: tkt.status === 'Closed' ? 'secondary' : tkt.status === 'Open' ? 'danger' : 'warning',
-            status: tkt.status === 'Closed' ? 'Closed' : `Ticket ${tkt.status} (${tkt.priority})`,
-            is_ticket: true,
-            ticket_id: tkt.id,
-            ticket_code: tkt.ticket_code,
-            ticket_status: tkt.status,
-            ticket_priority: tkt.priority,
-            ticket_category: tkt.category,
-            ticket_subject: tkt.subject,
-            resolution_remarks: tkt.resolution_remarks,
-            closed_at: tkt.closed_at,
-          });
-        }
-      } catch (tktErr) {
-        console.warn('[communicationService] Admin tickets fetch note:', tktErr.message);
-      }
-
-      // C. Fetch standard student conversations
+      // B. Fetch standard student live chat conversations
       const studentsRes = await pool.query(
         `SELECT 
            u.id, 
