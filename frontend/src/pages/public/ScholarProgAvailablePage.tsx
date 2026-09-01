@@ -506,7 +506,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
                       <p className="text-xs font-bold truncate">{user.name}</p>
                       <p className="text-[10px] text-slate-400 capitalize font-mono">
                         {user.role === 'student'
-                          ? `Applicant ID: ${user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                          ? `Application ID: ${user.application_code || user.reference_id || user.applicationId || user.application_id || (user.id ? `APP-2026-${String(user.id).padStart(4, '0')}` : 'APP-2026-0001')}`
                           : user.role?.replace('_', ' ')}
                       </p>
                     </div>

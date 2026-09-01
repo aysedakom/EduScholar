@@ -31,6 +31,10 @@ export interface User {
   avatar?: string;
   studentId?: string;
   student_id?: string;
+  applicationId?: string;
+  application_id?: string;
+  application_code?: string;
+  reference_id?: string;
   department?: string;
   major?: string;
   gpa?: number;

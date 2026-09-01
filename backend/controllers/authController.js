@@ -14,32 +14,47 @@ const generateToken = (user) => {
   );
 };
 
-const formatUserResponse = (user) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  role: user.role,
-  student_id: user.student_id,
-  studentId: user.student_id,
-  department: user.department,
-  major: user.major,
-  gpa: user.gpa ? Number(user.gpa) : null,
-  financialAidYear: user.financial_aid_year,
-  avatar: user.avatar,
-  phone: user.phone,
-  address: user.address,
-  barangay: user.barangay,
-  city: user.city,
-  province: user.province,
-  zipCode: user.zip_code,
-  isPwd: user.is_pwd,
-  isSoloParent: user.is_solo_parent,
-  isIndigenous: user.is_indigenous,
-  is4ps: user.is_4ps,
-  isKasambahayOrToda: user.is_kasambahay_or_toda,
-  status: user.status,
-  hasCompletedBasicForm: true,
-});
+const formatUserResponse = (user) => {
+  const appId =
+    user.application_code ||
+    user.reference_id ||
+    (user.application_id
+      ? `APP-2026-${String(user.application_id).padStart(4, '0')}`
+      : user.role === 'student' && user.id
+      ? `APP-2026-${String(user.id).padStart(4, '0')}`
+      : null);
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    student_id: user.student_id,
+    studentId: user.student_id,
+    application_code: user.application_code,
+    reference_id: user.reference_id,
+    application_id: appId,
+    applicationId: appId,
+    department: user.department,
+    major: user.major,
+    gpa: user.gpa ? Number(user.gpa) : null,
+    financialAidYear: user.financial_aid_year,
+    avatar: user.avatar,
+    phone: user.phone,
+    address: user.address,
+    barangay: user.barangay,
+    city: user.city,
+    province: user.province,
+    zipCode: user.zip_code,
+    isPwd: user.is_pwd,
+    isSoloParent: user.is_solo_parent,
+    isIndigenous: user.is_indigenous,
+    is4ps: user.is_4ps,
+    isKasambahayOrToda: user.is_kasambahay_or_toda,
+    status: user.status,
+    hasCompletedBasicForm: true,
+  };
+};
 
 const isSafeClientUrl = (urlStr) => {
   try {

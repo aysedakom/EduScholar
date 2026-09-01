@@ -214,9 +214,9 @@ export const EScholarPage: React.FC = () => {
                     <p className="text-xs font-black tracking-tight text-slate-900 dark:text-white uppercase font-heading">
                       {user.name || 'PIA MARIE FANER'}
                     </p>
-                    <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 capitalize mt-0.5">
+                    <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                       {user.role === 'student'
-                        ? (user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366'))
+                        ? (user.application_code || user.reference_id || user.applicationId || user.application_id || (user.id ? `APP-2026-${String(user.id).padStart(4, '0')}` : 'APP-2026-0001'))
                         : (user.role ? user.role.replace('_', ' ') : 'Administrator')}
                     </p>
                   </div>
@@ -231,9 +231,9 @@ export const EScholarPage: React.FC = () => {
                   <div className="absolute right-0 top-12 w-52 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-xl z-50 animate-in fade-in duration-150">
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
                       <p className="text-xs font-black uppercase truncate">{user.name}</p>
-                      <p className="text-[10px] text-slate-400 font-semibold capitalize">
+                      <p className="text-[10px] text-slate-400 font-semibold font-mono">
                         {user.role === 'student'
-                          ? `Applicant ID: ${user.student_id || user.studentId || (user.id ? `APP-QC-2026-${user.id}` : '23010366')}`
+                          ? `Application ID: ${user.application_code || user.reference_id || user.applicationId || user.application_id || (user.id ? `APP-2026-${String(user.id).padStart(4, '0')}` : 'APP-2026-0001')}`
                           : user.role?.replace('_', ' ')}
                       </p>
                       {user.email && (

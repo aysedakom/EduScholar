@@ -2,16 +2,33 @@
 const { pool } = require('../config/db');
 
 const findByEmail = async (email) => {
-  const result = await pool.query('SELECT * FROM users WHERE LOWER(email) = LOWER($1)', [email.trim()]);
+  const result = await pool.query(
+    `SELECT u.*, a.application_code, a.reference_id, a.id as application_id
+     FROM users u
+     LEFT JOIN (
+       SELECT DISTINCT ON (user_id) user_id, id, application_code, reference_id
+       FROM applications
+       ORDER BY user_id, id DESC
+     ) a ON a.user_id = u.id
+     WHERE LOWER(u.email) = LOWER($1)`,
+    [email.trim()]
+  );
   return result.rows[0];
 };
 
 const findById = async (id) => {
   const result = await pool.query(
-    `SELECT id, name, email, role, student_id, department, major, gpa, financial_aid_year,
-            avatar, phone, address, barangay, city, province, zip_code,
-            is_pwd, is_solo_parent, is_indigenous, is_4ps, is_kasambahay_or_toda, is_email_verified, status, created_at 
-     FROM users WHERE id = $1`,
+    `SELECT u.id, u.name, u.email, u.role, u.student_id, u.department, u.major, u.gpa, u.financial_aid_year,
+            u.avatar, u.phone, u.address, u.barangay, u.city, u.province, u.zip_code,
+            u.is_pwd, u.is_solo_parent, u.is_indigenous, u.is_4ps, u.is_kasambahay_or_toda, u.is_email_verified, u.status, u.created_at,
+            a.application_code, a.reference_id, a.id as application_id
+     FROM users u
+     LEFT JOIN (
+       SELECT DISTINCT ON (user_id) user_id, id, application_code, reference_id
+       FROM applications
+       ORDER BY user_id, id DESC
+     ) a ON a.user_id = u.id
+     WHERE u.id = $1`,
     [id]
   );
   return result.rows[0];
