@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { HelpCircle, Search, Plus, ChevronDown, ChevronUp, Ticket, Bot, PhoneCall } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { HelpCircle, Search, Plus, ChevronDown, ChevronUp, Ticket, Bot, PhoneCall, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -270,11 +271,41 @@ export const SupportPage: React.FC = () => {
     }
   };
 
+  const getBackNav = () => {
+    switch (user?.role) {
+      case 'student':
+        return { label: 'Student Dashboard', path: '/dashboard' };
+      case 'school_coordinator':
+        return { label: 'Coordinator Portal', path: '/school/portal' };
+      case 'admin':
+      case 'system_admin':
+        return { label: 'Admin Dashboard', path: '/admin/dashboard' };
+      case 'supervisor':
+        return { label: 'Supervisor Portal', path: '/supervisor/evaluations' };
+      case 'treasury':
+        return { label: 'Treasury Portal', path: '/treasury/budget' };
+      default:
+        return { label: 'E-SCHOLAR Hub', path: '/e-scholar' };
+    }
+  };
+  const backNav = getBackNav();
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
+          {/* Breadcrumb Navigation Matching Exact Design */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <Link
+              to={backNav.path}
+              className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
+            </Link>
+            <span className="text-slate-400 text-xs">/</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Support & Helpdesk Tickets</span>
+          </div>
           <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Support & Knowledge Center</h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
             Search financial aid FAQs, interact with AI assistant, or submit a support ticket to officers.
