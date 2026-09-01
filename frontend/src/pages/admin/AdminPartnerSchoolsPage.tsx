@@ -995,10 +995,13 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                           <tr key={app.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                             <td className="p-4">
                               <div className="font-bold text-slate-900 dark:text-white text-sm">{applicantName}</div>
-                              <code className="text-[11px] text-blue-600 font-mono font-semibold">
-                                {app.reference_id || `APP-${app.id}`}
-                              </code>
-                              {email && <div className="text-[11px] text-slate-400">{email}</div>}
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Ref ID:</span>
+                                <code className="text-[11px] text-blue-600 dark:text-blue-400 font-mono font-bold bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                                  {app.reference_id || app.application_code || (app.id ? `APP-QC-2026-${String(app.id).padStart(4, '0')}` : 'APP-QC-2026')}
+                                </code>
+                              </div>
+                              {email && <div className="text-[11px] text-slate-400 mt-0.5">{email}</div>}
                             </td>
                             <td className="p-4">
                               <span className="font-semibold text-slate-800 dark:text-slate-200 block">

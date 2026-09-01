@@ -443,12 +443,15 @@ class CommunicationService {
            u.major, 
            u.department,
            u.created_at,
+           a.id as application_id,
+           a.reference_id,
+           a.application_code,
            a.status as application_status,
            a.title as application_title,
            sr.status as registry_status
          FROM users u
          LEFT JOIN (
-           SELECT DISTINCT ON (user_id) user_id, status, title 
+           SELECT DISTINCT ON (user_id) user_id, id, status, title, reference_id, application_code
            FROM applications 
            ORDER BY user_id, id DESC
          ) a ON a.user_id = u.id
@@ -500,12 +503,20 @@ class CommunicationService {
           statusBadgeVariant = 'secondary';
         }
 
+        const applicantRefId =
+          student.reference_id ||
+          student.application_code ||
+          (student.application_id
+            ? `APP-QC-2026-${String(student.application_id).padStart(4, '0')}`
+            : student.student_id || `APP-QC-2026-${String(student.id).padStart(4, '0')}`);
+
         threads.push({
           conversation_id: convId,
           participant_id: student.id,
           participant_name: student.name,
           participant_role: student.application_title || student.major || 'Quezon City Applicant',
-          student_id: student.student_id || `STU-2026-${student.id.toString().padStart(4, '0')}`,
+          student_id: applicantRefId,
+          reference_id: applicantRefId,
           avatar: student.name.charAt(0).toUpperCase(),
           last_message: lastMsg ? lastMsg.message : 'No messages yet.',
           last_message_time: lastMsg ? lastMsg.created_at : student.created_at || new Date().toISOString(),

@@ -554,7 +554,7 @@ export const MessagesPage: React.FC = () => {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         {c.academic_status && (
                           <Badge
                             variant={c.status_badge_variant === 'danger' ? 'destructive' : (c.status_badge_variant as any) || 'outline'}
@@ -563,6 +563,11 @@ export const MessagesPage: React.FC = () => {
                           >
                             {c.academic_status}
                           </Badge>
+                        )}
+                        {c.student_id && (
+                          <span className="text-[10px] font-mono font-bold text-blue-600 dark:text-blue-400">
+                            Ref: {c.student_id}
+                          </span>
                         )}
                         <span className="text-[10px] text-slate-400 font-medium truncate">
                           {c.participant_role}
@@ -610,8 +615,8 @@ export const MessagesPage: React.FC = () => {
 
             <div className="flex items-center gap-2 shrink-0">
               {selectedConv?.student_id && (
-                <Badge variant="outline" size="sm" className="font-mono text-[10px] hidden sm:inline-flex">
-                  {selectedConv.student_id}
+                <Badge variant="outline" size="sm" className="font-mono font-bold text-[10px] hidden sm:inline-flex bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                  Ref ID: {selectedConv.student_id}
                 </Badge>
               )}
             </div>

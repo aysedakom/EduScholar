@@ -124,9 +124,15 @@ export const ApplicationsPage: React.FC = () => {
           else if (rawStatus === 'Rejected') mappedStatus = 'rejected';
           else if (rawStatus === 'Needs Revision' || rawStatus === 'Incomplete' || rawStatus === 'action_required') mappedStatus = 'action_required';
           
+          const refId =
+            app.reference_id ||
+            app.application_code ||
+            (app.id ? `APP-QC-2026-${String(app.id).padStart(4, '0')}` : 'APP-QC-2026');
+
           return {
             id: app.id ?? `app-${Math.random()}`,
-            scholarshipId: app.reference_id ?? '',
+            referenceId: refId,
+            scholarshipId: refId,
             scholarshipTitle: app.title ?? app.program_name ?? 'Quezon City Scholarship Program',
             amount: app.amount ?? 0,
             status: mappedStatus,
@@ -304,8 +310,13 @@ export const ApplicationsPage: React.FC = () => {
                         {app.status === 'action_required' && '5-Day Amendment Requested'}
                       </Badge>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Submitted on {formatDate(app.submissionDate || app.submission_date || new Date().toISOString())} • Reference ID: {app.id}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5 flex-wrap">
+                      <span>Submitted on {formatDate(app.submissionDate || app.submission_date || new Date().toISOString())}</span>
+                      <span>•</span>
+                      <span>Reference ID:</span>
+                      <code className="font-mono font-bold text-[11px] text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded border border-blue-200 dark:border-blue-800">
+                        {app.referenceId || app.scholarshipId || app.reference_id || (app.id ? `APP-QC-2026-${app.id}` : 'APP-QC-2026')}
+                      </code>
                     </p>
                   </div>
 
