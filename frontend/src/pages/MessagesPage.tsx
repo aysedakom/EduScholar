@@ -11,6 +11,7 @@ import {
   RefreshCw,
   ArrowLeft,
   MessageSquare,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/Card';
@@ -18,6 +19,7 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../context/WebSocketContext';
 import { formatDate } from '../utils/cn';
 import {
   getAnnouncements,
@@ -30,9 +32,59 @@ import {
   type ChatMessageItem,
 } from '../api/communication';
 
+/**
+ * Helper to compute live Philippine Standard Time (PHT, UTC+8)
+ * Desk Operating Hours: 8:00 AM to 5:00 PM PHT (08:00 to 17:00 PHT)
+ */
+export const getPhilippineTimeInfo = () => {
+  const now = new Date();
+  const manilaParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  }).formatToParts(now);
+
+  const hour = parseInt(manilaParts.find((p) => p.type === 'hour')?.value || '0', 10);
+  const minute = parseInt(manilaParts.find((p) => p.type === 'minute')?.value || '0', 10);
+  const second = parseInt(manilaParts.find((p) => p.type === 'second')?.value || '0', 10);
+
+  // Business hours: 8:00 AM (08:00) to 4:59:59 PM (<17:00). At 5:00 PM (17:00), automatically CLOSED!
+  const isOpen = hour >= 8 && hour < 17;
+
+  const formattedTime = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true,
+  }).format(now);
+
+  return {
+    isOpen,
+    hour,
+    minute,
+    second,
+    formattedTime,
+    timeZoneText: 'PHT (Asia/Manila, UTC+8)',
+  };
+};
+
 export const MessagesPage: React.FC = () => {
   const { user } = useAuth();
+  const { subscribeToTable, isConnected } = useWebSocket();
   const isAdminOrStaff = user?.role !== 'student';
+
+  // Live Philippine Time State (Updates Every Second)
+  const [phtInfo, setPhtInfo] = useState(getPhilippineTimeInfo());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhtInfo(getPhilippineTimeInfo());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Announcements State
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
@@ -47,6 +99,7 @@ export const MessagesPage: React.FC = () => {
   // Conversations & Chat State
   const [conversations, setConversations] = useState<ConversationThread[]>([]);
   const [selectedConv, setSelectedConv] = useState<ConversationThread | null>(null);
+  const selectedConvRef = useRef<ConversationThread | null>(null);
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,6 +107,10 @@ export const MessagesPage: React.FC = () => {
   const [isSending, setIsSending] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    selectedConvRef.current = selectedConv;
+  }, [selectedConv]);
 
   // Auto scroll to bottom of chat
   const scrollToBottom = () => {
@@ -110,7 +167,7 @@ export const MessagesPage: React.FC = () => {
             sender_id: 99,
             sender_name: selectedConv?.participant_name || 'Helpdesk Counselor',
             sender_role: selectedConv?.participant_role || 'staff',
-            message: 'Welcome to the official live communication channel. An officer is online to assist you.',
+            message: 'Welcome to the official Quezon City Scholarship live support desk. Operating hours are 8:00 AM to 5:00 PM Philippine Time.',
             is_read: true,
             created_at: new Date().toISOString(),
           },
@@ -136,15 +193,59 @@ export const MessagesPage: React.FC = () => {
     }
   }, [selectedConv?.conversation_id]);
 
-  // Periodic poll for real-time messages
+  // =========================================================================
+  // REAL-TIME WEBSOCKET SUBSCRIPTION FOR LIVE CHAT MESSAGES
+  // =========================================================================
+  useEffect(() => {
+    const unsubscribe = subscribeToTable('chat_messages', (event) => {
+      if (event.action === 'INSERT' && event.record) {
+        const incomingMsg = event.record as ChatMessageItem;
+        
+        // If message belongs to active chat thread, immediately append in real-time
+        if (selectedConvRef.current && incomingMsg.conversation_id === selectedConvRef.current.conversation_id) {
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === incomingMsg.id)) return prev;
+            return [...prev, incomingMsg];
+          });
+        }
+
+        // Update the conversations sidebar list preview in real-time
+        setConversations((prev) =>
+          prev.map((c) => {
+            if (c.conversation_id === incomingMsg.conversation_id) {
+              return {
+                ...c,
+                last_message: incomingMsg.message,
+                last_message_time: incomingMsg.created_at,
+                unread_count:
+                  c.conversation_id !== selectedConvRef.current?.conversation_id &&
+                  String(incomingMsg.sender_id) !== String(user?.id)
+                    ? (c.unread_count || 0) + 1
+                    : 0,
+              };
+            }
+            return c;
+          })
+        );
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribeToTable, user?.id]);
+
+  // Periodic poll fallback for real-time messages (every 4 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       if (selectedConv) {
-        getMessages(selectedConv.conversation_id).then((res) => {
-          if (res.data?.data && res.data.data.length !== messages.length) {
-            setMessages(res.data.data);
-          }
-        }).catch(() => {});
+        getMessages(selectedConv.conversation_id)
+          .then((res) => {
+            if (res.data?.data && res.data.data.length !== messages.length) {
+              setMessages(res.data.data);
+            }
+          })
+          .catch(() => {});
       }
     }, 4000);
     return () => clearInterval(interval);
@@ -153,6 +254,11 @@ export const MessagesPage: React.FC = () => {
   // Send Direct Message
   const handleSendDirectMessage = async () => {
     if (!messageInput.trim() || !selectedConv || isSending) return;
+
+    if (!phtInfo.isOpen && !isAdminOrStaff) {
+      toast.error('Live Support Desk is closed. Operating hours are 8:00 AM to 5:00 PM (Philippine Time).');
+      return;
+    }
 
     const currentText = messageInput.trim();
     setMessageInput('');
@@ -183,9 +289,10 @@ export const MessagesPage: React.FC = () => {
         );
       }
       loadConversations(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to send message:', err);
-      toast.error('Could not send message. Please try again.');
+      const errDetail = err?.response?.data?.message || 'Could not send message. Please try again.';
+      toast.error(errDetail);
     } finally {
       setIsSending(false);
     }
@@ -271,28 +378,42 @@ export const MessagesPage: React.FC = () => {
       {/* Live Support Operating Schedule Banner */}
       <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className={`h-10 w-10 rounded-xl flex items-center justify-center font-bold text-base shrink-0 ${
-            ((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17
-              ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800'
-              : 'bg-amber-50 dark:bg-amber-950 text-amber-600 border border-amber-200 dark:border-amber-800'
-          }`}>
-            {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? '🟢' : '🌙'}
+          <div
+            className={`h-11 w-11 rounded-xl flex items-center justify-center font-bold text-lg shrink-0 ${
+              phtInfo.isOpen
+                ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border border-emerald-200 dark:border-emerald-800'
+                : 'bg-rose-50 dark:bg-rose-950 text-rose-600 border border-rose-200 dark:border-rose-800'
+            }`}
+          >
+            {phtInfo.isOpen ? '🟢' : '🛑'}
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-extrabold text-sm text-slate-900 dark:text-white">
-                {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17
-                  ? 'Live Support Chat is ONLINE'
-                  : 'Live Support Chat is OFFLINE'}
+                {phtInfo.isOpen ? 'Live Support Chat is ONLINE' : 'Live Support Chat is CLOSED'}
               </span>
-              <Badge variant={((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? 'success' : 'warning'} size="sm">
-                {((new Date().getUTCHours() + 8) % 24) >= 8 && ((new Date().getUTCHours() + 8) % 24) < 17 ? 'Live Desk Active' : 'Off-Hours Queue'}
+              <Badge variant={phtInfo.isOpen ? 'success' : 'destructive'} size="sm">
+                {phtInfo.isOpen ? 'Live Desk Active (8:00 AM – 5:00 PM)' : 'Closed • Reopens 8:00 AM PHT'}
               </Badge>
+              <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                🕒 PHT: {phtInfo.formattedTime}
+              </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-              Live Support Operating Hours: <strong>Monday to Friday, 8:00 AM – 5:00 PM PHT</strong>. Messages sent during off-hours will be answered during the next operational shift.
+              Live Support Operating Hours: <strong>8:00 AM to 5:00 PM Philippine Standard Time (PHT)</strong>. Channels automatically close at 5:00 PM and reopen at 8:00 AM PHT.
             </p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            {isConnected ? 'Real-Time Sync Active' : 'Connecting...'}
+          </span>
         </div>
       </div>
 
@@ -605,8 +726,21 @@ export const MessagesPage: React.FC = () => {
                   )}
                 </div>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1.5 mt-0.5 truncate">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">Online Live Desk</span>
+                  {phtInfo.isOpen ? (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                        Live Desk Online (8:00 AM – 5:00 PM PHT)
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="h-2 w-2 rounded-full bg-rose-500 inline-block" />
+                      <span className="font-semibold text-rose-600 dark:text-rose-400">
+                        Desk Closed (Reopens 8:00 AM PHT)
+                      </span>
+                    </>
+                  )}
                   <span className="text-slate-300">•</span>
                   <span>{selectedConv?.participant_role || 'Support Counselor'}</span>
                 </p>
@@ -615,12 +749,36 @@ export const MessagesPage: React.FC = () => {
 
             <div className="flex items-center gap-2 shrink-0">
               {selectedConv?.student_id && (
-                <Badge variant="outline" size="sm" className="font-mono font-bold text-[10px] hidden sm:inline-flex bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
+                <Badge
+                  variant="outline"
+                  size="sm"
+                  className="font-mono font-bold text-[10px] hidden sm:inline-flex bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                >
                   Ref ID: {selectedConv.student_id}
                 </Badge>
               )}
             </div>
           </div>
+
+          {/* Off-Hours Notification Banner for Students */}
+          {!phtInfo.isOpen && !isAdminOrStaff && (
+            <div className="p-3 my-2 rounded-xl bg-rose-50/90 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-start gap-2.5 text-rose-900 dark:text-rose-200 text-xs shadow-xs">
+              <div className="p-1 rounded-md bg-rose-200/70 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300 font-bold shrink-0 mt-0.5">
+                <Clock className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 flex-wrap font-bold">
+                  <span>🛑 Live Support Desk is currently CLOSED</span>
+                  <span className="font-mono text-[10px] bg-white/80 dark:bg-black/50 px-2 py-0.5 rounded border border-rose-300 dark:border-rose-700">
+                    Current Time: {phtInfo.formattedTime} PHT
+                  </span>
+                </div>
+                <p className="text-[11px] mt-0.5 text-rose-800/90 dark:text-rose-300/90 leading-relaxed font-medium">
+                  Live support counselors are available from <strong>8:00 AM to 5:00 PM (Philippine Standard Time, UTC+8)</strong>. Chat channels will automatically reopen at <strong>8:00 AM PHT</strong>.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Chat Messages Log */}
           <div className="flex-1 p-3 space-y-3 overflow-y-auto text-xs my-2">
@@ -677,21 +835,28 @@ export const MessagesPage: React.FC = () => {
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
             <input
               type="text"
+              disabled={!phtInfo.isOpen && !isAdminOrStaff}
               placeholder={
-                isAdminOrStaff
+                !phtInfo.isOpen && !isAdminOrStaff
+                  ? 'Live Support Desk is closed (Hours: 8:00 AM - 5:00 PM PHT). Reopens at 8:00 AM.'
+                  : isAdminOrStaff
                   ? `Reply to ${selectedConv?.participant_name || 'student'}...`
                   : 'Type your message or inquiry to the counselor...'
               }
               value={messageInput}
               onChange={(e) => setMessageInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendDirectMessage()}
-              className="flex-1 h-10 px-3.5 text-xs rounded-xl border font-medium placeholder:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600"
+              onKeyDown={(e) =>
+                e.key === 'Enter' &&
+                (phtInfo.isOpen || isAdminOrStaff) &&
+                handleSendDirectMessage()
+              }
+              className="flex-1 h-10 px-3.5 text-xs rounded-xl border font-medium placeholder:text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:border-blue-600 disabled:opacity-60 disabled:cursor-not-allowed"
             />
             <Button
               variant="primary"
               size="sm"
               onClick={handleSendDirectMessage}
-              disabled={isSending || !messageInput.trim()}
+              disabled={isSending || !messageInput.trim() || (!phtInfo.isOpen && !isAdminOrStaff)}
               leftIcon={<Send className="h-3.5 w-3.5" />}
               className="font-bold bg-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >

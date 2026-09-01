@@ -1,5 +1,6 @@
 // backend/services/calendarService.js
 const { pool } = require('../config/db');
+const { broadcast } = require('../realtime/socketServer');
 
 class CalendarService {
   /**
@@ -182,7 +183,7 @@ class CalendarService {
         }
       }
 
-      return {
+      const eventPayload = {
         id: saved.event_code,
         title: saved.title,
         date: new Date(saved.event_date).toISOString().split('T')[0],
@@ -196,6 +197,21 @@ class CalendarService {
         source: 'custom',
         createdAt: new Date(saved.created_at).toISOString().split('T')[0],
       };
+
+      // Broadcast new calendar event in real-time
+      try {
+        broadcast({
+          type: 'DB_EVENT',
+          table: 'calendar_events',
+          action: 'INSERT',
+          record: eventPayload,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (wsErr) {
+        console.warn('[CalendarService] WebSocket broadcast warning:', wsErr.message);
+      }
+
+      return eventPayload;
     } catch (err) {
       console.error('[CalendarService.createCalendarEvent] Error:', err);
       throw err;
@@ -211,6 +227,20 @@ class CalendarService {
         `DELETE FROM calendar_events WHERE event_code = $1 OR id::text = $1`,
         [idOrCode]
       );
+
+      // Broadcast delete calendar event in real-time
+      try {
+        broadcast({
+          type: 'DB_EVENT',
+          table: 'calendar_events',
+          action: 'DELETE',
+          record: { id: idOrCode, event_code: idOrCode },
+          timestamp: new Date().toISOString(),
+        });
+      } catch (wsErr) {
+        console.warn('[CalendarService] WebSocket broadcast warning:', wsErr.message);
+      }
+
       return { success: true, message: `Event ${idOrCode} removed.` };
     } catch (err) {
       console.error('[CalendarService.deleteCalendarEvent] Error:', err);

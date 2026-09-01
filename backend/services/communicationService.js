@@ -1,7 +1,45 @@
 // backend/services/communicationService.js
 const { pool } = require('../config/db');
+const { broadcast } = require('../realtime/socketServer');
+
+/**
+ * Helper to compute operating hours in Philippine Standard Time (PHT, UTC+8)
+ * Desk Operating Hours: 8:00 AM to 5:00 PM PHT (08:00 to 17:00 PHT)
+ */
+function getPhilippineTimeInfo() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false,
+  });
+  const parts = formatter.formatToParts(now);
+  const hour = parseInt(parts.find((p) => p.type === 'hour')?.value || '0', 10);
+  const minute = parseInt(parts.find((p) => p.type === 'minute')?.value || '0', 10);
+  const second = parseInt(parts.find((p) => p.type === 'second')?.value || '0', 10);
+  const isOpen = hour >= 8 && hour < 17; // 8:00 AM (08:00) to 4:59:59 PM (<17:00). Closes automatically at 5:00 PM PHT!
+
+  return {
+    isOpen,
+    hour,
+    minute,
+    second,
+    timeZone: 'Asia/Manila (PHT, UTC+8)',
+    openTime: '8:00 AM',
+    closeTime: '5:00 PM',
+  };
+}
 
 class CommunicationService {
+  /**
+   * Return current operating hours status in PHT
+   */
+  getOperatingHoursStatus() {
+    return getPhilippineTimeInfo();
+  }
+
   /**
    * Fetch all active announcements
    */
@@ -86,24 +124,19 @@ class CommunicationService {
   }
 
   /**
-   * Get conversations list for the current user
-   * - If admin/staff: returns list of student chat threads with their names and latest message
-   * - If student: returns their thread with Financial Aid Desk
-   */
-  /**
    * Get list of conversations for current user
-   * - Student: their helpdesk thread with Financial Aid Desk + their filed support tickets
-   * - Treasury: Inter-agency desks (Scholarship Admin, COA Audit, University Bursars) + Disbursement tickets
+   * - Student: STRICTLY their official Financial Aid Desk thread only (prevent access to Treasury & Admissions Evaluators)
+   * - Treasury: Inter-agency desks (Scholarship Admin, COA Audit, University Bursars)
    * - Supervisor: Inter-agency desks (Scholarship Admin, School Coordinators, Evaluation Unit)
    * - School Coordinator: Inter-agency desks (Scholarship Admin, City Treasury) + School student inquiries
-   * - Admin/System Admin: All student inquiries & support tickets + Inter-departmental desks
+   * - Admin/System Admin: All student live chat inquiries + Inter-departmental desks
    */
   async getConversations(currentUser) {
     try {
       const userRole = currentUser.role || 'student';
 
       // =========================================================================
-      // 1. STUDENT VIEW
+      // 1. STUDENT VIEW: Strictly Financial Aid Review Desk only
       // =========================================================================
       if (userRole === 'student') {
         const convId = `conv-student-${currentUser.id}`;
@@ -116,7 +149,7 @@ class CommunicationService {
         );
 
         const lastMsg = msgRes.rows[0] || {
-          message: 'Financial Aid Desk is online to assist you.',
+          message: 'Quezon City Scholarship Board Financial Aid Desk is ready to assist you during operating hours (8:00 AM - 5:00 PM PHT).',
           created_at: new Date().toISOString(),
           sender_role: 'admin',
           is_read: true,
@@ -126,37 +159,13 @@ class CommunicationService {
           {
             conversation_id: convId,
             participant_id: 2,
-            participant_name: 'Financial Aid Desk',
-            participant_role: 'Financial Aid Counselor Desk',
-            avatar: 'FA',
+            participant_name: 'Quezon City Scholarship Board (Financial Aid Desk)',
+            participant_role: 'Financial Aid & Scholarship Review Desk',
+            avatar: '🏛️',
             last_message: lastMsg.message,
             last_message_time: lastMsg.created_at,
             unread_count: 0,
-            status: 'Active Live Response Desk',
-            is_ticket: false,
-          },
-          {
-            conversation_id: `conv-student-eval-${currentUser.id}`,
-            participant_id: 3,
-            participant_name: 'Scholarship Application Review Desk',
-            participant_role: 'Admissions & Document Evaluator',
-            avatar: '📋',
-            last_message: 'Direct channel for document verification, eligibility assessments, and evaluation questions.',
-            last_message_time: new Date().toISOString(),
-            unread_count: 0,
-            status: 'Live Evaluation Desk',
-            is_ticket: false,
-          },
-          {
-            conversation_id: `conv-student-disb-${currentUser.id}`,
-            participant_id: 4,
-            participant_name: 'Disbursement & Payout Hotline',
-            participant_role: 'City Treasury & GCash Support',
-            avatar: '💰',
-            last_message: 'Inquiries regarding stipend release schedules, ATM verification, and Landbank crediting.',
-            last_message_time: new Date().toISOString(),
-            unread_count: 0,
-            status: 'Treasury Live Hotline',
+            status: 'Active Official Support Desk',
             is_ticket: false,
           },
         ];
@@ -540,6 +549,23 @@ class CommunicationService {
    */
   async getMessages(conversationId, currentUser) {
     try {
+      // 1. Strict student access control: students can ONLY access their own Financial Aid desk thread
+      if (currentUser?.role === 'student' && conversationId !== `conv-student-${currentUser.id}`) {
+        const err = new Error('Access denied. Students are restricted to the official Financial Aid Review Desk only.');
+        err.statusCode = 403;
+        throw err;
+      }
+
+      // 2. Strict treasury/evaluator access control: cannot directly access student chat threads
+      if (
+        (currentUser?.role === 'treasury' || currentUser?.role === 'supervisor') &&
+        conversationId.startsWith('conv-student-')
+      ) {
+        const err = new Error('Access denied. Direct student chat is restricted to the Scholarship Board Admin Desk.');
+        err.statusCode = 403;
+        throw err;
+      }
+
       let res = await pool.query(
         `SELECT id, conversation_id, sender_id, sender_name, sender_role, recipient_id, recipient_role, message, is_read, created_at
          FROM chat_messages
@@ -589,27 +615,10 @@ class CommunicationService {
           initialText = 'Institutional aid disbursement and billing statement coordination.';
           senderName = 'City Treasury Disbursing Officer';
           senderRole = 'treasury';
-        } else if (conversationId.startsWith('conv_ticket_') || conversationId.toLowerCase().includes('tkt-')) {
-          try {
-            const rawCode = conversationId.replace('conv_ticket_', '').toUpperCase();
-            const ticketRes = await pool.query(
-              `SELECT t.*, u.name as user_name, u.role as user_role
-               FROM support_tickets t
-               LEFT JOIN users u ON t.user_id = u.id
-               WHERE t.conversation_id = $1 OR t.ticket_code ILIKE $2 OR LOWER(t.ticket_code) = LOWER($3)`,
-              [conversationId, `%${rawCode}%`, rawCode]
-            );
-
-            if (ticketRes.rows[0]) {
-              const t = ticketRes.rows[0];
-              senderName = t.applicant_name || t.user_name || 'Applicant';
-              senderRole = t.user_role || 'student';
-              senderId = t.user_id;
-              initialText = `[Ticket #${t.ticket_code}] ${t.subject}\nCategory: ${t.category} | Priority: ${t.priority}\n\n${t.description}`;
-            }
-          } catch (fillErr) {
-            console.warn('[CommunicationService.getMessages] Ticket backfill note:', fillErr.message);
-          }
+        } else if (conversationId.startsWith('conv-student-')) {
+          initialText = 'Welcome to the official Quezon City Scholarship Board Financial Aid Review Desk. Our counselors are available from 8:00 AM to 5:00 PM (Philippine Standard Time) to assist you with applications, qualifications, and document reviews.';
+          senderName = 'Quezon City Scholarship Board (Financial Aid Desk)';
+          senderRole = 'admin';
         }
 
         if (initialText) {
@@ -648,7 +657,34 @@ class CommunicationService {
    */
   async sendMessage(data, currentUser) {
     try {
-      const conversationId = data.conversation_id || (currentUser.role === 'student' ? `conv-student-${currentUser.id}` : data.conversationId);
+      // 1. Operating Hours Enforcement for Students (8:00 AM to 5:00 PM Philippine Standard Time)
+      if (currentUser.role === 'student') {
+        const timeInfo = getPhilippineTimeInfo();
+        if (!timeInfo.isOpen) {
+          const err = new Error(
+            'Live Support Chat is currently CLOSED. Support hours are 8:00 AM to 5:00 PM (Philippine Standard Time, PHT). Channels will automatically reopen at 8:00 AM PHT.'
+          );
+          err.statusCode = 400;
+          throw err;
+        }
+      }
+
+      // 2. Strict conversation destination routing
+      let conversationId = data.conversation_id || data.conversationId;
+      if (currentUser.role === 'student') {
+        conversationId = `conv-student-${currentUser.id}`;
+      }
+
+      // 3. Prevent Treasury & Supervisor from directly chatting with students
+      if (
+        (currentUser.role === 'treasury' || currentUser.role === 'supervisor') &&
+        conversationId.startsWith('conv-student-')
+      ) {
+        const err = new Error('Direct student chat is restricted. All communications must go through the Scholarship Board Admin Desk.');
+        err.statusCode = 403;
+        throw err;
+      }
+
       const senderId = currentUser.id;
       const senderName = currentUser.name || (currentUser.role === 'admin' ? 'ADMIN (Financial Aid Desk)' : currentUser.role === 'treasury' ? 'City Treasury Officer' : 'Staff');
       const senderRole = currentUser.role;
@@ -670,21 +706,6 @@ class CommunicationService {
         recipientRole = 'student';
       }
 
-      if (conversationId && conversationId.startsWith('conv_ticket_')) {
-        const tktCheck = await pool.query(
-          `SELECT status, ticket_code FROM support_tickets WHERE conversation_id = $1`,
-          [conversationId]
-        );
-        if (tktCheck.rows.length > 0) {
-          const tktStatus = tktCheck.rows[0].status;
-          if (tktStatus === 'Closed' || tktStatus === 'Resolved') {
-            const err = new Error(`Ticket #${tktCheck.rows[0].ticket_code} is permanently CLOSED and ARCHIVED. No further messages can be sent.`);
-            err.statusCode = 403;
-            throw err;
-          }
-        }
-      }
-
       const res = await pool.query(
         `INSERT INTO chat_messages (conversation_id, sender_id, sender_name, sender_role, recipient_id, recipient_role, message, is_read)
          VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE)
@@ -693,6 +714,19 @@ class CommunicationService {
       );
 
       const savedMessage = res.rows[0];
+
+      // Broadcast new message immediately via WebSocket to all connected clients
+      try {
+        broadcast({
+          type: 'DB_EVENT',
+          table: 'chat_messages',
+          action: 'INSERT',
+          record: savedMessage,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (wsErr) {
+        console.warn('[CommunicationService.sendMessage] WebSocket broadcast note:', wsErr.message);
+      }
 
       // Create in-app notification for the recipient(s)
       try {
@@ -733,24 +767,19 @@ class CommunicationService {
                VALUES ($1, $2, $3, 'info', FALSE, 'chat_inquiry', '/messages')`,
               [
                 admin.id,
-                `💬 New Message from ${currentUser.name || 'Scholar'}`,
+                `💬 New Live Inquiry from ${currentUser.name || 'Scholar'}`,
                 message.length > 150 ? `${message.substring(0, 147)}...` : message,
               ]
             );
           }
         } else {
-          // Admin replying to student: extract student id from convId or support_tickets
+          // Admin replying to student
           let targetStudentId = null;
           const studentIdMatch = conversationId.match(/conv-student-(\d+)/);
           if (studentIdMatch && studentIdMatch[1]) {
             targetStudentId = parseInt(studentIdMatch[1]);
           } else if (recipientId) {
             targetStudentId = parseInt(recipientId);
-          } else {
-            const ticketOwner = await pool.query('SELECT user_id FROM support_tickets WHERE conversation_id = $1', [conversationId]);
-            if (ticketOwner.rows[0]) {
-              targetStudentId = ticketOwner.rows[0].user_id;
-            }
           }
 
           if (targetStudentId) {

@@ -14,9 +14,10 @@ import {
   Trash2,
   Info,
   CalendarCheck,
-  RefreshCw
+  RefreshCw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../context/WebSocketContext';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -28,9 +29,33 @@ export interface CalendarNotice extends CalendarEventItem {}
 
 export const CalendarPage: React.FC = () => {
   const { user } = useAuth();
+  const { subscribeToTable, isConnected } = useWebSocket();
   const isAdmin = user?.role === 'admin' || user?.role === 'system_admin' || user?.role === 'school_coordinator' || user?.role === 'treasury';
 
-  // Current Calendar View State (Defaults to August 2026 to match platform dataset)
+  // Live Philippine Time Clock
+  const getManilaTimeString = () =>
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Manila',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date());
+
+  const [phtClock, setPhtClock] = useState<string>(getManilaTimeString());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPhtClock(getManilaTimeString());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Current Calendar View State
   const [currentYear, setCurrentYear] = useState<number>(2026);
   const [currentMonth, setCurrentMonth] = useState<number>(7); // 0-indexed: 7 = August
 
@@ -74,6 +99,48 @@ export const CalendarPage: React.FC = () => {
 
   useEffect(() => {
     loadCalendarData();
+  }, []);
+
+  // =========================================================================
+  // REAL-TIME WEBSOCKET SUBSCRIPTION FOR CALENDAR EVENTS
+  // =========================================================================
+  useEffect(() => {
+    const unsubscribe = subscribeToTable('calendar_events', (event) => {
+      if (event.action === 'INSERT' && event.record) {
+        const newEvent = event.record as any;
+        setNotices((prev) => {
+          if (prev.some((n) => n.id === newEvent.id || (newEvent.event_code && n.id === newEvent.event_code))) {
+            return prev;
+          }
+          return [newEvent as CalendarNotice, ...prev];
+        });
+        toast.info(`📅 New Calendar Event: ${newEvent.title}`, {
+          description: `Scheduled for ${newEvent.date} at ${newEvent.time || '08:00 AM'}`,
+        });
+      } else if (event.action === 'DELETE' && event.record) {
+        const rawRec = event.record as any;
+        const targetId = rawRec.id || rawRec.event_code;
+        setNotices((prev) => prev.filter((n) => n.id !== targetId && n.id !== rawRec.id));
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribeToTable]);
+
+  // Periodic poll fallback for real-time calendar synchronization (every 10 seconds)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getCalendarEvents()
+        .then((res) => {
+          if (res.data?.data) {
+            setNotices(res.data.data);
+          }
+        })
+        .catch(() => {});
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Calendar Date Math
@@ -239,6 +306,39 @@ export const CalendarPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
+      {/* Real-time Status & Philippine Clock Banner */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center font-bold text-lg shrink-0">
+            <Clock className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-extrabold text-sm text-slate-900 dark:text-white">
+                Real-Time Academic & Deadline Calendar
+              </span>
+              <Badge variant="primary" size="sm" className="font-mono text-[10px]">
+                🕒 {phtClock} (PHT)
+              </Badge>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Synchronized with Quezon City Scholarship Board milestone schedules, application cutoffs, and Landbank distribution dates in real time.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/80 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                isConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+              }`}
+            />
+            {isConnected ? 'Real-Time Sync Online' : 'Connecting...'}
+          </span>
+        </div>
+      </div>
+
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div>
