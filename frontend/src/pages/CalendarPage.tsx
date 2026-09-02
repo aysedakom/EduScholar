@@ -32,7 +32,7 @@ export const CalendarPage: React.FC = () => {
   const { subscribeToTable, isConnected } = useWebSocket();
   const isAdmin = user?.role === 'admin' || user?.role === 'system_admin' || user?.role === 'school_coordinator' || user?.role === 'treasury';
 
-  // Live Philippine Time Clock
+  // Live Philippine Time Clock & Date Extractor
   const getManilaTimeString = () =>
     new Intl.DateTimeFormat('en-US', {
       timeZone: 'Asia/Manila',
@@ -46,6 +46,22 @@ export const CalendarPage: React.FC = () => {
       year: 'numeric',
     }).format(new Date());
 
+  const getPhtDate = () => {
+    const now = new Date();
+    const phtFormatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+    });
+    const parts = phtFormatter.formatToParts(now);
+    const year = parseInt(parts.find((p) => p.type === 'year')?.value || `${now.getFullYear()}`, 10);
+    const month = parseInt(parts.find((p) => p.type === 'month')?.value || `${now.getMonth() + 1}`, 10) - 1; // 0-indexed (0 = Jan, 8 = Sept)
+    const day = parseInt(parts.find((p) => p.type === 'day')?.value || `${now.getDate()}`, 10);
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    return { year, month, day, dateStr };
+  };
+
   const [phtClock, setPhtClock] = useState<string>(getManilaTimeString());
 
   useEffect(() => {
@@ -55,12 +71,14 @@ export const CalendarPage: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Current Calendar View State
-  const [currentYear, setCurrentYear] = useState<number>(2026);
-  const [currentMonth, setCurrentMonth] = useState<number>(7); // 0-indexed: 7 = August
+  const initialPht = getPhtDate();
+
+  // Current Calendar View State (synced to live PHT date)
+  const [currentYear, setCurrentYear] = useState<number>(initialPht.year);
+  const [currentMonth, setCurrentMonth] = useState<number>(initialPht.month);
 
   // Selected Date
-  const [selectedDate, setSelectedDate] = useState<string>('2026-08-25');
+  const [selectedDate, setSelectedDate] = useState<string>(initialPht.dateStr);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -74,7 +92,7 @@ export const CalendarPage: React.FC = () => {
 
   // Form State for Admin New Notice
   const [formTitle, setFormTitle] = useState<string>('');
-  const [formDate, setFormDate] = useState<string>('2026-08-25');
+  const [formDate, setFormDate] = useState<string>(initialPht.dateStr);
   const [formTime, setFormTime] = useState<string>('09:00 AM');
   const [formCategory, setFormCategory] = useState<CalendarNotice['category']>('Announcement');
   const [formTargetAudience, setFormTargetAudience] = useState<string>('All Registered Scholars');
@@ -172,9 +190,10 @@ export const CalendarPage: React.FC = () => {
   };
 
   const handleToday = () => {
-    setCurrentYear(2026);
-    setCurrentMonth(7); // August 2026
-    setSelectedDate('2026-08-25');
+    const today = getPhtDate();
+    setCurrentYear(today.year);
+    setCurrentMonth(today.month);
+    setSelectedDate(today.dateStr);
   };
 
   const formatDateStr = (year: number, month: number, day: number): string => {
@@ -402,7 +421,7 @@ export const CalendarPage: React.FC = () => {
             leftIcon={<CalendarCheck className="h-4 w-4 text-blue-600" />}
             className="font-bold"
           >
-            Today (Aug 2026)
+            Today ({monthNames[initialPht.month].slice(0, 3)} {initialPht.day})
           </Button>
         </div>
       </div>
@@ -478,7 +497,11 @@ export const CalendarPage: React.FC = () => {
               const dayNum = idx + 1;
               const dateStr = formatDateStr(currentYear, currentMonth, dayNum);
               const isSelected = selectedDate === dateStr;
-              const isToday = currentYear === 2026 && currentMonth === 7 && dayNum === 25; // Aug 25, 2026
+              const livePht = getPhtDate();
+              const isToday =
+                currentYear === livePht.year &&
+                currentMonth === livePht.month &&
+                dayNum === livePht.day;
               const dayNotices = getNoticesForDate(dateStr);
               const hasDisbursement = dayNotices.some((n) => n.category === 'Disbursement');
               const hasDeadline = dayNotices.some((n) => n.category === 'Deadline');
