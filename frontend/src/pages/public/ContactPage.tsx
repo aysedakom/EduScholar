@@ -271,7 +271,21 @@ export const ContactPage: React.FC = () => {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-10 space-y-6">
+        {/* Top Breadcrumb Navigation */}
+        <div className="flex items-center gap-2">
+          <Link
+            to={backNav.path}
+            className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1.5 transition-colors bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 rounded-xl border border-blue-200 dark:border-blue-800 shadow-xs cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" /> {backNav.label}
+          </Link>
+          <span className="text-slate-400 text-xs">/</span>
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
+            Help Desk & Inquiry Ticketing
+          </span>
+        </div>
+
         {/* Help Desk & Ticketing Notice */}
         <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -279,20 +293,6 @@ export const ContactPage: React.FC = () => {
               🎫
             </div>
             <div>
-              {/* Breadcrumb Navigation Matching Exact Design */}
-              <div className="flex items-center gap-2 mb-1.5">
-                <Link
-                  to={backNav.path}
-                  className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
-                </Link>
-                <span className="text-slate-400 text-xs">/</span>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-                  Help Desk & Inquiry Ticketing
-                </span>
-              </div>
-
               <div className="flex items-center gap-2">
                 <h2 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
                   QCYDO Help Desk & Inquiry Ticketing
