@@ -240,19 +240,12 @@ export const EScholarPage: React.FC = () => {
                         <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>
                       )}
                     </div>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 transition-colors"
-                    >
-                      <span>📊</span> {t('nav.dashboard')}
-                    </Link>
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer border-t border-slate-100 dark:border-slate-800 mt-1 pt-2"
+                      className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     >
                       <span>🚪</span> {t('nav.signout')}
                     </button>

@@ -290,19 +290,12 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                   <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>
                 )}
               </div>
-              <Link
-                to="/dashboard"
-                onClick={() => setOpen(false)}
-                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <span>📊</span> Dashboard
-              </Link>
               <button
                 onClick={() => {
                   setOpen(false);
                   logout();
                 }}
-                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors mt-1 border-t border-slate-100 dark:border-slate-800 pt-2"
+                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
               >
                 <span>🚪</span> {t('nav.signout')}
               </button>

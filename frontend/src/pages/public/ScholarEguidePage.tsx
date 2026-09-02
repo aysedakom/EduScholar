@@ -196,19 +196,12 @@ export const ScholarEguidePage: React.FC = () => {
                           : user.role?.replace('_', ' ')}
                       </p>
                     </div>
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="w-full block rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
-                    >
-                      {t('nav.dashboard')}
-                    </Link>
                     <button
                       onClick={() => {
                         setUserDropdownOpen(false);
                         logout();
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer border-t border-slate-100 dark:border-slate-800 mt-1 pt-1.5"
+                      className="w-full rounded-lg px-3 py-2 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     >
                       {t('nav.signout')}
                     </button>
