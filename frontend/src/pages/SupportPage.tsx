@@ -304,7 +304,9 @@ export const SupportPage: React.FC = () => {
               <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
             </Link>
             <span className="text-slate-400 text-xs">/</span>
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Support & Helpdesk Tickets</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+              Help Desk & Inquiry Ticketing
+            </span>
           </div>
           <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Support & Knowledge Center</h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">

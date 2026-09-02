@@ -9,6 +9,7 @@ import {
   Moon,
   CheckCircle2,
   Ticket,
+  ArrowLeft,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '../../components/ui/Card';
@@ -29,6 +30,25 @@ export const ContactPage: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
   const { t } = useLanguage();
   const [eservicesOpen, setEservicesOpen] = useState(false);
+
+  const getBackNav = () => {
+    switch (user?.role) {
+      case 'student':
+        return { label: 'Student Dashboard', path: '/dashboard' };
+      case 'school_coordinator':
+        return { label: 'Coordinator Portal', path: '/school/portal' };
+      case 'admin':
+      case 'system_admin':
+        return { label: 'Admin Dashboard', path: '/admin/dashboard' };
+      case 'supervisor':
+        return { label: 'Supervisor Portal', path: '/supervisor/evaluations' };
+      case 'treasury':
+        return { label: 'Treasury Portal', path: '/treasury/budget' };
+      default:
+        return { label: 'E-SCHOLAR Hub', path: '/e-scholar' };
+    }
+  };
+  const backNav = getBackNav();
 
   // Active Desk Tabs: 'new-ticket' | 'my-tickets' | 'ticket-chat'
   const [activeDeskTab, setActiveDeskTab] = useState<'new-ticket' | 'my-tickets' | 'ticket-chat'>('new-ticket');
@@ -259,6 +279,20 @@ export const ContactPage: React.FC = () => {
               🎫
             </div>
             <div>
+              {/* Breadcrumb Navigation Matching Exact Design */}
+              <div className="flex items-center gap-2 mb-1.5">
+                <Link
+                  to={backNav.path}
+                  className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5" /> {backNav.label}
+                </Link>
+                <span className="text-slate-400 text-xs">/</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                  Help Desk & Inquiry Ticketing
+                </span>
+              </div>
+
               <div className="flex items-center gap-2">
                 <h2 className="font-heading font-extrabold text-lg text-slate-900 dark:text-white">
                   QCYDO Help Desk & Inquiry Ticketing
