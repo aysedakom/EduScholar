@@ -99,27 +99,24 @@ export const PublicServicesPortalPage: React.FC = () => {
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 rounded-xl mb-1">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Available eServices</p>
                     </div>
-                    <Link to="/education-scholarship" onClick={() => setEservicesOpen(false)} className="flex items-start gap-3 p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group">
-                      <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">🎓</div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">Education and Scholarship</p>
-                          <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Primary</span>
-                        </div>
-                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">QC Campus Aid Hub & Student Grants</p>
+                    <Link to="/education-scholarship" onClick={() => setEservicesOpen(false)} className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">Education and Scholarship</p>
+                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Primary</span>
                       </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">QC Campus Aid Hub & Student Grants</p>
                     </Link>
-                    <Link to="/e-scholar" onClick={() => setEservicesOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                      <span className="text-sm">⚡</span> E-SCHOLAR Hub & Grants
+                    <Link to="/e-scholar" onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                      E-SCHOLAR Hub & Grants
                     </Link>
-                    <Link to="/scholar-prog-available" onClick={() => setEservicesOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                      <span className="text-sm">🎓</span> Available Programs
+                    <Link to="/scholar-prog-available" onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                      Available Programs
                     </Link>
-                    <Link to="/scholar-eguide" onClick={() => setEservicesOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                      <span className="text-sm">📖</span> Scholar E-Guide
+                    <Link to="/scholar-eguide" onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                      Scholar E-Guide
                     </Link>
-                    <Link to={user ? "/dashboard" : "/login"} onClick={() => setEservicesOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border-t border-slate-100 dark:border-slate-800 mt-1 pt-2">
-                      <span className="text-sm">⚡</span> Portal {user ? '(Dashboard)' : '(Sign In)'}
+                    <Link to={user ? "/dashboard" : "/login"} onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border-t border-slate-100 dark:border-slate-800 mt-1 pt-2">
+                      Portal {user ? '(Dashboard)' : '(Sign In)'}
                     </Link>
                   </div>
                 )}

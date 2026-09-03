@@ -115,41 +115,36 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                 <Link
                   to="/education-scholarship"
                   onClick={() => setEservicesOpen(false)}
-                  className="flex items-start gap-3 p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
+                  className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
                 >
-                  <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                    🎓
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">{t('nav.eduScholarTitle')}</p>
+                    <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">{t('nav.eduScholarTitle')}</p>
-                      <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet, QCU Portal</p>
-                  </div>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet, QCU Portal</p>
                 </Link>
 
                 {/* Secondary Services */}
                 <Link
                   to="/e-scholar"
                   onClick={() => setEservicesOpen(false)}
-                  className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
-                  <span className="text-sm">✨</span> {t('nav.hub')}
+                  {t('nav.hub')}
                 </Link>
                 <Link
                   to="/scholar-prog-available"
                   onClick={() => setEservicesOpen(false)}
-                  className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
-                  <span className="text-sm">📚</span> {t('nav.programs')}
+                  {t('nav.programs')}
                 </Link>
                 <Link
                   to="/scholar-eguide"
                   onClick={() => setEservicesOpen(false)}
-                  className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                  className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                 >
-                  <span className="text-sm">📖</span> {t('nav.eguide')}
+                  {t('nav.eguide')}
                 </Link>
               </div>
             )}
@@ -297,7 +292,7 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                 }}
                 className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
               >
-                <span>🚪</span> {t('nav.signout')}
+                {t('nav.signout')}
               </button>
             </div>
           )}

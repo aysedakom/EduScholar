@@ -13,7 +13,6 @@ import {
   Phone,
   ArrowUpRight,
   Compass,
-  ShieldAlert,
   ExternalLink,
   Menu
 } from 'lucide-react';
@@ -153,18 +152,13 @@ export const LandingPage: React.FC = () => {
                     <Link
                       to="/education-scholarship"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-start gap-3 p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
+                      className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                        🎓
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">{t('nav.eduScholarTitle')}</p>
+                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">{t('nav.eduScholarTitle')}</p>
-                          <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
-                        </div>
-                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet, QCU Portal</p>
-                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet, QCU Portal</p>
                     </Link>
 
                     <a
@@ -172,50 +166,42 @@ export const LandingPage: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-start gap-3 p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/40 transition-all mb-1 group"
+                      className="block p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/40 transition-all mb-1 group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                        <ShieldAlert className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-extrabold text-amber-900 dark:text-amber-300 group-hover:text-amber-700 dark:group-hover:text-amber-200">Disaster Risk Reduction (DRRM)</p>
-                          <ExternalLink className="h-3 w-3 text-amber-500 shrink-0" />
-                        </div>
-                        <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">Emergency Response, Weather & Evacuation Center Monitoring</p>
-                      </div>
+                      <p className="text-xs font-extrabold text-amber-900 dark:text-amber-300 group-hover:text-amber-700 dark:group-hover:text-amber-200">Disaster Risk Reduction (DRRM)</p>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">Emergency Response, Weather & Evacuation Center Monitoring</p>
                     </a>
 
                     <Link
                       to="/e-scholar"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                      className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     >
-                      <span className="text-sm">⚡</span> {t('nav.hub')}
+                      {t('nav.hub')}
                     </Link>
 
                     <Link
                       to="/scholar-prog-available"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                      className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     >
-                      <span className="text-sm">🎓</span> {t('nav.programs')}
+                      {t('nav.programs')}
                     </Link>
 
                     <Link
                       to="/scholar-eguide"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+                      className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
                     >
-                      <span className="text-sm">📖</span> {t('nav.eguide')}
+                      {t('nav.eguide')}
                     </Link>
 
                     <Link
                       to={user ? '/dashboard' : '/login'}
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border-t border-slate-100 dark:border-slate-800 mt-1 pt-2"
+                      className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all border-t border-slate-100 dark:border-slate-800 mt-1 pt-2"
                     >
-                      <span className="text-sm">⚡</span> {t('nav.portal')} {user ? `(${t('nav.dashboard')})` : `(${t('nav.signin')})`}
+                      {t('nav.portal')} {user ? `(${t('nav.dashboard')})` : `(${t('nav.signin')})`}
                     </Link>
                   </div>
                 )}
@@ -304,14 +290,14 @@ export const LandingPage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                🏠 {t('nav.home')}
+                {t('nav.home')}
               </Link>
               <Link
                 to="/education-scholarship"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 flex items-center justify-between"
               >
-                <span>🎓 {t('nav.eduScholarTitle')}</span>
+                <span>{t('nav.eduScholarTitle')}</span>
                 <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
               </Link>
               <Link
@@ -319,14 +305,14 @@ export const LandingPage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📚 {t('nav.programs')}
+                {t('nav.programs')}
               </Link>
               <Link
                 to="/scholar-eguide"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📖 {t('nav.eguide')}
+                {t('nav.eguide')}
               </Link>
               <a
                 href="/citizens_charter.pdf"
@@ -335,14 +321,14 @@ export const LandingPage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📋 {t('nav.charter')}
+                {t('nav.charter')}
               </a>
               <Link
                 to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📞 {t('nav.contact')}
+                {t('nav.contact')}
               </Link>
             </div>
 

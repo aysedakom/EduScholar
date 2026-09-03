@@ -14,8 +14,6 @@ import {
   Sun,
   Moon,
   ChevronDown,
-  Sparkles,
-  BookOpen,
   Menu
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -202,18 +200,13 @@ export const QCeServicesHomePage: React.FC = () => {
                     <Link
                       to="/education-scholarship"
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-start gap-3 p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-blue-950/50 hover:bg-blue-900/60' : 'bg-blue-50/80 hover:bg-blue-100/80'}`}
+                      className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-blue-950/50 hover:bg-blue-900/60' : 'bg-blue-50/80 hover:bg-blue-100/80'}`}
                     >
-                      <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                        🎓
+                      <div className="flex items-center gap-1.5">
+                        <p className={`text-xs font-extrabold group-hover:text-blue-600 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{t('nav.eduScholarTitle')}</p>
+                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <p className={`text-xs font-extrabold group-hover:text-blue-600 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{t('nav.eduScholarTitle')}</p>
-                          <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
-                        </div>
-                        <p className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{t('nav.eduScholarDesc')}</p>
-                      </div>
+                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{t('nav.eduScholarDesc')}</p>
                     </Link>
 
                     <a
@@ -221,57 +214,45 @@ export const QCeServicesHomePage: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-start gap-3 p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-200' : 'bg-amber-50/80 hover:bg-amber-100/80 text-amber-900'}`}
+                      className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-amber-950/40 hover:bg-amber-900/50 text-amber-200' : 'bg-amber-50/80 hover:bg-amber-100/80 text-amber-900'}`}
                     >
-                      <div className="h-8 w-8 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-sm">
-                        <ShieldAlert className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-extrabold group-hover:text-amber-600 dark:group-hover:text-amber-400">
-                            Disaster Risk Reduction (DRRM)
-                          </p>
-                          <ExternalLink className="h-3 w-3 text-amber-500 shrink-0" />
-                        </div>
-                        <p className={`text-[10px] font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                          QC Emergency Response, Weather & Evacuation Center Monitoring
-                        </p>
-                      </div>
+                      <p className="text-xs font-extrabold group-hover:text-amber-600 dark:group-hover:text-amber-400">
+                        Disaster Risk Reduction (DRRM)
+                      </p>
+                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                        QC Emergency Response, Weather & Evacuation Center Monitoring
+                      </p>
                     </a>
 
                     <Link
                       to="/e-scholar"
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
-                      <Sparkles className="h-4 w-4 text-amber-500" />
                       <span>{t('nav.hub')}</span>
                     </Link>
 
                     <Link
                       to="/scholar-prog-available"
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
-                      <GraduationCap className="h-4 w-4 text-blue-500" />
                       <span>{t('nav.programs')}</span>
                     </Link>
 
                     <Link
                       to="/scholar-eguide"
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
-                      <BookOpen className="h-4 w-4 text-emerald-500" />
                       <span>{t('nav.eguide')}</span>
                     </Link>
 
                     <Link
                       to={user ? '/dashboard' : '/login'}
                       onClick={() => setEservicesOpen(false)}
-                      className={`flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold border-t border-slate-100 dark:border-slate-800 mt-1 pt-2 transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
+                      className={`block px-3 py-2 rounded-xl text-xs font-bold border-t border-slate-100 dark:border-slate-800 mt-1 pt-2 transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
                     >
-                      <span className="text-sm">⚡</span>
                       <span>{t('nav.portal')} {user ? `(${t('nav.dashboard')})` : `(${t('nav.signin')})`}</span>
                     </Link>
                   </div>
@@ -365,7 +346,6 @@ export const QCeServicesHomePage: React.FC = () => {
                         isDark ? 'hover:bg-slate-800 text-slate-300' : 'hover:bg-slate-100 text-slate-700'
                       }`}
                     >
-                      <span className="text-xs">🎓</span>
                       <span>{t('nav.eduScholarTitle')}</span>
                     </Link>
                     <button
@@ -375,7 +355,6 @@ export const QCeServicesHomePage: React.FC = () => {
                       }}
                       className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer border-t border-slate-100 dark:border-slate-800 mt-1 pt-2"
                     >
-                      <span>🚪</span>
                       <span>{t('nav.signout')}</span>
                     </button>
                   </div>
@@ -407,14 +386,14 @@ export const QCeServicesHomePage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60"
               >
-                🏠 {t('nav.home')}
+                {t('nav.home')}
               </Link>
               <Link
                 to="/education-scholarship"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
               >
-                <span>🎓 {t('nav.eduScholarTitle')}</span>
+                <span>{t('nav.eduScholarTitle')}</span>
                 <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
               </Link>
               <Link
@@ -422,14 +401,14 @@ export const QCeServicesHomePage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📚 {t('nav.programs')}
+                {t('nav.programs')}
               </Link>
               <Link
                 to="/scholar-eguide"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📖 {t('nav.eguide')}
+                {t('nav.eguide')}
               </Link>
               <a
                 href="/citizens_charter.pdf"
@@ -438,14 +417,14 @@ export const QCeServicesHomePage: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📋 {t('nav.charter')}
+                {t('nav.charter')}
               </a>
               <Link
                 to="/contact"
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
-                📞 {t('nav.contact')}
+                {t('nav.contact')}
               </Link>
             </div>
 

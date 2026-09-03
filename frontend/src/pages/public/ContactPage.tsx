@@ -238,8 +238,8 @@ export const ContactPage: React.FC = () => {
                 </button>
                 {eservicesOpen && (
                   <div className="absolute left-0 top-11 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden z-50 p-2">
-                    <Link to="/e-scholar" onClick={() => setEservicesOpen(false)} className="flex items-center gap-2.5 p-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                      <span className="text-sm">⚡</span> {t('nav.hub')}
+                    <Link to="/e-scholar" onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                      {t('nav.hub')}
                     </Link>
                   </div>
                 )}

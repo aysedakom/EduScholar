@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { GraduationCap, ChevronDown, Sun, Moon, ArrowRight, ExternalLink, Calendar, ShieldCheck, BookOpen } from 'lucide-react';
+import { ChevronDown, Sun, Moon, ArrowRight, ExternalLink, Calendar, ShieldCheck, BookOpen } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
@@ -60,29 +60,19 @@ export const QCCampusAidHubPage: React.FC = () => {
                     <Link
                       to="/e-scholar"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mb-1 group"
+                      className="block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mb-1 group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                        <GraduationCap className="h-4 w-4 text-blue-600 dark:text-blue-400 group-hover:text-white" />
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">E-SCHOLAR</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">LGU QC Scholarship Program & Directory</p>
-                      </div>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">E-SCHOLAR</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">LGU QC Scholarship Program & Directory</p>
                     </Link>
 
                     <Link
                       to="/login"
                       onClick={() => setEservicesOpen(false)}
-                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
+                      className="block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
                     >
-                      <div className="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                        <span className="text-sm">🎓</span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Student E-Portal</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400">Scholar Sign-In & Applications</p>
-                      </div>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Student E-Portal</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Scholar Sign-In & Applications</p>
                     </Link>
                   </div>
                 )}
