@@ -7,7 +7,9 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "reset-db": "node db/reset.js",
-    "mcp": "node mcp/eduscholarMcpServer.js"
+    "mcp": "node mcp/eduscholarMcpServer.js",
+    "db:pull": "node scripts/syncDb.js --pull",
+    "db:push": "node scripts/syncDb.js --push"
   },
   "keywords": [],
   "author": "",
