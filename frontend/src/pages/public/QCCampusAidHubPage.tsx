@@ -58,22 +58,27 @@ export const QCCampusAidHubPage: React.FC = () => {
                     </div>
 
                     <Link
-                      to="/e-scholar"
+                      to="/education-scholarship"
                       onClick={() => setEservicesOpen(false)}
-                      className="block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all mb-1 group"
+                      className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
                     >
-                      <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">E-SCHOLAR</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">LGU QC Scholarship Program & Directory</p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">Education and Scholarship</p>
+                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Primary</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">QC Campus Aid Hub & Student Grants</p>
                     </Link>
 
-                    <Link
-                      to="/login"
+                    <a
+                      href="https://govservedrrm.up.railway.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onClick={() => setEservicesOpen(false)}
-                      className="block p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
+                      className="block p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/40 transition-all mb-1 group"
                     >
-                      <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">Student E-Portal</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Scholar Sign-In & Applications</p>
-                    </Link>
+                      <p className="text-xs font-extrabold text-amber-900 dark:text-amber-300 group-hover:text-amber-700 dark:group-hover:text-amber-200">Disaster Risk Reduction (DRRM)</p>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">Emergency Response, Weather & Evacuation Center Monitoring</p>
+                    </a>
                   </div>
                 )}
               </div>

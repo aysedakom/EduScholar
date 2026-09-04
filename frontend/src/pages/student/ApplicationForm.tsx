@@ -202,8 +202,37 @@ export const ApplicationForm: React.FC = () => {
   const [isCheckingPortal, setIsCheckingPortal] = useState(true);
 
   useEffect(() => {
+    // 1. Check local storage cache
     const existing = getActiveStudentApplication();
-    setActiveApp(existing);
+    if (existing) {
+      setActiveApp(existing);
+    }
+
+    // 2. Query backend for real-time active application status
+    api.get('/applications')
+      .then((res) => {
+        const apps = Array.isArray(res.data) ? res.data : [];
+        const activeDbApp = apps.find((a: any) => {
+          const s = String(a.status || '').toLowerCase();
+          return s !== 'rejected' && s !== 'cancelled';
+        });
+        if (activeDbApp) {
+          const unifiedActive = {
+            id: activeDbApp.reference_id || activeDbApp.application_code || activeDbApp.id,
+            applicantName: activeDbApp.applicant_name,
+            scholarshipTitle: activeDbApp.program_name || activeDbApp.title,
+            program_name: activeDbApp.program_name || activeDbApp.title,
+            status: activeDbApp.status,
+            submissionDate: activeDbApp.submission_date,
+            submitted_at: activeDbApp.created_at || activeDbApp.submission_date,
+          };
+          saveActiveStudentApplication(unifiedActive);
+          setActiveApp(unifiedActive);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not query active applications from server:', err);
+      });
 
     getPortalSettings()
       .then((res: any) => {
@@ -620,7 +649,23 @@ export const ApplicationForm: React.FC = () => {
           notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} required documents submitted. Documents queued for administrative verification.`,
           remarks: 'Application submitted via student portal. Documents and credentials queued for initial secretariat review.',
         });
-      } catch (backendError) {
+      } catch (backendError: any) {
+        if (backendError?.response?.status === 409) {
+          const activeInfo = backendError.response.data?.activeApplication;
+          toast.error(backendError.response.data?.message || 'You already have an active application on file.');
+          if (activeInfo) {
+            const unified = {
+              id: activeInfo.id,
+              program_name: activeInfo.programName,
+              status: activeInfo.status,
+              submissionDate: activeInfo.submissionDate,
+            };
+            saveActiveStudentApplication(unified);
+            setActiveApp(unified);
+          }
+          setIsSubmitting(false);
+          return;
+        }
         console.warn('Backend server connection note:', backendError);
       }
 

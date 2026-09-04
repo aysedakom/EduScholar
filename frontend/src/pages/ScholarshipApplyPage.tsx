@@ -13,13 +13,15 @@ import {
   AlertCircle,
   Clock,
   Calendar,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { createApplication } from '../api/applications';
+import { createApplication, getMyApplications } from '../api/applications';
 import { getPortalSettings, type PortalSettingsData } from '../api/portalSettings';
+import { getActiveStudentApplication, saveActiveStudentApplication } from '../utils/scholarshipPrograms';
 import { toast } from 'sonner';
 
 interface RequiredDocItem {
@@ -79,10 +81,36 @@ export const ScholarshipApplyPage: React.FC = () => {
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [submittedSuccess, setSubmittedSuccess] = useState<any | null>(null);
+  const [activeApp, setActiveApp] = useState<any | null>(() => getActiveStudentApplication());
   const [portalSettings, setPortalSettings] = useState<PortalSettingsData | null>(null);
   const [isCheckingPortal, setIsCheckingPortal] = useState(true);
 
   React.useEffect(() => {
+    // 1. Fetch active application from server for logged-in students
+    if (user && user.role === 'student') {
+      getMyApplications()
+        .then((res) => {
+          const dbApps = res && Array.isArray(res.data) ? res.data : [];
+          const active = dbApps.find((a: any) => {
+            const s = String(a.status || '').toLowerCase();
+            return s !== 'rejected' && s !== 'cancelled';
+          });
+          if (active) {
+            const unified = {
+              id: active.reference_id || active.application_code || active.id,
+              program_name: active.program_name || active.title,
+              status: active.status,
+              submissionDate: active.submission_date,
+            };
+            saveActiveStudentApplication(unified);
+            setActiveApp(unified);
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not query active applications in apply page:', err);
+        });
+    }
+
     getPortalSettings()
       .then((res: any) => {
         if (res.data?.data) {
@@ -95,7 +123,7 @@ export const ScholarshipApplyPage: React.FC = () => {
       .finally(() => {
         setIsCheckingPortal(false);
       });
-  }, []);
+  }, [user]);
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -216,16 +244,50 @@ export const ScholarshipApplyPage: React.FC = () => {
         },
       });
 
+      const newRecord = {
+        id: res.data?.reference_id || res.data?.application_code || `APP-QC-${Date.now()}`,
+        program_name: programTitle,
+        status: 'Under Review',
+        submissionDate: new Date().toISOString().split('T')[0],
+      };
+      saveActiveStudentApplication(newRecord);
+      setActiveApp(newRecord);
+
       setSubmittedSuccess({
-        id: res.data?.reference_id || `APP-QC-${Date.now()}`,
+        id: newRecord.id,
         programTitle,
         expectedTimeline: `${expectedStart} – ${expectedEnd}`,
       });
       toast.success(`Scholarship application for "${programTitle}" submitted successfully! 🎉`);
     } catch (err: any) {
-      console.warn('Submission fallback:', err);
-      setSubmittedSuccess({
+      if (err?.response?.status === 409) {
+        const activeInfo = err.response.data?.activeApplication;
+        toast.error(err.response.data?.message || 'You already have an active application on file.');
+        if (activeInfo) {
+          const unified = {
+            id: activeInfo.id,
+            program_name: activeInfo.programName,
+            status: activeInfo.status,
+            submissionDate: activeInfo.submissionDate,
+          };
+          saveActiveStudentApplication(unified);
+          setActiveApp(unified);
+        }
+        setIsLoading(false);
+        return;
+      }
+      console.warn('Submission network fallback:', err);
+      const fallbackRecord = {
         id: `APP-QC-${Date.now()}`,
+        program_name: programTitle,
+        status: 'Under Review',
+        submissionDate: new Date().toISOString().split('T')[0],
+      };
+      saveActiveStudentApplication(fallbackRecord);
+      setActiveApp(fallbackRecord);
+
+      setSubmittedSuccess({
+        id: fallbackRecord.id,
         programTitle,
         expectedTimeline: `${expectedStart} – ${expectedEnd}`,
       });
@@ -296,6 +358,89 @@ export const ScholarshipApplyPage: React.FC = () => {
                 className="bg-blue-600 font-bold"
               >
                 Inquire via Helpdesk
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // If student already has an active application on file
+  if (activeApp && !submittedSuccess && user?.role === 'student') {
+    return (
+      <div className="mx-auto max-w-2xl space-y-6 animate-in fade-in duration-300 py-8">
+        <button
+          onClick={() => navigate('/scholarships')}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back to Scholarships
+        </button>
+
+        <Card className="border-amber-200 dark:border-amber-800/80 bg-white dark:bg-slate-900 shadow-xl overflow-hidden rounded-3xl">
+          <div className="h-2 bg-gradient-to-r from-amber-400 to-amber-600" />
+          <CardContent className="p-8 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="h-14 w-14 rounded-2xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-200 dark:border-amber-800 shadow-md">
+                <Lock className="h-7 w-7" />
+              </div>
+              <div className="space-y-1">
+                <Badge variant="warning" size="md">
+                  Active Application on File
+                </Badge>
+                <h2 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+                  Existing Scholarship Application Active
+                </h2>
+              </div>
+            </div>
+
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+              In accordance with the <strong>Quezon City Scholarship Program (QCSP) Committee Governance & Ordinances</strong>, an applicant may only apply once and hold <strong>one (1) active scholarship program</strong> at a time.
+            </p>
+
+            <div className="p-5 rounded-2xl border space-y-3 bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <span className="text-xs text-slate-500 font-semibold">Active Program</span>
+                <span className="text-xs font-black text-slate-900 dark:text-white text-right">
+                  {activeApp.program_name || activeApp.scholarshipTitle || 'Quezon City Scholarship Program (QCSP)'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <span className="text-xs text-slate-500 font-semibold">Reference ID</span>
+                <span className="font-mono font-bold text-xs text-blue-600 dark:text-blue-400">
+                  {activeApp.id || 'QCSP-2026-ACTIVE'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+                <span className="text-xs text-slate-500 font-semibold">Application Status</span>
+                <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 capitalize font-extrabold text-xs">
+                  {activeApp.status || 'Under Review'}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-slate-500 font-semibold">Submission Date</span>
+                <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                  {activeApp.submissionDate || activeApp.submitted_at?.split('T')[0] || new Date().toISOString().split('T')[0]}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => navigate('/dashboard')}
+                className="w-full sm:w-auto font-bold bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Track My Application →
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => navigate('/scholarships')}
+                className="w-full sm:w-auto font-bold"
+              >
+                Browse Scholarships Catalog
               </Button>
             </div>
           </CardContent>

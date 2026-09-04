@@ -35,7 +35,7 @@ import { getMyApplications } from '../api/applications';
 import { getScholarships, updateScholarshipStatus } from '../api/scholarships';
 import { getPortalSettings, updatePortalSettings, type PortalSettingsData } from '../api/portalSettings';
 
-import { ALL_SCHOLARSHIP_PROGRAMS } from '../utils/scholarshipPrograms';
+import { ALL_SCHOLARSHIP_PROGRAMS, getActiveStudentApplication, saveActiveStudentApplication } from '../utils/scholarshipPrograms';
 
 type FeedItem = Scholarship & { kind: 'scholarship' };
 
@@ -111,7 +111,8 @@ export const ScholarshipsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [statusFilter, setStatusFilter] = useState<'all' | 'ongoing' | 'upcoming' | 'expired'>('all');
   const [activeModalScholarship, setActiveModalScholarship] = useState<Scholarship | null>(null);
-  const [appliedIds] = useState<string[]>([]);
+  const [appliedIds, setAppliedIds] = useState<string[]>([]);
+  const [activeStudentApp, setActiveStudentApp] = useState<any | null>(() => getActiveStudentApplication());
   const [items, setItems] = useState<FeedItem[]>(INITIAL_PROGRAMS);
   const [adminActiveTab, setAdminActiveTab] = useState<'programs' | 'reviews' | 'renewal'>('programs');
   const [selectedProgramFilter, setSelectedProgramFilter] = useState<string | null>(null);
@@ -181,21 +182,38 @@ export const ScholarshipsPage: React.FC = () => {
         );
       });
 
-    if (isAdminOrStaff) {
-      getMyApplications()
-        .then((res) => {
-          const dbApps = res && Array.isArray(res.data) ? res.data : [];
-          setDbApplications(dbApps);
+    getMyApplications()
+      .then((res) => {
+        const dbApps = res && Array.isArray(res.data) ? res.data : [];
+        setDbApplications(dbApps);
+        if (isAdminOrStaff) {
           const activePending = dbApps.filter((a) => {
             const s = (a.status || '').toLowerCase();
             return s !== 'approved' && s !== 'granted' && s !== 'rejected' && s !== 'paid';
           }).length;
           setPendingReviewsCount(activePending);
-        })
-        .catch((err) => {
-          console.warn('Failed to fetch pending review count:', err);
-        });
-    }
+        } else {
+          // Student role: find if student already has active application
+          const active = dbApps.find((a: any) => {
+            const s = String(a.status || '').toLowerCase();
+            return s !== 'rejected' && s !== 'cancelled';
+          });
+          if (active) {
+            const unified = {
+              id: active.reference_id || active.application_code || active.id,
+              program_name: active.program_name || active.title,
+              status: active.status,
+              submissionDate: active.submission_date,
+            };
+            saveActiveStudentApplication(unified);
+            setActiveStudentApp(unified);
+            setAppliedIds(dbApps.map((a: any) => a.program_id || String(a.id)));
+          }
+        }
+      })
+      .catch((err) => {
+        console.warn('Failed to fetch applications:', err);
+      });
   }, [isAdminOrStaff]);
 
   const getAppliedCountForProgram = (id: string, title: string): number => {
@@ -261,6 +279,10 @@ export const ScholarshipsPage: React.FC = () => {
   const handleStartApplication = (sch: Scholarship) => {
     if (!isPortalOpen && !isAdminOrStaff) {
       toast.error('Application portal intake is currently closed for new submissions.');
+      return;
+    }
+    if (!isAdminOrStaff && activeStudentApp) {
+      toast.warning('You already have an active application on file. Applicants may only apply once for an active scholarship program.');
       return;
     }
     navigate('/apply/scholarship', {

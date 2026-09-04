@@ -223,38 +223,6 @@ export const QCeServicesHomePage: React.FC = () => {
                         QC Emergency Response, Weather & Evacuation Center Monitoring
                       </p>
                     </a>
-
-                    <Link
-                      to="/e-scholar"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      <span>{t('nav.hub')}</span>
-                    </Link>
-
-                    <Link
-                      to="/scholar-prog-available"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      <span>{t('nav.programs')}</span>
-                    </Link>
-
-                    <Link
-                      to="/scholar-eguide"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block px-3 py-2 rounded-xl text-xs font-bold transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      <span>{t('nav.eguide')}</span>
-                    </Link>
-
-                    <Link
-                      to={user ? '/dashboard' : '/login'}
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block px-3 py-2 rounded-xl text-xs font-bold border-t border-slate-100 dark:border-slate-800 mt-1 pt-2 transition-all ${isDark ? 'text-slate-300 hover:bg-slate-800' : 'text-slate-700 hover:bg-slate-100'}`}
-                    >
-                      <span>{t('nav.portal')} {user ? `(${t('nav.dashboard')})` : `(${t('nav.signin')})`}</span>
-                    </Link>
                   </div>
                 )}
               </div>

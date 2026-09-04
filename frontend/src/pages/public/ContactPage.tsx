@@ -237,10 +237,33 @@ export const ContactPage: React.FC = () => {
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 </button>
                 {eservicesOpen && (
-                  <div className="absolute left-0 top-11 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden z-50 p-2">
-                    <Link to="/e-scholar" onClick={() => setEservicesOpen(false)} className="block px-3 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
-                      {t('nav.hub')}
+                  <div className="absolute left-0 top-11 w-72 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden z-50 p-2 animate-in fade-in duration-150">
+                    <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 rounded-xl mb-1">
+                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{t('nav.available')}</p>
+                    </div>
+
+                    <Link
+                      to="/education-scholarship"
+                      onClick={() => setEservicesOpen(false)}
+                      className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">{t('nav.eduScholarTitle')}</p>
+                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">QC Campus Aid Hub & Student Grants</p>
                     </Link>
+
+                    <a
+                      href="https://govservedrrm.up.railway.app/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setEservicesOpen(false)}
+                      className="block p-2.5 rounded-xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60 hover:bg-amber-100/80 dark:hover:bg-amber-900/40 transition-all mb-1 group"
+                    >
+                      <p className="text-xs font-extrabold text-amber-900 dark:text-amber-300 group-hover:text-amber-700 dark:group-hover:text-amber-200">Disaster Risk Reduction (DRRM)</p>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">Emergency Response, Weather & Evacuation Center Monitoring</p>
+                    </a>
                   </div>
                 )}
               </div>

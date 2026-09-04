@@ -60,6 +60,23 @@ const findByUser = async (userId, filters = {}) => {
   }
 };
 
+const findActiveByUserId = async (userId) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM applications 
+       WHERE user_id = $1 
+         AND LOWER(status) NOT IN ('rejected', 'cancelled')
+       ORDER BY submission_date DESC, id DESC
+       LIMIT 1`,
+      [userId]
+    );
+    return result.rows[0] || null;
+  } catch (err) {
+    console.error('[applicationModel] findActiveByUserId query error:', err.message);
+    return null;
+  }
+};
+
 const findById = async (id) => {
   try {
     const result = await pool.query(
@@ -298,4 +315,4 @@ const updateStatus = async (id, status, notes, remarks) => {
   }
 };
 
-module.exports = { findAll, findByUser, findById, create, updateStatus };
+module.exports = { findAll, findByUser, findActiveByUserId, findById, create, updateStatus };

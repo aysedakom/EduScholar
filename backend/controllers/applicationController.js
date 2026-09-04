@@ -53,6 +53,21 @@ const createApplication = async (req, res) => {
           portalSettings,
         });
       }
+
+      // Enforce single active application constraint per student
+      const activeExisting = await applicationModel.findActiveByUserId(req.user.id);
+      if (activeExisting) {
+        return res.status(409).json({
+          success: false,
+          message: 'You already have an active application on file. Applicants may only apply once for an active scholarship program.',
+          activeApplication: {
+            id: activeExisting.reference_id || activeExisting.application_code || activeExisting.id,
+            programName: activeExisting.program_name || activeExisting.title,
+            status: activeExisting.status,
+            submissionDate: activeExisting.submission_date,
+          },
+        });
+      }
     }
 
     const {
