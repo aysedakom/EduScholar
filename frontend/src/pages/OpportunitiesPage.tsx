@@ -105,8 +105,8 @@ export const OpportunitiesPage: React.FC = () => {
     return matchesSearch && matchesCat;
   });
 
-  const handleApplyRoute = (o: Opportunity) => {
-    navigate(`/apply/scholarship${o.id ? `?opportunity=${o.id}` : ''}`);
+  const handleApplyRoute = (_o: Opportunity) => {
+    navigate('/scholar-prog-available');
   };
 
   return (

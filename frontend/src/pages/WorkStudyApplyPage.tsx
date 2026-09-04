@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 export const WorkStudyApplyPage: React.FC = () => {
   const navigate = useNavigate();
   useEffect(() => {
-    navigate('/apply/scholarship', { replace: true });
+    navigate('/scholar-prog-available', { replace: true });
   }, [navigate]);
 
   return null;

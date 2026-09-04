@@ -125,6 +125,15 @@ export const ScholarshipApplyPage: React.FC = () => {
       });
   }, [user]);
 
+  // Require applicants to pick a scholarship program first from scholar-prog-available
+  React.useEffect(() => {
+    const existing = getActiveStudentApplication();
+    if (!existing && !activeApp && !submittedSuccess) {
+      toast.info('Please select your preferred scholarship program from the catalog first.');
+      navigate('/scholar-prog-available', { replace: true });
+    }
+  }, [activeApp, submittedSuccess, navigate]);
+
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const formatFileSize = (bytes: number): string => {

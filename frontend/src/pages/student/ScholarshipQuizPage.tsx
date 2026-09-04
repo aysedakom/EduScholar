@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { CheckCircle2, ArrowRight, ArrowLeft, Sparkles, RefreshCw } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -217,11 +218,11 @@ export const ScholarshipQuizPage: React.FC = () => {
                           {formatCurrency(res.amount)}
                         </span>
                       </div>
-                      <a href="/apply/scholarship">
+                      <Link to="/scholar-prog-available">
                         <Button variant="primary" size="sm" className="font-bold text-xs" rightIcon={<ArrowRight className="h-3.5 w-3.5" />}>
                           Apply Now
                         </Button>
-                      </a>
+                      </Link>
                     </div>
                     <div className="pt-2 border-t border-slate-200/60 space-y-1">
                       {res.reasons.map((r, idx) => (

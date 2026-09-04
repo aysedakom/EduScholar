@@ -173,7 +173,7 @@ export const SmartRecommendationsPage: React.FC = () => {
             </CardContent>
 
             <CardFooter className="pt-2">
-              <Link to={`/apply?title=${encodeURIComponent(item.title)}`} className="w-full">
+              <Link to="/scholar-prog-available" className="w-full">
                 <Button variant="primary" className="w-full font-bold shadow-soft" rightIcon={<ArrowRight className="h-4 w-4" />}>
                   Apply for Recommendation
                 </Button>

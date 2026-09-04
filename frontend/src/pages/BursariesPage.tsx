@@ -302,7 +302,7 @@ export const BursariesPage: React.FC = () => {
           <WalletCards className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <span>Need guidance on which bursary fits your situation?</span>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/apply/scholarship')}>
+        <Button variant="outline" size="sm" onClick={() => navigate('/scholar-prog-available')}>
           Browse All Awards
         </Button>
       </div>

@@ -263,7 +263,7 @@ export const ApplicationsPage: React.FC = () => {
           <Button variant="outline" size="sm" onClick={() => navigate('/documents')}>
             Document Vault
           </Button>
-          <Button variant="primary" size="sm" onClick={() => navigate('/apply/scholarship')} className="font-bold">
+          <Button variant="primary" size="sm" onClick={() => navigate('/scholar-prog-available')} className="font-bold">
             Apply for Scholarship
           </Button>
         </div>

@@ -276,7 +276,7 @@ export const ScholarshipsPage: React.FC = () => {
     return matchesSearch && matchesCat && matchesTab;
   });
 
-  const handleStartApplication = (sch: Scholarship) => {
+  const handleStartApplication = (_sch: Scholarship) => {
     if (!isPortalOpen && !isAdminOrStaff) {
       toast.error('Application portal intake is currently closed for new submissions.');
       return;
@@ -285,15 +285,7 @@ export const ScholarshipsPage: React.FC = () => {
       toast.warning('You already have an active application on file. Applicants may only apply once for an active scholarship program.');
       return;
     }
-    navigate('/apply/scholarship', {
-      state: {
-        scholarshipId: sch.id,
-        scholarshipTitle: sch.title,
-        amount: sch.amount,
-        deadline: sch.deadline,
-        category: sch.category,
-      },
-    });
+    navigate('/scholar-prog-available');
   };
 
   const handleCreateProgram = (e: React.FormEvent) => {

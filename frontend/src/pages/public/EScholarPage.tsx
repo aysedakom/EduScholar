@@ -44,14 +44,14 @@ export const EScholarPage: React.FC = () => {
 
   const handleStartNewApplication = () => {
     if (!user) {
-      navigate('/login?redirect=' + encodeURIComponent('/student/application-form'));
+      navigate('/login?redirect=' + encodeURIComponent('/scholar-prog-available'));
       return;
     }
     if (activeApp) {
       setBlockedModalOpen(true);
       return;
     }
-    navigate('/student/application-form');
+    navigate('/scholar-prog-available');
   };
 
   useEffect(() => {

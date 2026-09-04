@@ -668,7 +668,7 @@ export const ScholarEguidePage: React.FC = () => {
                 Explore Available Programs →
               </Button>
             </Link>
-            <Link to="/apply">
+            <Link to="/scholar-prog-available">
               <Button variant="outline" size="md" className="font-bold border-slate-300 dark:border-slate-700">
                 Start Scholarship Application
               </Button>

@@ -233,9 +233,9 @@ export const ApplicationProgressTracker: React.FC = () => {
             </p>
           </div>
           <div className="pt-2">
-            <Link to="/apply/scholarship">
-              <Button variant="primary" size="md" className="font-extrabold shadow-md shadow-blue-600/30 gap-2">
-                <span>Apply for Scholarship</span>
+            <Link to="/scholar-prog-available">
+              <Button variant="primary" size="md" className="font-extrabold shadow-md shadow-blue-600/30 gap-2 cursor-pointer">
+                <span>Select Scholarship Program & Apply</span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>

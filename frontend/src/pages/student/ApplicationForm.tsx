@@ -201,6 +201,16 @@ export const ApplicationForm: React.FC = () => {
   const [portalSettings, setPortalSettings] = useState<PortalSettingsData | null>(null);
   const [isCheckingPortal, setIsCheckingPortal] = useState(true);
 
+  // Require applicants to pick a scholarship program first from scholar-prog-available
+  useEffect(() => {
+    const hasProgramParam = searchParams.get('program') || searchParams.get('programId');
+    const existing = getActiveStudentApplication();
+    if (!hasProgramParam && !existing && !activeApp) {
+      toast.info('Please select your preferred scholarship program from the catalog first.');
+      navigate('/scholar-prog-available', { replace: true });
+    }
+  }, [searchParams, activeApp, navigate]);
+
   useEffect(() => {
     // 1. Check local storage cache
     const existing = getActiveStudentApplication();

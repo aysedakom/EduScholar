@@ -150,9 +150,9 @@ export const QCCampusAidHubPage: React.FC = () => {
                   Access E-SCHOLAR Portal
                 </Button>
               </Link>
-              <Link to="/student/application-form">
+              <Link to="/scholar-prog-available">
                 <Button variant="outline" size="md" className="font-bold border-white/30 text-white hover:bg-white/10 dark:hover:bg-slate-800">
-                  New Applicant Form
+                  Available Programs & Apply
                 </Button>
               </Link>
             </div>
@@ -283,9 +283,9 @@ export const QCCampusAidHubPage: React.FC = () => {
               </div>
 
               <div className="pt-2">
-                <Link to="/student/application-form">
+                <Link to="/scholar-prog-available">
                   <Button variant="primary" size="md" rightIcon={<ArrowRight className="h-4 w-4" />} className="font-extrabold">
-                    Start New Application Form
+                    Browse Programs & Apply
                   </Button>
                 </Link>
               </div>
