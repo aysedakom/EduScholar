@@ -1,4 +1,12 @@
-
+/**
+ * backend/scripts/syncDb.js
+ * 
+ * Synchronizes data between Railway cloud PostgreSQL and Localhost PostgreSQL.
+ * 
+ * Usage:
+ *   node scripts/syncDb.js --pull    (Fetch latest records from Railway -> Localhost)
+ *   node scripts/syncDb.js --push    (Send local records from Localhost -> Railway)
+ */
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
 const { Pool } = require('pg');
@@ -8,10 +16,13 @@ const railwayUrl = process.env.RAILWAY_DATABASE_URL;
 
 const TABLES_TO_SYNC = [
   'users',
-  'student_profiles',
   'applications',
+  'documents',
   'portal_settings',
-  'departments',
+  'partner_schools',
+  'scholarships',
+  'bursaries',
+  'opportunities',
   'system_logs',
 ];
 
@@ -23,15 +34,9 @@ async function syncDatabases() {
   console.log('====================================================');
 
   if (!railwayUrl) {
-    console.error('\n RAILWAY_DATABASE_URL is not set in backend/.env!');
-    console.log('\nTo connect Railway and Localhost:');
-    console.log('1. Go to your Railway dashboard: https://railway.app');
-    console.log('2. Click your Postgres database service -> "Connect" tab');
-    console.log('3. Copy the "Public Networking" or "DATABASE_URL" connection string');
-    console.log('4. Add it to backend/.env like this:');
+    console.error('\n⚠️  RAILWAY_DATABASE_URL is not set in backend/.env!');
+    console.log('Add it to backend/.env like this:');
     console.log('   RAILWAY_DATABASE_URL=postgresql://postgres:password@junction.proxy.rlwy.net:port/railway\n');
-    console.log('5. Then run: npm run db:pull (to copy Railway data into Localhost pgAdmin)');
-    console.log('====================================================\n');
     process.exit(1);
   }
 
@@ -55,6 +60,20 @@ async function syncDatabases() {
     for (const table of TABLES_TO_SYNC) {
       try {
         console.log(`\n⏳ Syncing table: "${table}"...`);
+        // Check if table exists in source
+        const checkSource = await sourcePool.query(`SELECT to_regclass('${table}')`);
+        if (!checkSource.rows[0]?.to_regclass) {
+          console.log(`   ⏩ Table "${table}" does not exist in ${sourceName}, skipping.`);
+          continue;
+        }
+
+        // Check if table exists in target
+        const checkTarget = await targetPool.query(`SELECT to_regclass('${table}')`);
+        if (!checkTarget.rows[0]?.to_regclass) {
+          console.log(`   ⏩ Table "${table}" does not exist in ${targetName}, skipping.`);
+          continue;
+        }
+
         const { rows } = await sourcePool.query(`SELECT * FROM ${table} ORDER BY id ASC`);
         console.log(`   Found ${rows.length} row(s) in ${sourceName}`);
 
@@ -65,18 +84,36 @@ async function syncDatabases() {
           const keys = Object.keys(row);
           const columns = keys.join(', ');
           const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
-          const values = keys.map((k) => row[k]);
+
+          // Properly serialize objects / arrays for PostgreSQL JSONB
+          const values = keys.map((k) => {
+            const val = row[k];
+            if (val !== null && typeof val === 'object' && !(val instanceof Date) && !Buffer.isBuffer(val)) {
+              return JSON.stringify(val);
+            }
+            return val;
+          });
+
+          // Determine conflict target
+          let conflictCol = 'id';
+          if (table === 'users' && keys.includes('email')) {
+            conflictCol = 'email';
+          } else if (table === 'portal_settings' && keys.includes('id')) {
+            conflictCol = 'id';
+          } else if (table === 'partner_schools' && keys.includes('school_id')) {
+            conflictCol = 'school_id';
+          }
 
           const updateSet = keys
-            .filter((k) => k !== 'id')
+            .filter((k) => k !== conflictCol && k !== 'id')
             .map((k) => `${k} = EXCLUDED.${k}`)
             .join(', ');
 
           let sql;
-          if (keys.includes('id') && updateSet.length > 0) {
-            sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) ON CONFLICT (id) DO UPDATE SET ${updateSet}`;
-          } else if (keys.includes('id')) {
-            sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) ON CONFLICT (id) DO NOTHING`;
+          if (keys.includes(conflictCol) && updateSet.length > 0) {
+            sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) ON CONFLICT (${conflictCol}) DO UPDATE SET ${updateSet}`;
+          } else if (keys.includes(conflictCol)) {
+            sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) ON CONFLICT (${conflictCol}) DO NOTHING`;
           } else {
             sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders})`;
           }
@@ -87,11 +124,12 @@ async function syncDatabases() {
 
         console.log(`   ✅ Synced ${insertedOrUpdated} row(s) to ${targetName}`);
 
+        // Update serial sequence
         if (rows.length > 0 && rows[0].id !== undefined) {
           try {
             await targetPool.query(`SELECT setval(pg_get_serial_sequence('${table}', 'id'), COALESCE((SELECT MAX(id) + 1 FROM ${table}), 1), false);`);
           } catch (seqErr) {
-
+            // non-fatal
           }
         }
       } catch (tableErr) {
