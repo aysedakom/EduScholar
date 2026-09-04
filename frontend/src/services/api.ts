@@ -44,6 +44,15 @@ api.interceptors.response.use(
   }
 );
 
+// Reconnection Listener: Auto-sync flush when internet connection is restored
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    console.log('🌐 Internet connection restored. Triggering auto-sync to cloud...');
+    axios.post('http://localhost:5000/api/sync/trigger').catch(() => {});
+    api.post('/sync/trigger').catch(() => {});
+  });
+}
+
 // Mock Fallback for Client-Side AI Matching Simulation
 export const processAiApplicationMatch = (formData: Record<string, any>) => {
   const gwa = Number(formData.gwa) || 1.75;

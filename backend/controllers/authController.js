@@ -178,6 +178,11 @@ const register = async (req, res) => {
       expiresInMinutes: 60,
     }).catch((err) => console.warn('[authController] Email verification dispatch warning:', err.message));
 
+    try {
+      const { triggerSyncNow } = require('../services/autoSyncService');
+      triggerSyncNow();
+    } catch (_) {}
+
     res.status(201).json({
       success: true,
       requireEmailVerification: true,
@@ -218,6 +223,11 @@ const verifyEmail = async (req, res) => {
 
 
     await userModel.verifyEmail(user.email);
+
+    try {
+      const { triggerSyncNow } = require('../services/autoSyncService');
+      triggerSyncNow();
+    } catch (_) {}
 
     res.json({
       success: true,

@@ -131,12 +131,24 @@ server.listen(port, host, () => {
   console.log(`[EduScholar Docs] Swagger OpenAPI available at http://0.0.0.0:${port}/api-docs`);
 });
 
-// Initialize Database & PostgreSQL listener in background
+const { startAutoSync, getSyncStatus, triggerSyncNow } = require('./services/autoSyncService');
+
+app.get('/api/sync/status', (req, res) => {
+  res.json(getSyncStatus());
+});
+
+app.post('/api/sync/trigger', (req, res) => {
+  triggerSyncNow();
+  res.json({ message: 'Sync cycle triggered in background' });
+});
+
+// Initialize Database, PostgreSQL listener & Auto-Sync in background
 (async function initBackgroundServices() {
   try {
     await initDb();
     await initPgListener();
     console.log('[EduScholar Server] Database and realtime listener ready.');
+    startAutoSync(12);
   } catch (error) {
     console.warn('[EduScholar Server] Background services warning:', error.message);
   }

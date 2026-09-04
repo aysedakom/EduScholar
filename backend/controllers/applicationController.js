@@ -223,6 +223,14 @@ const createApplication = async (req, res) => {
       console.warn('[applicationController] Notification error:', notifErr.message);
     }
 
+    // 4. Replicate transaction immediately to Railway/Localhost via AutoSync
+    try {
+      const { triggerSyncNow } = require('../services/autoSyncService');
+      triggerSyncNow();
+    } catch (syncErr) {
+      // non-fatal
+    }
+
     res.status(201).json(application);
   } catch (error) {
     console.error('[applicationController] createApplication error:', error);
@@ -237,6 +245,14 @@ const updateStatus = async (req, res) => {
     const { status, notes, remarks } = req.body;
     const application = await applicationModel.updateStatus(req.params.id, status, notes, remarks);
     if (!application) return res.status(404).json({ message: 'Application not found' });
+
+    try {
+      const { triggerSyncNow } = require('../services/autoSyncService');
+      triggerSyncNow();
+    } catch (syncErr) {
+      // non-fatal
+    }
+
     res.json(application);
   } catch (error) {
     console.error('[applicationController] updateStatus error:', error);
