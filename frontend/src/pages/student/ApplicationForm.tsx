@@ -1,10 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { api, processAiApplicationMatch } from '../../services/api';
 import { toast } from 'sonner';
+import { PhoneInput } from '../../components/ui/PhoneInput';
+import { formatPHMobile, isValidPHMobile } from '../../utils/phoneFormatter';
 import {
   ArrowLeft,
   ArrowRight,
@@ -89,41 +91,76 @@ const applicationSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   suffix: z.string().optional(),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  gender: z.enum(['Male', 'Female', 'Prefer not to say']),
-  civilStatus: z.enum(['Single', 'Married', 'Widowed', 'Separated']),
+  gender: z.string().refine((val) => ['Male', 'Female', 'Prefer not to say'].includes(val), {
+    message: 'Please select your gender',
+  }),
+  civilStatus: z.string().refine((val) => ['Single', 'Married', 'Widowed', 'Separated'].includes(val), {
+    message: 'Please select your civil status',
+  }),
   nationality: z.string().min(1, 'Nationality is required'),
   religion: z.string().optional(),
   email: z.string().email('Invalid email address'),
-  mobileNumber: z.string().min(10, 'Mobile number is required'),
+  mobileNumber: z.string().refine((val) => isValidPHMobile(val), {
+    message: 'Please enter a valid 10-digit Philippine mobile number (e.g. +63 917 123 4567)',
+  }),
   telephoneNumber: z.string().optional(),
-  address: z.string().min(1, 'Address is required'),
+  address: z.string().min(1, 'House/unit number and street address is required'),
   barangay: z.string().min(1, 'Barangay is required'),
-  city: z.string().min(1, 'City is required'),
+  city: z.string().min(1, 'City or Municipality is required'),
   province: z.string().optional().default('Metro Manila'),
   zipCode: z.string().optional().default('1100'),
 
   // Step 2: Academic Information
   studentId: z.string().min(1, 'Student ID or LRN is required'),
-  school: z.string().min(1, 'School is required'),
+  school: z.string().min(1, 'Please select your school or university'),
   unlistedSchoolName: z.string().optional(),
   unlistedSchoolAddress: z.string().optional(),
-  schoolType: z.enum(['Private', 'Public', 'SUC', 'LUC']),
-  department: z.string().min(1, 'Beneficiary department / college is required'),
-  course: z.string().min(1, 'Course / Strand is required'),
-  yearLevel: z.enum(['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Postgraduate / Reviewee']),
-  gwa: z.number().min(1.0, 'Enter a valid GWA or grade percentage').max(100.0, 'Enter a valid GWA or grade percentage'),
+  schoolType: z.string().refine((val) => ['Private', 'Public', 'SUC', 'LUC'].includes(val), {
+    message: 'Please select school institution type',
+  }),
+  department: z.string().min(1, 'Please select beneficiary department / college'),
+  course: z.string().min(1, 'Course or Academic Strand is required'),
+  yearLevel: z.string().refine(
+    (val) =>
+      ['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Postgraduate / Reviewee'].includes(val),
+    {
+      message: 'Please select your current year / grade level',
+    }
+  ),
+  gwa: z.preprocess(
+    (val) => (val === '' || val === undefined || Number.isNaN(Number(val)) ? NaN : Number(val)),
+    z.number({ message: 'Enter a valid GWA or grade percentage' })
+      .min(1.0, 'Enter a valid GWA or grade percentage')
+      .max(100.0, 'Enter a valid GWA or grade percentage')
+  ),
 
   // Step 3: Financial Information
-  annualIncome: z.number().min(0, 'Annual income is required'),
-  incomeBracket: z.enum(['Low', 'Middle', 'High']),
-  numberOfSiblings: z.number().min(0),
-  financialSupport: z.enum(['Parents', 'Self', 'Scholarship', 'Other']),
-  disbursementChannel: z.enum([
-    'Landbank ATM / Cash Card',
-    'GCash E-Wallet',
-    'Maya E-Wallet',
-    'City Hall Cashier Pickup',
-  ]),
+  annualIncome: z.preprocess(
+    (val) => (val === '' || val === undefined || Number.isNaN(Number(val)) ? NaN : Number(val)),
+    z.number({ message: 'Gross annual household income is required' }).min(0, 'Income must be 0 or greater')
+  ),
+  incomeBracket: z.string().refine((val) => ['Low', 'Middle', 'High'].includes(val), {
+    message: 'Please select household income bracket',
+  }),
+  numberOfSiblings: z.preprocess(
+    (val) => (val === '' || val === undefined || Number.isNaN(Number(val)) ? 0 : Number(val)),
+    z.number().min(0, 'Number of siblings must be 0 or greater')
+  ),
+  financialSupport: z.string().refine((val) => ['Parents', 'Self', 'Scholarship', 'Other'].includes(val), {
+    message: 'Please select primary financial support source',
+  }),
+  disbursementChannel: z.string().refine(
+    (val) =>
+      [
+        'Landbank ATM / Cash Card',
+        'GCash E-Wallet',
+        'Maya E-Wallet',
+        'City Hall Cashier Pickup',
+      ].includes(val),
+    {
+      message: 'Please select preferred stipend disbursement channel',
+    }
+  ),
   accountNumber: z.string().min(1, 'Account or Mobile number is required'),
   accountName: z.string().min(1, 'Account holder name is required'),
   isPWD: z.boolean().optional(),
@@ -133,7 +170,7 @@ const applicationSchema = z.object({
   isKasambahayOrToda: z.boolean().optional(),
 
   // Step 4: Terms Consent
-  termsAccepted: z.boolean().refine((val) => val === true, 'You must accept the terms'),
+  termsAccepted: z.boolean().refine((val) => val === true, 'You must certify and accept the terms'),
 });
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
@@ -186,14 +223,7 @@ export const ApplicationForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Dynamic Uploads Dictionary per Document Spec ID
-  const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocMeta | null>>({
-    residency_qc: {
-      name: 'Citizen_Information_System_Matched.json',
-      size: 'System Verified',
-      type: 'application/json',
-      uploadedAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    },
-  });
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocMeta | null>>({});
 
   // Video Presentation state for vocational / applicable tracks
   const [videoMode, setVideoMode] = useState<'link' | 'file'>('link');
@@ -214,12 +244,14 @@ export const ApplicationForm: React.FC = () => {
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null);
+  const [pendingDraft, setPendingDraft] = useState<any | null>(null);
 
   const DRAFT_STORAGE_KEY = `eduscholar_app_draft_${selectedProgramId}_${user?.email || 'guest'}`;
 
   const {
     register,
     handleSubmit,
+    control,
     trigger,
     watch,
     reset,
@@ -230,30 +262,32 @@ export const ApplicationForm: React.FC = () => {
       firstName: user?.name?.split(' ')[0] || '',
       lastName: user?.name?.split(' ').slice(1).join(' ') || '',
       email: user?.email || '',
-      city: 'Quezon City',
-      province: 'Metro Manila',
-      barangay: 'Barangay Central',
-      zipCode: '1100',
-      school: QC_SCHOOLS[0],
-      department: INSTALLED_DEPARTMENTS[0],
-      disbursementChannel: 'Landbank ATM / Cash Card',
+      mobileNumber: user?.phone ? formatPHMobile(user.phone) : '',
+      city: user?.city || '',
+      province: user?.province || 'Metro Manila',
+      barangay: user?.barangay || '',
+      zipCode: user?.zipCode || '',
+      school: '',
+      department: '',
+      course: '',
+      disbursementChannel: '' as any,
       accountNumber: '',
       accountName: user?.name || '',
-      annualIncome: 0,
+      annualIncome: '' as any,
       numberOfSiblings: 0,
-      gender: 'Female',
-      civilStatus: 'Single',
-      schoolType: selectedProgram.categoryId === 'shs' ? 'Public' : 'SUC',
-      yearLevel: selectedProgram.categoryId === 'shs' ? 'Grade 11' : selectedProgram.categoryId === 'postgrad' ? 'Postgraduate / Reviewee' : '1st Year',
-      incomeBracket: 'Low',
-      financialSupport: 'Parents',
+      gender: '' as any,
+      civilStatus: '' as any,
+      schoolType: '' as any,
+      yearLevel: '' as any,
+      incomeBracket: '' as any,
+      financialSupport: '' as any,
       nationality: 'Filipino',
       isPWD: false,
       isIndigenous: false,
       is4Ps: false,
       isSoloParent: false,
       isKasambahayOrToda: false,
-      termsAccepted: true,
+      termsAccepted: false,
     },
   });
 
@@ -284,35 +318,59 @@ export const ApplicationForm: React.FC = () => {
     };
   }, []);
 
-  // 2. Restore Draft on initial component mount
+  // 2. Check for saved draft on initial component mount (prompts user rather than auto-deciding)
   useEffect(() => {
     try {
       const savedRaw = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (savedRaw) {
         const parsed = JSON.parse(savedRaw);
-        if (parsed.formData) {
-          reset(parsed.formData);
-        }
-        if (parsed.currentStep) {
-          setCurrentStep(parsed.currentStep);
-        }
-        if (parsed.uploadedDocs) {
-          setUploadedDocs(parsed.uploadedDocs);
-        }
-        if (parsed.videoUrl) {
-          setVideoUrl(parsed.videoUrl);
-        }
-        if (parsed.videoMode) {
-          setVideoMode(parsed.videoMode);
-        }
-        if (parsed.savedAt) {
-          setDraftSavedAt(parsed.savedAt);
+        if (parsed && parsed.formData) {
+          setPendingDraft(parsed);
         }
       }
     } catch (e) {
-      console.warn('Could not restore saved application draft:', e);
+      console.warn('Could not inspect saved application draft:', e);
     }
-  }, [DRAFT_STORAGE_KEY, reset]);
+  }, [DRAFT_STORAGE_KEY]);
+
+  const handleApplyDraft = () => {
+    if (!pendingDraft) return;
+    try {
+      if (pendingDraft.formData) {
+        reset(pendingDraft.formData);
+      }
+      if (pendingDraft.currentStep) {
+        setCurrentStep(pendingDraft.currentStep);
+      }
+      if (pendingDraft.uploadedDocs) {
+        setUploadedDocs(pendingDraft.uploadedDocs);
+      }
+      if (pendingDraft.videoUrl) {
+        setVideoUrl(pendingDraft.videoUrl);
+      }
+      if (pendingDraft.videoMode) {
+        setVideoMode(pendingDraft.videoMode);
+      }
+      if (pendingDraft.savedAt) {
+        setDraftSavedAt(pendingDraft.savedAt);
+      }
+      setPendingDraft(null);
+      toast.success('Previous application draft restored.');
+    } catch (err) {
+      console.warn('Draft restoration error:', err);
+    }
+  };
+
+  const handleDiscardDraft = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      setPendingDraft(null);
+      setDraftSavedAt(null);
+      toast.info('Starting with a clean application form.');
+    } catch (err) {
+      console.warn('Draft discard error:', err);
+    }
+  };
 
   // 3. Continuously auto-save filled form data, step, and attachments
   const formValues = watch();
@@ -342,35 +400,39 @@ export const ApplicationForm: React.FC = () => {
     try {
       localStorage.removeItem(DRAFT_STORAGE_KEY);
       setDraftSavedAt(null);
+      setPendingDraft(null);
       reset({
         firstName: user?.name?.split(' ')[0] || '',
         lastName: user?.name?.split(' ').slice(1).join(' ') || '',
         email: user?.email || '',
-        city: 'Quezon City',
-        province: 'Metro Manila',
-        barangay: 'Barangay Central',
-        zipCode: '1100',
-        school: QC_SCHOOLS[0],
-        department: INSTALLED_DEPARTMENTS[0],
-        disbursementChannel: 'Landbank ATM / Cash Card',
+        mobileNumber: user?.phone ? formatPHMobile(user.phone) : '',
+        city: user?.city || '',
+        province: user?.province || 'Metro Manila',
+        barangay: user?.barangay || '',
+        zipCode: user?.zipCode || '',
+        school: '',
+        department: '',
+        course: '',
+        disbursementChannel: '' as any,
         accountNumber: '',
         accountName: user?.name || '',
-        annualIncome: 0,
+        annualIncome: '' as any,
         numberOfSiblings: 0,
-        gender: 'Female',
-        civilStatus: 'Single',
-        schoolType: selectedProgram.categoryId === 'shs' ? 'Public' : 'SUC',
-        yearLevel: selectedProgram.categoryId === 'shs' ? 'Grade 11' : selectedProgram.categoryId === 'postgrad' ? 'Postgraduate / Reviewee' : '1st Year',
-        incomeBracket: 'Low',
-        financialSupport: 'Parents',
+        gender: '' as any,
+        civilStatus: '' as any,
+        schoolType: '' as any,
+        yearLevel: '' as any,
+        incomeBracket: '' as any,
+        financialSupport: '' as any,
         nationality: 'Filipino',
         isPWD: false,
         isIndigenous: false,
         is4Ps: false,
         isSoloParent: false,
         isKasambahayOrToda: false,
-        termsAccepted: true,
+        termsAccepted: false,
       });
+      setUploadedDocs({});
       setCurrentStep(1);
       toast.success('Application draft cleared. You can start with a fresh form.');
     } catch (e) {
@@ -1138,6 +1200,41 @@ export const ApplicationForm: React.FC = () => {
           </div>
         </div>
 
+        {/* DRAFT PROMPT BANNER (Allows student to choose rather than system deciding) */}
+        {pendingDraft && (
+          <div className={`p-4 sm:p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in ${isDark ? 'bg-blue-950/40 border-blue-800 text-blue-200' : 'bg-blue-50/90 border-blue-200 text-blue-900'}`}>
+            <div className="flex items-start gap-3">
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-extrabold text-xs">Unfinished Application Draft Found</p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5">
+                  You have an unsaved draft saved on this device from {pendingDraft.savedAt || 'a previous session'}. Would you like to resume your saved progress or start fresh?
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleDiscardDraft}
+                className="font-bold text-[11px] h-8"
+              >
+                Start Fresh
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={handleApplyDraft}
+                className="bg-blue-600 hover:bg-blue-700 font-bold text-[11px] h-8 text-white"
+              >
+                Resume Draft
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* FORM CONTAINER */}
         <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
           {/* STEP 1: BASIC INFORMATION */}
@@ -1214,10 +1311,14 @@ export const ApplicationForm: React.FC = () => {
                       {...register('gender')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
+                      <option value="">-- Select Gender --</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
                       <option value="Prefer not to say">Prefer not to say</option>
                     </select>
+                    {errors.gender && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.gender.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">Civil Status *</label>
@@ -1225,11 +1326,15 @@ export const ApplicationForm: React.FC = () => {
                       {...register('civilStatus')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
+                      <option value="">-- Select Civil Status --</option>
                       <option value="Single">Single</option>
                       <option value="Married">Married</option>
                       <option value="Widowed">Widowed</option>
                       <option value="Separated">Separated</option>
                     </select>
+                    {errors.civilStatus && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.civilStatus.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">Nationality *</label>
@@ -1261,23 +1366,32 @@ export const ApplicationForm: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1">Mobile Number *</label>
-                    <input
-                      {...register('mobileNumber')}
-                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="09171234567"
+                    <Controller
+                      name="mobileNumber"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneInput
+                          id="mobileNumber"
+                          label="Mobile Number"
+                          required
+                          value={field.value}
+                          onChange={(val) => field.onChange(val)}
+                          error={errors.mobileNumber?.message}
+                          helperText="Limits to 10 digits after +63 (e.g. +63 9XX XXX XXXX)"
+                        />
+                      )}
                     />
-                    {errors.mobileNumber && (
-                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.mobileNumber.message}</p>
-                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">City / Municipality *</label>
                     <input
                       {...register('city')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="Quezon City"
+                      placeholder="e.g. Quezon City"
                     />
+                    {errors.city && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.city.message}</p>
+                    )}
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold mb-1">House / Unit No., Street Address *</label>
@@ -1349,12 +1463,16 @@ export const ApplicationForm: React.FC = () => {
                     {...register('school')}
                     className={`w-full p-2.5 border rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
+                    <option value="">-- Select School / University --</option>
                     {QC_SCHOOLS.map((sch) => (
                       <option key={sch} value={sch}>
                         {sch}
                       </option>
                     ))}
                   </select>
+                  {errors.school && (
+                    <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.school.message}</p>
+                  )}
                 </div>
 
                 {/* Phase 1: School Validation Exception Flow Callout */}
@@ -1393,11 +1511,15 @@ export const ApplicationForm: React.FC = () => {
                     {...register('schoolType')}
                     className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
+                    <option value="">-- Select Institution Type --</option>
                     <option value="Public">Public Institution</option>
                     <option value="SUC">State University / College (SUC)</option>
                     <option value="LUC">Local University / College (LUC)</option>
                     <option value="Private">Private Institution</option>
                   </select>
+                  {errors.schoolType && (
+                    <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.schoolType.message}</p>
+                  )}
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-xs font-bold mb-1">
@@ -1407,12 +1529,16 @@ export const ApplicationForm: React.FC = () => {
                     {...register('department')}
                     className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
+                    <option value="">-- Select College / Department --</option>
                     {INSTALLED_DEPARTMENTS.map((dept) => (
                       <option key={dept} value={dept}>
                         {dept}
                       </option>
                     ))}
                   </select>
+                  {errors.department && (
+                    <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.department.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold mb-1">Course / Academic Strand *</label>
@@ -1431,6 +1557,7 @@ export const ApplicationForm: React.FC = () => {
                     {...register('yearLevel')}
                     className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
+                    <option value="">-- Select Year / Grade Level --</option>
                     <option value="Grade 11">Grade 11 (SHS)</option>
                     <option value="Grade 12">Grade 12 (SHS)</option>
                     <option value="1st Year">1st Year College</option>
@@ -1440,6 +1567,9 @@ export const ApplicationForm: React.FC = () => {
                     <option value="5th Year">5th Year College</option>
                     <option value="Postgraduate / Reviewee">Postgraduate / Reviewee</option>
                   </select>
+                  {errors.yearLevel && (
+                    <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.yearLevel.message}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold mb-1">
@@ -1499,10 +1629,14 @@ export const ApplicationForm: React.FC = () => {
                       {...register('incomeBracket')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
+                      <option value="">-- Select Income Bracket --</option>
                       <option value="Low">Low Income (Below ₱250,000/yr)</option>
                       <option value="Middle">Middle Income (₱250,000 - ₱500,000/yr)</option>
                       <option value="High">Above ₱500,000/yr</option>
                     </select>
+                    {errors.incomeBracket && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.incomeBracket.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">Number of Siblings</label>
@@ -1557,11 +1691,15 @@ export const ApplicationForm: React.FC = () => {
                       {...register('disbursementChannel')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
+                      <option value="">-- Select Disbursement Channel --</option>
                       <option value="Landbank ATM / Cash Card">Landbank ATM / Cash Card</option>
                       <option value="GCash E-Wallet">GCash E-Wallet</option>
                       <option value="Maya E-Wallet">Maya E-Wallet</option>
                       <option value="City Hall Cashier Pickup">City Hall Cashier Pickup</option>
                     </select>
+                    {errors.disbursementChannel && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.disbursementChannel.message}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">Account Holder Full Name *</label>
@@ -1575,14 +1713,46 @@ export const ApplicationForm: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1">Account / Mobile Number *</label>
-                    <input
-                      {...register('accountNumber')}
-                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="e.g. 09171234567 or 1234-5678-90"
-                    />
-                    {errors.accountNumber && (
-                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.accountNumber.message}</p>
+                    {watch('disbursementChannel') === 'GCash E-Wallet' || watch('disbursementChannel') === 'Maya E-Wallet' ? (
+                      <Controller
+                        name="accountNumber"
+                        control={control}
+                        render={({ field }) => (
+                          <PhoneInput
+                            id="accountNumber"
+                            label={`${watch('disbursementChannel')} Mobile Number`}
+                            required
+                            value={field.value}
+                            onChange={(val) => field.onChange(val)}
+                            error={errors.accountNumber?.message}
+                            helperText="Limits to 10 digits after +63"
+                          />
+                        )}
+                      />
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-bold mb-1">
+                          {watch('disbursementChannel') === 'Landbank ATM / Cash Card'
+                            ? 'Landbank Account / Card Number *'
+                            : watch('disbursementChannel') === 'City Hall Cashier Pickup'
+                            ? 'Claiming Valid ID Number *'
+                            : 'Account / Card Number *'}
+                        </label>
+                        <input
+                          {...register('accountNumber')}
+                          className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                          placeholder={
+                            watch('disbursementChannel') === 'Landbank ATM / Cash Card'
+                              ? 'e.g. 10 to 12-digit Account No.'
+                              : watch('disbursementChannel') === 'City Hall Cashier Pickup'
+                              ? 'e.g. Student ID or QC Citizen ID No.'
+                              : 'e.g. 1234-5678-90'
+                          }
+                        />
+                        {errors.accountNumber && (
+                          <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.accountNumber.message}</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1807,16 +1977,14 @@ export const ApplicationForm: React.FC = () => {
                             >
                               Replace
                             </Button>
-                            {docSpec.id !== 'residency_qc' && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveDoc(docSpec.id)}
-                                className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer"
-                                title="Remove file"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDoc(docSpec.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors cursor-pointer"
+                              title="Remove file"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
                           </div>
                         </div>
                       ) : (

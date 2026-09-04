@@ -70,10 +70,10 @@ const DEFAULT_RENEWAL_DOCS: RenewalDocumentItem[] = [
     code: 'QC ID',
     name: 'QC Citizen ID & Residency Status',
     category: 'QC Resident Verification',
-    fileName: 'Citizen_Information_System_Matched.json',
-    fileSize: 'System Verified',
-    date: 'Auto-Recognized',
-    status: 'Auto-Recognized',
+    fileName: '',
+    fileSize: '',
+    date: 'Pending Upload',
+    status: 'Pending Verification',
   },
 ];
 

@@ -404,7 +404,7 @@ export const ScholarshipsPage: React.FC = () => {
             </>
           ) : (
             <Badge variant="success" size="md" className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Profile Auto-Linked ({profile?.studentId || 'STU-2026-8891'})
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Profile Active {profile?.studentId || user?.studentId ? `(${profile?.studentId || user?.studentId})` : ''}
             </Badge>
           )}
         </div>

@@ -7,6 +7,9 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
+import { PhoneInput } from '../../components/ui/PhoneInput';
+import { formatPHMobile, isValidPHMobile } from '../../utils/phoneFormatter';
+import { toast } from 'sonner';
 import type { BasicProfile } from '../../types';
 
 export const BasicFormPage: React.FC = () => {
@@ -16,19 +19,19 @@ export const BasicFormPage: React.FC = () => {
   const existingProfile = user?.basicProfile;
 
   const [form, setForm] = useState<BasicProfile>({
-    studentId: existingProfile?.studentId || user?.studentId || 'STU-2026-9042',
+    studentId: existingProfile?.studentId || user?.studentId || '',
     fullName: existingProfile?.fullName || user?.name || '',
     email: existingProfile?.email || user?.email || '',
-    phone: existingProfile?.phone || '',
-    department: existingProfile?.department || user?.department || 'College of Computer Studies',
-    major: existingProfile?.major || user?.major || 'B.S. Software Engineering',
-    yearLevel: existingProfile?.yearLevel || '3rd Year',
-    gpa: existingProfile?.gpa || (user?.gpa ? String(user.gpa) : '3.85'),
-    barangay: existingProfile?.barangay || 'Barangay Batasan Hills',
-    address: existingProfile?.address || '142 Commonwealth Avenue, Quezon City',
-    householdIncome: existingProfile?.householdIncome || 'Under ₱150,000 / year',
+    phone: formatPHMobile(existingProfile?.phone || user?.phone || ''),
+    department: existingProfile?.department || user?.department || '',
+    major: existingProfile?.major || user?.major || '',
+    yearLevel: existingProfile?.yearLevel || '',
+    gpa: existingProfile?.gpa || (user?.gpa ? String(user.gpa) : ''),
+    barangay: existingProfile?.barangay || user?.barangay || '',
+    address: existingProfile?.address || user?.address || '',
+    householdIncome: existingProfile?.householdIncome || '',
     emergencyContactName: existingProfile?.emergencyContactName || '',
-    emergencyContactPhone: existingProfile?.emergencyContactPhone || '',
+    emergencyContactPhone: formatPHMobile(existingProfile?.emergencyContactPhone || ''),
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +42,17 @@ export const BasicFormPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isValidPHMobile(form.phone)) {
+      toast.error('Please enter a valid 10-digit Philippine mobile number (e.g. +63 917 123 4567).');
+      return;
+    }
+
+    if (form.emergencyContactPhone && !isValidPHMobile(form.emergencyContactPhone)) {
+      toast.error('Emergency contact number must be a valid 10-digit Philippine phone number.');
+      return;
+    }
+
     setIsLoading(true);
     setTimeout(() => {
       saveBasicProfile({
@@ -101,7 +115,7 @@ export const BasicFormPage: React.FC = () => {
                 label="Student ID Number"
                 value={form.studentId}
                 onChange={(e) => update('studentId', e.target.value)}
-                placeholder="STU-2026-9042"
+                placeholder="e.g. 2026-10492 / Student ID"
                 required
               />
               <Input
@@ -113,13 +127,13 @@ export const BasicFormPage: React.FC = () => {
                 placeholder="student@university.edu.ph"
                 required
               />
-              <Input
+              <PhoneInput
                 id="phone"
                 label="Mobile Phone Number"
                 value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
-                placeholder="+63 917 123 4567"
+                onChange={(val) => update('phone', val)}
                 required
+                helperText="Limits to 10 digits after +63 (e.g. +63 9XX XXX XXXX)"
               />
             </div>
           </CardContent>
@@ -143,7 +157,9 @@ export const BasicFormPage: React.FC = () => {
                   value={form.department}
                   onChange={(e) => update('department', e.target.value)}
                   className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 cursor-pointer"
+                  required
                 >
+                  <option value="">-- Select Beneficiary Department / College --</option>
                   {INSTALLED_DEPARTMENTS.map((dept) => (
                     <option key={dept} value={dept} className="dark:bg-slate-900 dark:text-white">
                       {dept}
@@ -156,7 +172,7 @@ export const BasicFormPage: React.FC = () => {
                 label="Degree / Major Program"
                 value={form.major}
                 onChange={(e) => update('major', e.target.value)}
-                placeholder="B.S. Computer Science"
+                placeholder="e.g. B.S. Computer Science"
                 required
               />
               <div className="space-y-1.5">
@@ -166,6 +182,7 @@ export const BasicFormPage: React.FC = () => {
                   onChange={(e) => update('yearLevel', e.target.value)}
                   className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                 >
+                  <option value="">-- Select Year Level --</option>
                   <option value="1st Year" className="dark:bg-slate-900 dark:text-white">1st Year (Freshman)</option>
                   <option value="2nd Year" className="dark:bg-slate-900 dark:text-white">2nd Year (Sophomore)</option>
                   <option value="3rd Year" className="dark:bg-slate-900 dark:text-white">3rd Year (Junior)</option>
@@ -178,7 +195,7 @@ export const BasicFormPage: React.FC = () => {
                 label="Cumulative GWA / GPA"
                 value={form.gpa}
                 onChange={(e) => update('gpa', e.target.value)}
-                placeholder="3.85"
+                placeholder="e.g. 1.50 or 92.5"
                 required
               />
             </div>
@@ -202,7 +219,7 @@ export const BasicFormPage: React.FC = () => {
                 label="QC Barangay"
                 value={form.barangay}
                 onChange={(e) => update('barangay', e.target.value)}
-                placeholder="Barangay Batasan Hills"
+                placeholder="e.g. Barangay Batasan Hills"
                 required
               />
               <div className="space-y-1.5">
@@ -212,6 +229,7 @@ export const BasicFormPage: React.FC = () => {
                   onChange={(e) => update('householdIncome', e.target.value)}
                   className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
                 >
+                  <option value="">-- Select Household Income Bracket --</option>
                   <option value="Under ₱150,000 / year" className="dark:bg-slate-900 dark:text-white">Under ₱150,000 / year (Priority Need)</option>
                   <option value="₱150,000 - ₱300,000 / year" className="dark:bg-slate-900 dark:text-white">₱150,000 - ₱300,000 / year</option>
                   <option value="₱300,000 - ₱500,000 / year" className="dark:bg-slate-900 dark:text-white">₱300,000 - ₱500,000 / year</option>
@@ -225,7 +243,7 @@ export const BasicFormPage: React.FC = () => {
               label="Complete Home Address"
               value={form.address}
               onChange={(e) => update('address', e.target.value)}
-              placeholder="142 Commonwealth Avenue, Barangay Batasan Hills, Quezon City"
+              placeholder="e.g. 142 Commonwealth Avenue, Barangay Batasan Hills, Quezon City"
               required
             />
 
@@ -235,17 +253,15 @@ export const BasicFormPage: React.FC = () => {
                 label="Emergency Contact Person & Relationship"
                 value={form.emergencyContactName}
                 onChange={(e) => update('emergencyContactName', e.target.value)}
-                placeholder="Elena Santos (Mother)"
+                placeholder="e.g. Elena Santos (Mother)"
                 leftIcon={<PhoneCall className="h-4 w-4 text-slate-400" />}
-                required
               />
-              <Input
+              <PhoneInput
                 id="emergencyContactPhone"
                 label="Emergency Contact Phone"
                 value={form.emergencyContactPhone}
-                onChange={(e) => update('emergencyContactPhone', e.target.value)}
-                placeholder="+63 918 444 0123"
-                required
+                onChange={(val) => update('emergencyContactPhone', val)}
+                helperText="Limits to 10 digits after +63"
               />
             </div>
           </CardContent>

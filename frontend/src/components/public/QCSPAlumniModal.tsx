@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { X, GraduationCap, Award, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/Button';
+import { PhoneInput } from '../ui/PhoneInput';
+import { isValidPHMobile } from '../../utils/phoneFormatter';
 
 interface QCSPAlumniModalProps {
   isOpen: boolean;
@@ -30,6 +32,10 @@ export const QCSPAlumniModal: React.FC<QCSPAlumniModalProps> = ({ isOpen, onClos
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValidPHMobile(formData.phone)) {
+      toast.error('Please enter a valid 10-digit Philippine mobile number (e.g. +63 917 123 4567).');
+      return;
+    }
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
@@ -238,14 +244,13 @@ export const QCSPAlumniModal: React.FC<QCSPAlumniModalProps> = ({ isOpen, onClos
                   </div>
 
                   <div>
-                    <label className="block font-bold text-slate-800 dark:text-slate-200 mb-1">Mobile Number *</label>
-                    <input
-                      type="tel"
+                    <PhoneInput
+                      id="alumniPhone"
+                      label="Mobile Number"
                       required
                       value={formData.phone}
-                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                      placeholder="0917 123 4567"
-                      className="w-full h-10 px-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 shadow-xs"
+                      onChange={(val) => setFormData({ ...formData, phone: val })}
+                      helperText="Limits to 10 digits after +63"
                     />
                   </div>
                 </div>

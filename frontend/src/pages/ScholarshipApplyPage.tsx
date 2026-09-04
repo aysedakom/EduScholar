@@ -209,10 +209,10 @@ export const ScholarshipApplyPage: React.FC = () => {
           statement,
           specialHardship,
           documentsSubmitted,
-          gwa: profile?.gpa || 3.85,
-          school: profile?.department || user?.department || 'Quezon City University',
-          course: profile?.major || user?.major,
-          studentId: profile?.studentId || user?.studentId,
+          gwa: profile?.gpa || user?.gpa || null,
+          school: profile?.department || user?.department || '',
+          course: profile?.major || user?.major || '',
+          studentId: profile?.studentId || user?.studentId || '',
         },
       });
 
@@ -352,7 +352,7 @@ export const ScholarshipApplyPage: React.FC = () => {
             </div>
             <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">Student ID</span>
-              <span className="font-mono font-bold text-blue-700 dark:text-blue-400">{profile?.studentId || user?.studentId || 'STU-2026-8891'}</span>
+              <span className="font-mono font-bold text-blue-700 dark:text-blue-400">{profile?.studentId || user?.studentId || 'Not set'}</span>
             </div>
             <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">Email Address</span>
@@ -360,11 +360,11 @@ export const ScholarshipApplyPage: React.FC = () => {
             </div>
             <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">Department & Course</span>
-              <span className="font-semibold text-slate-900 dark:text-white">{profile?.major || 'B.S. Software Engineering'}</span>
+              <span className="font-semibold text-slate-900 dark:text-white">{profile?.major || user?.major || 'Not specified'}</span>
             </div>
             <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">Year Level & GWA</span>
-              <span className="font-bold text-slate-900 dark:text-white">{profile?.yearLevel || '3rd Year'} (GWA: {profile?.gpa || '3.85'})</span>
+              <span className="font-bold text-slate-900 dark:text-white">{profile?.yearLevel || 'Enrolled'}{profile?.gpa ? ` (GWA: ${profile.gpa})` : ''}</span>
             </div>
             <div className="bg-white/90 dark:bg-slate-800/90 p-3 rounded-xl border border-blue-100/80 dark:border-slate-700">
               <span className="text-[10px] font-bold uppercase text-slate-400 block">QC Residency</span>
