@@ -9,7 +9,8 @@
     "reset-db": "node db/reset.js",
     "mcp": "node mcp/eduscholarMcpServer.js",
     "db:pull": "node scripts/syncDb.js --pull",
-    "db:push": "node scripts/syncDb.js --push"
+    "db:push": "node scripts/syncDb.js --push",
+    "reset-apps": "node scripts/resetApplications.js"
   },
   "keywords": [],
   "author": "",
