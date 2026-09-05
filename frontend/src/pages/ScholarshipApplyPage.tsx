@@ -21,7 +21,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Badge } from '../components/ui/Badge';
 import { createApplication, getMyApplications } from '../api/applications';
 import { getPortalSettings, type PortalSettingsData } from '../api/portalSettings';
-import { getActiveStudentApplication, saveActiveStudentApplication } from '../utils/scholarshipPrograms';
+import {
+  getActiveStudentApplication,
+  saveActiveStudentApplication,
+  clearActiveStudentApplication,
+} from '../utils/scholarshipPrograms';
 import { toast } from 'sonner';
 
 interface RequiredDocItem {
@@ -104,6 +108,9 @@ export const ScholarshipApplyPage: React.FC = () => {
             };
             saveActiveStudentApplication(unified);
             setActiveApp(unified);
+          } else {
+            clearActiveStudentApplication();
+            setActiveApp(null);
           }
         })
         .catch((err) => {

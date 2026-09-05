@@ -827,3 +827,27 @@ export function saveActiveStudentApplication(applicationData: any) {
     console.error('Failed to save active application:', err);
   }
 }
+
+export function clearActiveStudentApplication(email?: string) {
+  try {
+    let targetEmail = email;
+    if (!targetEmail) {
+      const userRaw = localStorage.getItem('user_profile');
+      if (userRaw) {
+        try {
+          const currentUser = JSON.parse(userRaw);
+          targetEmail = currentUser?.email;
+        } catch (_) {}
+      }
+    }
+    if (targetEmail) {
+      localStorage.removeItem(`active_app_${targetEmail.toLowerCase()}`);
+    }
+    localStorage.removeItem('active_scholarship_application');
+    localStorage.removeItem('qc_active_student_application');
+    localStorage.removeItem('student_submitted_application');
+    localStorage.removeItem('qc_scholarship_status_overrides');
+  } catch (err) {
+    console.error('Failed to clear active application:', err);
+  }
+}

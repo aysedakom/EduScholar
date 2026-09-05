@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
@@ -6,9 +6,11 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { formatDate } from '../../utils/cn';
+import { getMyApplications, updateApplicationStatus } from '../../api/applications';
 
 interface EnrollmentRecord {
   id: string;
+  dbId?: number | string;
   studentName: string;
   studentId: string;
   school: string;
@@ -20,44 +22,8 @@ interface EnrollmentRecord {
   rejectionReason?: string;
 }
 
-const INITIAL_ENROLLMENT_RECORDS: EnrollmentRecord[] = [
-  {
-    id: 'ENR-309',
-    studentName: 'Maria Santos',
-    studentId: '2024-00192',
-    school: 'Quezon City University',
-    course: 'BS Information Technology',
-    yearLevel: '3rd Year',
-    corDocument: 'COR_FirstSem_2026_MariaSantos.pdf',
-    submissionDate: '2026-08-08',
-    status: 'Pending Verification',
-  },
-  {
-    id: 'ENR-310',
-    studentName: 'Joshua Reyes',
-    studentId: '2023-11048',
-    school: 'Quezon City University',
-    course: 'BS Computer Science',
-    yearLevel: '2nd Year',
-    corDocument: 'COR_FirstSem_2026_JoshuaReyes.pdf',
-    submissionDate: '2026-08-07',
-    status: 'Pending Verification',
-  },
-  {
-    id: 'ENR-305',
-    studentName: 'Angelica Cruz',
-    studentId: '2025-04821',
-    school: 'University of the Philippines Diliman',
-    course: 'BS Business Administration',
-    yearLevel: '1st Year',
-    corDocument: 'COR_2026_UP_AngelicaCruz.pdf',
-    submissionDate: '2026-08-05',
-    status: 'Verified',
-  },
-];
-
 export const EnrollmentVerificationPage: React.FC = () => {
-  const [records, setRecords] = useState<EnrollmentRecord[]>(INITIAL_ENROLLMENT_RECORDS);
+  const [records, setRecords] = useState<EnrollmentRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Pending Verification' | 'Verified' | 'Rejected'>('all');
 
@@ -66,19 +32,77 @@ export const EnrollmentVerificationPage: React.FC = () => {
   const [actionType, setActionType] = useState<'confirm' | 'reject'>('confirm');
   const [rejectionReason, setRejectionReason] = useState('');
 
+  const loadRecords = async () => {
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res?.data) ? res.data : [];
+      if (apps.length > 0) {
+        const liveRecords: EnrollmentRecord[] = apps.map((app: any) => {
+          const formData = typeof app.form_data === 'string' ? JSON.parse(app.form_data) : (app.form_data || {});
+          const sLower = String(app.status || '').toLowerCase();
+          const isVerified =
+            sLower.includes('assess') ||
+            sLower.includes('evaluat') ||
+            sLower === 'approved' ||
+            sLower === 'disbursed';
+          const isRejected = sLower === 'rejected' || sLower === 'disapproved';
+          return {
+            id: app.application_code || `ENR-${app.id}`,
+            dbId: app.id,
+            studentName:
+              app.applicant_name ||
+              `${formData.firstName || ''} ${formData.lastName || ''}`.trim() ||
+              'Student Applicant',
+            studentId: app.student_id || formData.studentId || `2026-${String(app.id).padStart(5, '0')}`,
+            school: formData.school || 'Quezon City University',
+            course: formData.course || app.program_name || 'BS Information Technology',
+            yearLevel: formData.yearLevel || '1st Year',
+            corDocument: `COR_2026_${(app.applicant_name || 'Scholar').replace(/\s+/g, '')}.pdf`,
+            submissionDate: app.submission_date || new Date().toISOString().split('T')[0],
+            status: isVerified ? 'Verified' : isRejected ? 'Rejected' : 'Pending Verification',
+          };
+        });
+        setRecords(liveRecords);
+      } else {
+        setRecords([]);
+      }
+    } catch (err) {
+      console.warn('Could not load live applications for supervisor verification:', err);
+      setRecords([]);
+    }
+  };
+
+  useEffect(() => {
+    loadRecords();
+  }, []);
+
   const filteredRecords = records.filter((r) => {
     const matchesSearch =
       r.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.school.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.id.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const handleProcessAction = () => {
+  const handleProcessAction = async () => {
     if (!targetRecord) return;
+
+    const newStatus = actionType === 'confirm' ? 'Assessment Phase' : 'Rejected';
+    const notes =
+      actionType === 'confirm'
+        ? 'Enrollment credentials verified and endorsed by Supervisor.'
+        : rejectionReason || 'Invalid Certificate of Registration';
+
+    if (targetRecord.dbId) {
+      try {
+        await updateApplicationStatus(targetRecord.dbId, newStatus, notes, notes);
+      } catch (err) {
+        console.warn('Supervisor verification update warning:', err);
+      }
+    }
 
     setRecords((prev) =>
       prev.map((r) =>
@@ -93,7 +117,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
     );
 
     toast.success(
-      `Enrollment for ${targetRecord.studentName} ${actionType === 'confirm' ? 'VERIFIED' : 'REJECTED'}!`
+      `Enrollment for ${targetRecord.studentName} ${actionType === 'confirm' ? 'VERIFIED & TRANSITIONED TO ASSESSMENT' : 'REJECTED'}!`
     );
     setTargetRecord(null);
     setRejectionReason('');

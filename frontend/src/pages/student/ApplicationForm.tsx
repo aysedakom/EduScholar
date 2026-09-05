@@ -42,6 +42,7 @@ import {
   getProgramById,
   getActiveStudentApplication,
   saveActiveStudentApplication,
+  clearActiveStudentApplication,
   type ScholarshipProgramSpec,
 } from '../../utils/scholarshipPrograms';
 import { getPortalSettings, type PortalSettingsData } from '../../api/portalSettings';
@@ -238,6 +239,9 @@ export const ApplicationForm: React.FC = () => {
           };
           saveActiveStudentApplication(unifiedActive);
           setActiveApp(unifiedActive);
+        } else {
+          clearActiveStudentApplication();
+          setActiveApp(null);
         }
       })
       .catch((err) => {

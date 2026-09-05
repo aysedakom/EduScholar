@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Star, Search, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { getMyApplications, updateApplicationStatus } from '../../api/applications';
 
 interface StudentEvaluation {
   id: string;
+  dbId?: number | string;
   studentName: string;
   studentId: string;
   jobTitle: string;
@@ -17,37 +19,8 @@ interface StudentEvaluation {
   status: 'Pending' | 'Completed';
 }
 
-const ASSIGNED_STUDENTS_EVAL: StudentEvaluation[] = [
-  {
-    id: 'EVAL-101',
-    studentName: 'Maria Santos',
-    studentId: '2024-00192',
-    jobTitle: 'Computer Lab Assistant',
-    department: 'Computer Science Lab',
-    status: 'Pending',
-  },
-  {
-    id: 'EVAL-102',
-    studentName: 'Joshua Reyes',
-    studentId: '2023-11048',
-    jobTitle: 'Library Archive Cataloger',
-    department: 'University Library',
-    status: 'Pending',
-  },
-  {
-    id: 'EVAL-100',
-    studentName: 'Samantha Tan',
-    studentId: '2024-00912',
-    jobTitle: 'Library Assistant',
-    department: 'University Library',
-    lastEvaluationDate: '2026-08-01',
-    overallScore: 4.8,
-    status: 'Completed',
-  },
-];
-
 export const StudentEvaluationsPage: React.FC = () => {
-  const [students, setStudents] = useState<StudentEvaluation[]>(ASSIGNED_STUDENTS_EVAL);
+  const [students, setStudents] = useState<StudentEvaluation[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Evaluation Form Modal State
@@ -61,6 +34,44 @@ export const StudentEvaluationsPage: React.FC = () => {
   const [teamwork, setTeamwork] = useState(5);
   const [comments, setComments] = useState('');
 
+  const loadEvaluations = async () => {
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res?.data) ? res.data : [];
+      if (apps.length > 0) {
+        const liveEvaluations: StudentEvaluation[] = apps.map((app: any) => {
+          const formData = typeof app.form_data === 'string' ? JSON.parse(app.form_data) : (app.form_data || {});
+          const sLower = String(app.status || '').toLowerCase();
+          const isCompleted = sLower.includes('evaluat') || sLower.includes('assess') || sLower === 'approved' || sLower === 'disbursed';
+          return {
+            id: app.application_code || `EVAL-${app.id}`,
+            dbId: app.id,
+            studentName:
+              app.applicant_name ||
+              `${formData.firstName || ''} ${formData.lastName || ''}`.trim() ||
+              'Scholar Applicant',
+            studentId: app.student_id || formData.studentId || `2026-${String(app.id).padStart(5, '0')}`,
+            jobTitle: app.program_name || app.title || 'Scholar Beneficiary',
+            department: formData.school || 'Academic Services Department',
+            status: isCompleted ? 'Completed' : 'Pending',
+            overallScore: isCompleted ? 4.8 : undefined,
+            lastEvaluationDate: isCompleted ? (app.updated_at ? app.updated_at.split('T')[0] : '2026-08-01') : undefined,
+          };
+        });
+        setStudents(liveEvaluations);
+      } else {
+        setStudents([]);
+      }
+    } catch (err) {
+      console.warn('Could not load live applications for evaluations:', err);
+      setStudents([]);
+    }
+  };
+
+  useEffect(() => {
+    loadEvaluations();
+  }, []);
+
   const filteredStudents = students.filter(
     (s) =>
       s.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,11 +79,24 @@ export const StudentEvaluationsPage: React.FC = () => {
       s.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmitEvaluation = (e: React.FormEvent) => {
+  const handleSubmitEvaluation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!evalTarget) return;
 
     const avg = ((professionalism + punctuality + qualityOfWork + communication + teamwork) / 5).toFixed(1);
+
+    if (evalTarget.dbId) {
+      try {
+        await updateApplicationStatus(
+          evalTarget.dbId,
+          'Assessment Phase',
+          comments || `Evaluation score: ${avg}/5.0`,
+          `Supervisor Rubric Completed: Overall Score ${avg}/5.0`
+        );
+      } catch (err) {
+        console.warn('Supervisor status update warning:', err);
+      }
+    }
 
     setStudents((prev) =>
       prev.map((s) =>
@@ -87,7 +111,7 @@ export const StudentEvaluationsPage: React.FC = () => {
       )
     );
 
-    toast.success(`Performance Evaluation submitted for ${evalTarget.studentName}! Overall Score: ${avg}/5.0`);
+    toast.success(`Performance Evaluation submitted for ${evalTarget.studentName}! Overall Score: ${avg}/5.0. Application advanced to Assessment.`);
     setEvalTarget(null);
     setComments('');
   };

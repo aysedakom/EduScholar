@@ -6,6 +6,7 @@ import { Button } from '../ui/Button';
 import { useAuth } from '../../context/AuthContext';
 import { getMyApplications } from '../../api/applications';
 import { Link } from 'react-router-dom';
+import { clearActiveStudentApplication } from '../../utils/scholarshipPrograms';
 
 export interface StudentApplicationItem {
   refNumber: string;
@@ -32,6 +33,7 @@ const MILESTONES = [
 
 /**
  * Maps live database status & progress to the 6 official scholarship stages
+ * confirming transitions across Student, Coordinator, Supervisor, Admin, and Treasury.
  */
 function resolveApplicationStage(app: any): {
   stage: number;
@@ -43,18 +45,25 @@ function resolveApplicationStage(app: any): {
   const status = String(app.status || '').toLowerCase().trim();
   const remarks = app.remarks || app.notes || '';
 
-  // 1. Stage 6: Paid / Disbursed / Remitted
-  if (status === 'paid' || status === 'disbursed' || status === 'completed' || status === 'released') {
+  // 1. Stage 6: Paid / Disbursed / Remitted (Confirmed by City Treasury)
+  if (
+    status === 'paid' ||
+    status === 'disbursed' ||
+    status === 'completed' ||
+    status === 'released' ||
+    status === 'confirmed & disbursed' ||
+    status === 'transferred & credited'
+  ) {
     return {
       stage: 6,
       label: 'Confirmed & Disbursed',
       type: 'approved',
-      remark: remarks || 'Educational grant and semestral stipend remitted directly to scholar e-wallet / Landbank card.',
+      remark: remarks || 'Educational grant and semestral stipend remitted directly to scholar e-wallet / Landbank card by City Treasury.',
       progress: 100,
     };
   }
 
-  // 2. Stage 5: Approved or Disapproved
+  // 2. Stage 5: Approved or Disapproved (Official Board Decision by Admin)
   if (status === 'approved' || status === 'granted') {
     return {
       stage: 5,
@@ -75,30 +84,53 @@ function resolveApplicationStage(app: any): {
     };
   }
 
-  // 3. Stage 4: Assessment / Interview Scheduled / Board Scoring
-  if (status === 'interview scheduled' || status === 'assessment' || status === 'screening' || status === 'shortlisted') {
+  // 3. Stage 4: Assessment / Supervisor Evaluation / Board Scoring
+  if (
+    status === 'interview scheduled' ||
+    status === 'assessment' ||
+    status === 'assessment phase' ||
+    status === 'screening' ||
+    status === 'shortlisted' ||
+    status === 'evaluated' ||
+    status.includes('assess') ||
+    status.includes('evaluat') ||
+    status.includes('board scoring')
+  ) {
     return {
       stage: 4,
       label: 'Assessment Phase',
       type: 'in_progress',
-      remark: remarks || 'QCYDO Evaluation Board assessing financial need scoring and semestral grant allocation.',
+      remark: remarks || 'QCYDO Evaluation Board and Supervisor assessing financial need scoring and semestral grant allocation.',
       progress: 66,
     };
   }
 
-  // 4. Stage 3: Eligibility Verified / GWA & Residency Passed
-  if (status === 'eligibility' || status === 'eligible' || status === 'eligibility verified') {
+  // 4. Stage 3: Eligibility & School Endorsement (Confirmed by School Coordinator)
+  if (
+    status === 'eligibility' ||
+    status === 'eligible' ||
+    status === 'eligibility verified' ||
+    status === 'school endorsed' ||
+    status.includes('endorse') ||
+    status.includes('school')
+  ) {
     return {
       stage: 3,
-      label: 'Eligibility Verified',
+      label: 'Eligibility & School Endorsed',
       type: 'in_progress',
-      remark: remarks || 'QC Barangay residency proof and GWA minimum threshold (2.50 or better) verified by Secretariat.',
+      remark: remarks || 'Academic standing, enrolled units, and QC residency officially verified and endorsed by the School Coordinator.',
       progress: 50,
     };
   }
 
-  // 5. Stage 2: Document Review / Under Review / Pending
-  if (status === 'under review' || status === 'pending' || status === 'in review' || status === 'reviewing' || status === 'document review') {
+  // 5. Stage 2: Document Review / Under Review / Pending Screening
+  if (
+    status === 'under review' ||
+    status === 'pending' ||
+    status === 'in review' ||
+    status === 'reviewing' ||
+    status === 'document review'
+  ) {
     return {
       stage: 2,
       label: 'Under Document Review',
@@ -128,7 +160,7 @@ export const ApplicationProgressTracker: React.FC = () => {
   const fetchApplicationData = useCallback(async (showLoading = false) => {
     if (showLoading) setIsLoading(true);
     try {
-      // 1. Fetch live data from PostgreSQL Backend API
+      // 1. Fetch live data directly from PostgreSQL Backend API
       const res = await getMyApplications();
       const apps = Array.isArray(res?.data) ? res.data : [];
 
@@ -152,35 +184,40 @@ export const ApplicationProgressTracker: React.FC = () => {
         return;
       }
 
-      // 2. Fallback to user-scoped storage
+      // 2. Server successfully returned 0 applications: Database is verified empty!
+      // Purge any stale client-side cache so fake/static data is never shown
+      clearActiveStudentApplication(user?.email);
+      setAppData(null);
+    } catch (err) {
+      console.warn('[ApplicationProgressTracker] Real-time fetch error:', err);
+      // Only in an actual offline network failure do we inspect fallback storage
       if (user?.email) {
         const userKey = `active_app_${user.email.toLowerCase()}`;
         const stored = localStorage.getItem(userKey);
         if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed) {
-            const stageInfo = resolveApplicationStage(parsed);
-            setAppData({
-              refNumber: parsed.id || parsed.referenceId || 'APP-QC-2026',
-              dateFiled: parsed.submissionDate || new Date().toISOString().split('T')[0],
-              category: parsed.program_name || parsed.scholarshipTitle || 'Quezon City Scholarship Program',
-              yearLevel: user?.basicProfile?.yearLevel || 'Enrolled Student',
-              semester: '1st Semester AY 2026-2027',
-              statusStage: stageInfo.stage,
-              statusLabel: stageInfo.label,
-              statusType: stageInfo.type,
-              validationRemark: stageInfo.remark,
-              progressPercent: stageInfo.progress,
-            });
-            setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-            return;
-          }
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.id) {
+              const stageInfo = resolveApplicationStage(parsed);
+              setAppData({
+                refNumber: parsed.id || parsed.referenceId || 'APP-QC-2026',
+                dateFiled: parsed.submissionDate || new Date().toISOString().split('T')[0],
+                category: parsed.program_name || parsed.scholarshipTitle || 'Quezon City Scholarship Program',
+                yearLevel: user?.basicProfile?.yearLevel || 'Enrolled Student',
+                semester: '1st Semester AY 2026-2027',
+                statusStage: stageInfo.stage,
+                statusLabel: stageInfo.label,
+                statusType: stageInfo.type,
+                validationRemark: stageInfo.remark,
+                progressPercent: stageInfo.progress,
+              });
+              setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+              return;
+            }
+          } catch (_) {}
         }
       }
-
       setAppData(null);
-    } catch (err) {
-      console.warn('[ApplicationProgressTracker] Real-time fetch error:', err);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);

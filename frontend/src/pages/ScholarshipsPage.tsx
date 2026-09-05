@@ -35,7 +35,12 @@ import { getMyApplications } from '../api/applications';
 import { getScholarships, updateScholarshipStatus } from '../api/scholarships';
 import { getPortalSettings, updatePortalSettings, type PortalSettingsData } from '../api/portalSettings';
 
-import { ALL_SCHOLARSHIP_PROGRAMS, getActiveStudentApplication, saveActiveStudentApplication } from '../utils/scholarshipPrograms';
+import {
+  ALL_SCHOLARSHIP_PROGRAMS,
+  getActiveStudentApplication,
+  saveActiveStudentApplication,
+  clearActiveStudentApplication,
+} from '../utils/scholarshipPrograms';
 
 type FeedItem = Scholarship & { kind: 'scholarship' };
 
@@ -208,6 +213,10 @@ export const ScholarshipsPage: React.FC = () => {
             saveActiveStudentApplication(unified);
             setActiveStudentApp(unified);
             setAppliedIds(dbApps.map((a: any) => a.program_id || String(a.id)));
+          } else {
+            clearActiveStudentApplication();
+            setActiveStudentApp(null);
+            setAppliedIds([]);
           }
         }
       })

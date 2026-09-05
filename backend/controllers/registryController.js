@@ -90,7 +90,27 @@ const updateScholarStatus = async (req, res) => {
       [req.params.id, status || null, disbursementStatus || null, gwa || null]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Scholar record not found' });
-    res.json(result.rows[0]);
+    const scholar = result.rows[0];
+
+    // If disbursement is confirmed by Treasury, update student's application to Stage 6 (Disbursed - 100%)
+    if (disbursementStatus === 'Disbursed') {
+      try {
+        await pool.query(
+          `UPDATE applications 
+           SET status = 'Disbursed',
+               progress = 100,
+               disbursement_date = CURRENT_DATE,
+               updated_at = NOW(),
+               remarks = 'Stipend and educational grant officially remitted and disbursed by City Treasury.'
+           WHERE (user_id = $1 OR student_id = $2) AND LOWER(status) IN ('approved', 'granted')`,
+          [scholar.user_id, scholar.student_id]
+        );
+      } catch (appSyncErr) {
+        console.warn('[registryController] Application sync warning:', appSyncErr.message);
+      }
+    }
+
+    res.json(scholar);
   } catch (error) {
     console.error('[registryController] updateScholarStatus error:', error);
     res.status(500).json({ message: 'Failed to update scholar' });

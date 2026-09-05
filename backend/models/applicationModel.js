@@ -136,15 +136,53 @@ const updateStatus = async (id, status, notes, remarks) => {
   try {
     const statusLower = String(status || '').toLowerCase().trim();
     let progress = 33;
-    if (statusLower === 'paid' || statusLower === 'disbursed' || statusLower === 'completed' || statusLower === 'released') {
+    if (
+      statusLower === 'paid' ||
+      statusLower === 'disbursed' ||
+      statusLower === 'completed' ||
+      statusLower === 'released' ||
+      statusLower === 'confirmed & disbursed' ||
+      statusLower === 'transferred & credited'
+    ) {
       progress = 100;
-    } else if (statusLower === 'approved' || statusLower === 'granted' || statusLower === 'rejected' || statusLower === 'disapproved' || statusLower === 'denied') {
+    } else if (
+      statusLower === 'approved' ||
+      statusLower === 'granted' ||
+      statusLower === 'rejected' ||
+      statusLower === 'disapproved' ||
+      statusLower === 'denied'
+    ) {
       progress = 83;
-    } else if (statusLower.includes('endorse') || statusLower.includes('verified') || statusLower === 'interview scheduled' || statusLower === 'assessment' || statusLower === 'screening' || statusLower === 'shortlisted') {
+    } else if (
+      statusLower === 'interview scheduled' ||
+      statusLower === 'assessment' ||
+      statusLower === 'assessment phase' ||
+      statusLower === 'screening' ||
+      statusLower === 'shortlisted' ||
+      statusLower === 'evaluated' ||
+      statusLower.includes('assess') ||
+      statusLower.includes('evaluat') ||
+      statusLower.includes('board scoring')
+    ) {
       progress = 66;
-    } else if (statusLower === 'eligibility' || statusLower === 'eligible' || statusLower === 'eligibility verified') {
+    } else if (
+      statusLower === 'eligibility' ||
+      statusLower === 'eligible' ||
+      statusLower === 'eligibility verified' ||
+      statusLower === 'school endorsed' ||
+      statusLower.includes('endorse') ||
+      statusLower.includes('school')
+    ) {
       progress = 50;
-    } else if (statusLower === 'submitted' || statusLower === 'draft') {
+    } else if (
+      statusLower === 'under review' ||
+      statusLower === 'pending' ||
+      statusLower === 'in review' ||
+      statusLower === 'reviewing' ||
+      statusLower === 'document review'
+    ) {
+      progress = 33;
+    } else if (statusLower === 'submitted' || statusLower === 'encoded' || statusLower === 'draft') {
       progress = 16;
     }
 
