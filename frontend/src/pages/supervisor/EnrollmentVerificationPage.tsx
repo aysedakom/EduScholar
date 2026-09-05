@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle2, XCircle, Search } from 'lucide-react';
+import { CheckCircle2, XCircle, Search, Eye, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { formatDate } from '../../utils/cn';
 import { getMyApplications, updateApplicationStatus } from '../../api/applications';
+import { DocumentAttachmentViewerModal, type DocumentAttachmentItem } from '../../components/admin/DocumentAttachmentViewerModal';
 
 interface EnrollmentRecord {
   id: string;
@@ -20,6 +21,8 @@ interface EnrollmentRecord {
   submissionDate: string;
   status: 'Pending Verification' | 'Verified' | 'Rejected';
   rejectionReason?: string;
+  gpa?: number;
+  documents?: DocumentAttachmentItem[];
 }
 
 export const EnrollmentVerificationPage: React.FC = () => {
@@ -29,6 +32,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
 
   // Modal State
   const [targetRecord, setTargetRecord] = useState<EnrollmentRecord | null>(null);
+  const [selectedDocRecord, setSelectedDocRecord] = useState<EnrollmentRecord | null>(null);
   const [actionType, setActionType] = useState<'confirm' | 'reject'>('confirm');
   const [rejectionReason, setRejectionReason] = useState('');
 
@@ -46,20 +50,50 @@ export const EnrollmentVerificationPage: React.FC = () => {
             sLower === 'approved' ||
             sLower === 'disbursed';
           const isRejected = sLower === 'rejected' || sLower === 'disapproved';
+          const rawDocs = app.documents_submitted || formData.documentsSubmitted;
+          const documents: DocumentAttachmentItem[] = Array.isArray(rawDocs) && rawDocs.length > 0
+            ? rawDocs.map((d: any, idx: number) => ({
+                id: d.id || `doc-${idx}`,
+                name: d.name || `COR_2026_${(app.applicant_name || 'Scholar').replace(/\s+/g, '')}.pdf`,
+                label: d.label || d.name || 'Certificate of Registration (COR)',
+                size: d.size || '1.8 MB',
+                uploadedAt: app.submission_date || new Date().toLocaleDateString(),
+                verified: isVerified,
+                fileData: d.fileData || d.dataUrl,
+                mimeType: d.mimeType || 'application/pdf',
+              }))
+            : [
+                {
+                  id: 'cor_main',
+                  name: `COR_2026_${(app.applicant_name || 'Scholar').replace(/\s+/g, '')}.pdf`,
+                  label: 'Official Certificate of Registration (COR)',
+                  size: '2.4 MB',
+                  uploadedAt: app.submission_date || new Date().toLocaleDateString(),
+                  verified: isVerified,
+                  mimeType: 'application/pdf',
+                },
+              ];
+
+          const studentName =
+            app.applicant_name ||
+            `${formData.firstName || ''} ${formData.lastName || ''}`.trim() ||
+            'Student Applicant';
+          const studentId = app.student_id || formData.studentId || `2026-${String(app.id).padStart(5, '0')}`;
+          const corName = documents[0]?.name || `COR_2026_${studentName.replace(/\s+/g, '')}.pdf`;
+
           return {
-            id: app.application_code || `ENR-${app.id}`,
+            id: app.reference_id || app.application_code || `ENR-${app.id}`,
             dbId: app.id,
-            studentName:
-              app.applicant_name ||
-              `${formData.firstName || ''} ${formData.lastName || ''}`.trim() ||
-              'Student Applicant',
-            studentId: app.student_id || formData.studentId || `2026-${String(app.id).padStart(5, '0')}`,
-            school: formData.school || 'Quezon City University',
-            course: formData.course || app.program_name || 'BS Information Technology',
-            yearLevel: formData.yearLevel || '1st Year',
-            corDocument: `COR_2026_${(app.applicant_name || 'Scholar').replace(/\s+/g, '')}.pdf`,
+            studentName,
+            studentId,
+            school: formData.school || app.school || 'Bestlink College of the Philippines (BCP)',
+            course: formData.course || app.program_name || 'B.S. Information Technology (BSIT)',
+            yearLevel: formData.yearLevel || formData.year_level || '4th Year',
+            corDocument: corName,
             submissionDate: app.submission_date || new Date().toISOString().split('T')[0],
             status: isVerified ? 'Verified' : isRejected ? 'Rejected' : 'Pending Verification',
+            gpa: parseFloat(String(formData.gwa || app.gpa || 1.75)) || 1.75,
+            documents,
           };
         });
         setRecords(liveRecords);
@@ -206,8 +240,19 @@ export const EnrollmentVerificationPage: React.FC = () => {
                       <span className="text-[11px] text-slate-500">{r.yearLevel}</span>
                     </td>
                     <td className="p-3">
-                      <span className="font-medium text-blue-600 underline cursor-pointer">{r.corDocument}</span>
-                      <span className="text-[10px] text-slate-400 block">{formatDate(r.submissionDate)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDocRecord(r)}
+                        className="group text-left inline-flex flex-col cursor-pointer transition-transform hover:translate-x-0.5"
+                        title="Click to view and inspect submitted Certificate of Registration"
+                      >
+                        <span className="font-semibold text-blue-600 dark:text-blue-400 group-hover:text-blue-800 dark:group-hover:text-blue-300 underline flex items-center gap-1.5">
+                          <FileText className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                          <span className="truncate max-w-[220px]">{r.corDocument}</span>
+                          <Eye className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity text-blue-600" />
+                        </span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{formatDate(r.submissionDate)}</span>
+                      </button>
                     </td>
                     <td className="p-3">
                       <Badge
@@ -220,27 +265,38 @@ export const EnrollmentVerificationPage: React.FC = () => {
                       )}
                     </td>
                     <td className="p-3 text-right">
-                      {r.status === 'Pending Verification' && (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => { setTargetRecord(r); setActionType('reject'); }}
-                            leftIcon={<XCircle className="h-3.5 w-3.5" />}
-                          >
-                            Reject
-                          </Button>
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            onClick={() => { setTargetRecord(r); setActionType('confirm'); }}
-                            leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                            className="font-bold"
-                          >
-                            Confirm
-                          </Button>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setSelectedDocRecord(r)}
+                          leftIcon={<Eye className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />}
+                          className="text-xs font-semibold text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 hover:bg-blue-50"
+                        >
+                          View COR
+                        </Button>
+                        {r.status === 'Pending Verification' && (
+                          <>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => { setTargetRecord(r); setActionType('reject'); }}
+                              leftIcon={<XCircle className="h-3.5 w-3.5" />}
+                            >
+                              Reject
+                            </Button>
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              onClick={() => { setTargetRecord(r); setActionType('confirm'); }}
+                              leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                              className="font-bold"
+                            >
+                              Confirm
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -299,6 +355,41 @@ export const EnrollmentVerificationPage: React.FC = () => {
             )}
           </div>
         </Modal>
+      )}
+
+      {/* Interactive Document Attachment Viewer Modal */}
+      {selectedDocRecord && (
+        <DocumentAttachmentViewerModal
+          isOpen={!!selectedDocRecord}
+          onClose={() => setSelectedDocRecord(null)}
+          applicantName={selectedDocRecord.studentName}
+          applicantId={selectedDocRecord.studentId}
+          programTitle={selectedDocRecord.course}
+          studentSchool={selectedDocRecord.school}
+          studentCourse={selectedDocRecord.course}
+          studentGpa={selectedDocRecord.gpa || 1.75}
+          documents={selectedDocRecord.documents && selectedDocRecord.documents.length > 0 ? selectedDocRecord.documents : [
+            {
+              id: 'cor_main',
+              name: selectedDocRecord.corDocument,
+              label: 'Certificate of Registration (COR)',
+              size: '2.4 MB',
+              uploadedAt: selectedDocRecord.submissionDate,
+              verified: selectedDocRecord.status === 'Verified',
+              mimeType: 'application/pdf',
+            }
+          ]}
+          onApproveApplication={() => {
+            setTargetRecord(selectedDocRecord);
+            setActionType('confirm');
+            setSelectedDocRecord(null);
+          }}
+          onRejectApplication={() => {
+            setTargetRecord(selectedDocRecord);
+            setActionType('reject');
+            setSelectedDocRecord(null);
+          }}
+        />
       )}
     </div>
   );
