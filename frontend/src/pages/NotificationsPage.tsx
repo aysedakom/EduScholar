@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, CheckCheck, Trash2, Sliders, Search, CheckCircle2, DollarSign, Clock, Info, Moon, Mail, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
-import { getSystemNotifications, saveSystemNotifications } from '../utils/systemNotifications';
-import { markAllNotificationsRead, markNotificationRead } from '../api/notifications';
+import { useAuth } from '../context/AuthContext';
+import { getSystemNotifications, saveSystemNotifications, mergeNotifications } from '../utils/systemNotifications';
+import { markAllNotificationsRead, markNotificationRead, getMyNotifications } from '../api/notifications';
 import type { AppNotification } from '../types';
 import { Card, CardHeader, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -10,7 +11,8 @@ import { Modal } from '../components/ui/Modal';
 import { formatDate } from '../utils/cn';
 
 export const NotificationsPage: React.FC = () => {
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => getSystemNotifications());
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getSystemNotifications(user));
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
@@ -26,12 +28,31 @@ export const NotificationsPage: React.FC = () => {
   const [quietHours, setQuietHours] = useState(false);
 
   useEffect(() => {
-    const refresh = () => {
-      setNotifications(getSystemNotifications());
+    let isMounted = true;
+    const refresh = async () => {
+      const localScoped = getSystemNotifications(user);
+      try {
+        const res = await getMyNotifications();
+        if (isMounted && res.data?.notifications && Array.isArray(res.data.notifications)) {
+          const merged = mergeNotifications(localScoped, res.data.notifications);
+          setNotifications(merged);
+          return;
+        }
+      } catch {
+        // Fallback to local
+      }
+      if (isMounted) {
+        setNotifications(localScoped);
+      }
     };
+
+    refresh();
     window.addEventListener('qc_new_notification', refresh);
-    return () => window.removeEventListener('qc_new_notification', refresh);
-  }, []);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('qc_new_notification', refresh);
+    };
+  }, [user]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

@@ -187,20 +187,16 @@ const createApplication = async (req, res) => {
         );
       }
 
-      // 3b. Staff/Admin/Coordinator notifications
-      const staffUsers = await pool.query("SELECT id, role FROM users WHERE role IN ('admin', 'system_admin', 'school_coordinator', 'supervisor')");
-      const isUnlistedSchool = formData?.school?.includes('Other') || Boolean(formData?.unlistedSchoolName);
+      // 3b. System Admin & Admin notifications (Scoped ONLY to administrators)
+      const staffUsers = await pool.query("SELECT id, role FROM users WHERE role IN ('system_admin', 'admin')");
 
       for (const staff of staffUsers.rows) {
-        let notifTitle = `New Application: ${application.title || application.program_name}`;
-        let notifMsg = `Applicant ${formData?.firstName || req.user.name || 'Student'} (${req.user.email || 'student@qc.gov.ph'}) submitted an application for ${application.program_name}.`;
-        let notifLink = '/admin/review-queue';
-
-        if (isUnlistedSchool && staff.role === 'school_coordinator') {
-          notifTitle = `🏫 School Exception Review: ${formData?.unlistedSchoolName || 'Unlisted School'}`;
-          notifMsg = `Applicant ${formData?.firstName || 'Student'} requested Special Eligibility Review with attached Certificate of Enrollment.`;
-          notifLink = '/school/portal';
-        }
+        const applicantDisplayName = formData?.firstName
+          ? `${formData.firstName} ${formData.lastName || ''}`.trim()
+          : req.user.name || 'Student';
+        const notifTitle = `New Application Submitted: ${application.title || application.program_name}`;
+        const notifMsg = `Applicant ${applicantDisplayName} (${req.user.email || 'student@qc.gov.ph'}) submitted an application for ${application.program_name} (Ref: ${application.application_code || application.reference_id || 'QCSP'}).`;
+        const notifLink = '/admin/review-queue';
 
         await pool.query(
           `INSERT INTO notifications (user_id, title, message, type, is_read, category, link)

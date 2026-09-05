@@ -5,8 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
-import { getSystemNotifications, saveSystemNotifications } from '../../utils/systemNotifications';
-import { markAllNotificationsRead } from '../../api/notifications';
+import { getSystemNotifications, saveSystemNotifications, mergeNotifications } from '../../utils/systemNotifications';
+import { markAllNotificationsRead, getMyNotifications } from '../../api/notifications';
 import type { AppNotification } from '../../types';
 
 interface AppHeaderProps {
@@ -19,7 +19,7 @@ function getUserInitials(name?: string): string {
   if (words.length >= 2) {
     return (words[0][0] + words[1][0]).toUpperCase();
   }
-  return name.trim().substring(0, 2).toUpperCase();
+  return (name[0] || 'U').toUpperCase();
 }
 
 export function AppHeader({ onMenu }: AppHeaderProps) {
@@ -29,15 +29,34 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [eservicesOpen, setEservicesOpen] = useState(false);
-  const [notifications, setNotifications] = useState<AppNotification[]>(() => getSystemNotifications());
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getSystemNotifications(user));
 
   useEffect(() => {
-    const refresh = () => {
-      setNotifications(getSystemNotifications());
+    let isMounted = true;
+    const refresh = async () => {
+      const localScoped = getSystemNotifications(user);
+      try {
+        const res = await getMyNotifications();
+        if (isMounted && res.data?.notifications && Array.isArray(res.data.notifications)) {
+          const merged = mergeNotifications(localScoped, res.data.notifications);
+          setNotifications(merged);
+          return;
+        }
+      } catch {
+        // Fallback to local scoped
+      }
+      if (isMounted) {
+        setNotifications(localScoped);
+      }
     };
+
+    refresh();
     window.addEventListener('qc_new_notification', refresh);
-    return () => window.removeEventListener('qc_new_notification', refresh);
-  }, []);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('qc_new_notification', refresh);
+    };
+  }, [user]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

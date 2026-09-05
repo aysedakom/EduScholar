@@ -826,16 +826,31 @@ export const ApplicationForm: React.FC = () => {
         console.error('Vault LocalStorage error:', e);
       }
 
-      // 4. Record student in-app notification
+      // 4. Record scoped in-app notifications (Applicant + System Admin ONLY)
       try {
+        const applicantFullName = `${data.firstName} ${data.lastName}`.trim();
+
+        // 4a. Notification for the Applicant ONLY (Photo 2)
         sendSystemScholarshipNotice({
-          recipientStudentId: data.studentId || 'STUDENT',
-          recipientStudentName: `${data.firstName} ${data.lastName}`,
-          recipientEmail: data.email,
+          recipientUserId: user?.id,
+          recipientRole: 'student',
+          recipientStudentId: data.studentId || user?.studentId || user?.student_id || 'STUDENT',
+          recipientStudentName: applicantFullName,
+          recipientEmail: data.email || user?.email,
           scholarshipTitle: selectedProgram.title,
           subject: `Application Submitted: ${selectedProgram.title}`,
           message: `Your scholarship application (${generatedRefId}) for ${selectedProgram.title} has been successfully filed. All ${activeRequiredDocs.length} required documents have been received and are queued for review.`,
           category: 'Document Compliance',
+        });
+
+        // 4b. Notification for the System Admin ONLY
+        sendSystemScholarshipNotice({
+          recipientRole: 'system_admin',
+          recipientStudentName: 'System Administrator',
+          scholarshipTitle: selectedProgram.title,
+          subject: `New Application Submitted: ${selectedProgram.title}`,
+          message: `Applicant ${applicantFullName} (${data.email || 'student@qc.gov.ph'}) has submitted an application for ${selectedProgram.title} (Ref: ${generatedRefId}).`,
+          category: 'General Notice',
         });
       } catch (notifErr) {
         console.warn('System notification record note:', notifErr);
