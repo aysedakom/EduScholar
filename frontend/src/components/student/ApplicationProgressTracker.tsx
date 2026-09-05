@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getMyApplications } from '../../api/applications';
 import { Link } from 'react-router-dom';
 import { clearActiveStudentApplication } from '../../utils/scholarshipPrograms';
+import { useWebSocket } from '../../context/WebSocketContext';
 
 export interface StudentApplicationItem {
   refNumber: string;
@@ -152,6 +153,7 @@ function resolveApplicationStage(app: any): {
 
 export const ApplicationProgressTracker: React.FC = () => {
   const { user } = useAuth();
+  const { subscribeToTable } = useWebSocket();
   const [appData, setAppData] = useState<StudentApplicationItem | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -184,39 +186,15 @@ export const ApplicationProgressTracker: React.FC = () => {
         return;
       }
 
-      // 2. Server successfully returned 0 applications: Database is verified empty!
-      // Purge any stale client-side cache so fake/static data is never shown
+      // 2. Server returned 0 applications: Database is verified empty!
+      // Purge any stale client-side cache so fake/static data is NEVER shown
       clearActiveStudentApplication(user?.email);
       setAppData(null);
     } catch (err) {
       console.warn('[ApplicationProgressTracker] Real-time fetch error:', err);
-      // Only in an actual offline network failure do we inspect fallback storage
-      if (user?.email) {
-        const userKey = `active_app_${user.email.toLowerCase()}`;
-        const stored = localStorage.getItem(userKey);
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed.id) {
-              const stageInfo = resolveApplicationStage(parsed);
-              setAppData({
-                refNumber: parsed.id || parsed.referenceId || 'APP-QC-2026',
-                dateFiled: parsed.submissionDate || new Date().toISOString().split('T')[0],
-                category: parsed.program_name || parsed.scholarshipTitle || 'Quezon City Scholarship Program',
-                yearLevel: user?.basicProfile?.yearLevel || 'Enrolled Student',
-                semester: '1st Semester AY 2026-2027',
-                statusStage: stageInfo.stage,
-                statusLabel: stageInfo.label,
-                statusType: stageInfo.type,
-                validationRemark: stageInfo.remark,
-                progressPercent: stageInfo.progress,
-              });
-              setLastSyncTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
-              return;
-            }
-          } catch (_) {}
-        }
-      }
+      // In case of network error, do NOT resurrect stale local storage records
+      // Ground truth resides on the server
+      clearActiveStudentApplication(user?.email);
       setAppData(null);
     } finally {
       setIsLoading(false);
@@ -229,11 +207,52 @@ export const ApplicationProgressTracker: React.FC = () => {
     fetchApplicationData(true);
   }, [fetchApplicationData]);
 
-  // Real-time Background Polling every 12 seconds
+  // 1. Instant WebSocket Real-time Push (0ms delay across all devices)
+  useEffect(() => {
+    const unsubscribe = subscribeToTable('applications', (event) => {
+      console.log('[ApplicationProgressTracker] ⚡ Instant WebSocket application event:', event.action);
+      fetchApplicationData(false);
+    });
+    return () => unsubscribe();
+  }, [subscribeToTable, fetchApplicationData]);
+
+  // 2. Instant Cross-Tab BroadcastChannel (0ms delay between open tabs)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('eduscholar_app_sync');
+      channel.onmessage = (e) => {
+        if (e.data?.type === 'APPLICATION_UPDATED') {
+          console.log('[ApplicationProgressTracker] ⚡ Instant BroadcastChannel application update received');
+          fetchApplicationData(false);
+        }
+      };
+      return () => channel.close();
+    }
+  }, [fetchApplicationData]);
+
+  // 3. Instant Window/Tab Focus & Visibility Event (0ms delay on tab switch)
+  useEffect(() => {
+    const onFocus = () => {
+      fetchApplicationData(false);
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchApplicationData(false);
+      }
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [fetchApplicationData]);
+
+  // 4. Background Polling Fallback (every 4 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       fetchApplicationData(false);
-    }, 12000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [fetchApplicationData]);
 

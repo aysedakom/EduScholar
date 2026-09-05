@@ -246,6 +246,21 @@ const updateStatus = async (req, res) => {
     const application = await applicationModel.updateStatus(req.params.id, status, notes, remarks);
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
+    // Broadcast status change immediately to all connected clients
+    try {
+      const { broadcast } = require('../realtime/socketServer');
+      broadcast({
+        type: 'DB_EVENT',
+        channel: 'eduscholar_events',
+        table: 'applications',
+        action: 'UPDATE',
+        record: application,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (wsErr) {
+      // non-fatal
+    }
+
     try {
       const { triggerSyncNow } = require('../services/autoSyncService');
       triggerSyncNow();

@@ -26,12 +26,22 @@ export interface CreateApplicationPayload {
   remarks?: string;
 }
 
-export const createApplication = (payload: CreateApplicationPayload) => {
-  return api.post<Application>('/applications', payload);
+const appSyncChannel = typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('eduscholar_app_sync') : null;
+
+export const createApplication = async (payload: CreateApplicationPayload) => {
+  const res = await api.post<Application>('/applications', payload);
+  try {
+    appSyncChannel?.postMessage({ type: 'APPLICATION_UPDATED', id: res.data?.id, timestamp: Date.now() });
+  } catch (_) {}
+  return res;
 };
 
-export const updateApplicationStatus = (id: string | number, status: string, notes?: string, remarks?: string) => {
-  return api.patch<Application>(`/applications/${id}/status`, { status, notes, remarks });
+export const updateApplicationStatus = async (id: string | number, status: string, notes?: string, remarks?: string) => {
+  const res = await api.patch<Application>(`/applications/${id}/status`, { status, notes, remarks });
+  try {
+    appSyncChannel?.postMessage({ type: 'APPLICATION_UPDATED', id, status, timestamp: Date.now() });
+  } catch (_) {}
+  return res;
 };
 
 export const resubmitApplicationDocument = (
@@ -40,3 +50,4 @@ export const resubmitApplicationDocument = (
 ) => {
   return api.post<{ success: boolean; message: string; newStatus: string }>(`/applications/${id}/resubmit-document`, payload);
 };
+

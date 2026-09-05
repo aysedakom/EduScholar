@@ -105,6 +105,18 @@ const updateScholarStatus = async (req, res) => {
            WHERE (user_id = $1 OR student_id = $2) AND LOWER(status) IN ('approved', 'granted')`,
           [scholar.user_id, scholar.student_id]
         );
+
+        try {
+          const { broadcast } = require('../realtime/socketServer');
+          broadcast({
+            type: 'DB_EVENT',
+            channel: 'eduscholar_events',
+            table: 'applications',
+            action: 'UPDATE',
+            record: { student_id: scholar.student_id, user_id: scholar.user_id, status: 'Disbursed', progress: 100 },
+            timestamp: new Date().toISOString(),
+          });
+        } catch (_) {}
       } catch (appSyncErr) {
         console.warn('[registryController] Application sync warning:', appSyncErr.message);
       }
