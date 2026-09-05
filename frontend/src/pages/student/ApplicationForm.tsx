@@ -28,7 +28,6 @@ import {
   Sun,
   Moon,
   Info,
-  Wifi,
   WifiOff,
 } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
@@ -1093,7 +1092,7 @@ export const ApplicationForm: React.FC = () => {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* NETWORK & OFFLINE PERSISTENCE STATUS BAR */}
-        {!isOnline ? (
+        {!isOnline && (
           <div className="p-4 rounded-2xl bg-amber-500/15 border-2 border-amber-500 text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-md animate-pulse">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-amber-500 text-white rounded-xl shadow-xs">
@@ -1112,38 +1111,16 @@ export const ApplicationForm: React.FC = () => {
               </div>
             </div>
             {draftSavedAt && (
-              <span className="text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 whitespace-nowrap self-start sm:self-auto text-amber-900 dark:text-amber-200">
-                Held safely on device ({draftSavedAt})
-              </span>
-            )}
-          </div>
-        ) : (
-          <div className={`p-3 rounded-2xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs shadow-2xs ${
-            isDark ? 'bg-slate-900/80 border-slate-800 text-slate-300' : 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
-          }`}>
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="flex h-2.5 w-2.5 relative">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <span className="text-[11px] font-bold bg-amber-100 dark:bg-amber-900/60 px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-700 whitespace-nowrap text-amber-900 dark:text-amber-200">
+                  Held safely on device ({draftSavedAt})
                 </span>
-                <Wifi className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <span className="font-extrabold text-emerald-700 dark:text-emerald-400">Offline Resilience Protected:</span>
-              <span className="text-[11px] text-slate-600 dark:text-slate-400">
-                All form fields & attached files are continuously held in local storage. If you lose internet, you will never start over.
-              </span>
-            </div>
-            {draftSavedAt && (
-              <div className="flex items-center gap-3 self-end sm:self-auto">
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Auto-Saved: {draftSavedAt}</span>
                 <button
                   type="button"
                   onClick={handleClearDraft}
-                  className="text-[11px] text-rose-600 dark:text-rose-400 hover:underline cursor-pointer font-bold"
-                  title="Clear all saved data and start fresh"
+                  className="text-[11px] text-rose-700 dark:text-rose-400 hover:underline cursor-pointer font-bold px-2 py-1"
                 >
-                  Clear Draft
+                  Clear
                 </button>
               </div>
             )}
