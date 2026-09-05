@@ -179,7 +179,7 @@ const applicationSchema = z.object({
     (val) => (val === '' || val === undefined || Number.isNaN(Number(val)) ? 0 : Number(val)),
     z.number().min(0, 'Number of siblings must be 0 or greater')
   ),
-  financialSupport: z.string().refine((val) => ['Parents', 'Self', 'Scholarship', 'Other'].includes(val), {
+  financialSupport: z.string().refine((val) => ['Parents', 'Self', 'Other'].includes(val), {
     message: 'Please select primary financial support source',
   }),
   disbursementChannel: z.string().refine(
@@ -1865,7 +1865,6 @@ export const ApplicationForm: React.FC = () => {
                       <option value="">-- Select Support Source --</option>
                       <option value="Parents">Parents / Legal Guardian</option>
                       <option value="Self">Self-Supporting / Working Student</option>
-                      <option value="Scholarship">Scholarships / Private Grants</option>
                       <option value="Other">Other Relatives / Sponsor</option>
                     </select>
                     {errors.financialSupport && (
