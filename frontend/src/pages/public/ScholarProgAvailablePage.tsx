@@ -332,7 +332,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
   const [eservicesOpen, setEservicesOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
-  const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string>('shs');
+  const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string>('');
   const [blockedModalOpen, setBlockedModalOpen] = useState(false);
 
   const [activeApp, setActiveApp] = useState<any | null>(null);
