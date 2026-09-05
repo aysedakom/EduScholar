@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
+import { ACADEMIC_COURSES_BY_CATEGORY } from '../../utils/courses';
 import { PhoneInput } from '../../components/ui/PhoneInput';
 import { formatPHMobile, isValidPHMobile } from '../../utils/phoneFormatter';
 import { toast } from 'sonner';
@@ -167,14 +168,27 @@ export const BasicFormPage: React.FC = () => {
                   ))}
                 </select>
               </div>
-              <Input
-                id="major"
-                label="Degree / Major Program"
-                value={form.major}
-                onChange={(e) => update('major', e.target.value)}
-                placeholder="e.g. B.S. Computer Science"
-                required
-              />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Course / Academic Strand *</label>
+                <select
+                  id="major"
+                  value={form.major}
+                  onChange={(e) => update('major', e.target.value)}
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 cursor-pointer"
+                  required
+                >
+                  <option value="">-- Select Course / Academic Strand --</option>
+                  {ACADEMIC_COURSES_BY_CATEGORY.map((group) => (
+                    <optgroup key={group.category} label={group.category}>
+                      {group.courses.map((c) => (
+                        <option key={c} value={c} className="dark:bg-slate-900 dark:text-white">
+                          {c}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Year Level</label>
                 <select

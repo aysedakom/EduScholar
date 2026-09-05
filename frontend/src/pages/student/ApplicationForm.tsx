@@ -37,6 +37,7 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
+import { ACADEMIC_COURSES_BY_CATEGORY } from '../../utils/courses';
 import {
   getProgramById,
   getActiveStudentApplication,
@@ -119,7 +120,8 @@ const applicationSchema = z.object({
     message: 'Please select school institution type',
   }),
   department: z.string().min(1, 'Please select beneficiary department / college'),
-  course: z.string().min(1, 'Course or Academic Strand is required'),
+  course: z.string().min(1, 'Please select your course or academic strand'),
+  unlistedCourseName: z.string().optional(),
   yearLevel: z.string().refine(
     (val) =>
       ['Grade 11', 'Grade 12', '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Postgraduate / Reviewee'].includes(val),
@@ -717,6 +719,12 @@ export const ApplicationForm: React.FC = () => {
         })),
         notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} program-specific documentary attachments attached. Under review by QCYDO Screening Committee.`,
       };
+
+      const resolvedCourse =
+        data.course?.includes('Other') && data.unlistedCourseName?.trim()
+          ? data.unlistedCourseName.trim()
+          : data.course;
+      data.course = resolvedCourse;
 
       // 2. Save active application into LocalStorage (Locking duplicate applications)
       saveActiveStudentApplication(newApplicationRecord);
@@ -1575,15 +1583,44 @@ export const ApplicationForm: React.FC = () => {
                     <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.department.message}</p>
                   )}
                 </div>
-                <div>
-                  <label className="block text-xs font-bold mb-1">Course / Academic Strand *</label>
-                  <input
-                    {...register('course')}
-                    className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                    placeholder={selectedProgram.categoryId === 'shs' ? 'e.g. STEM / ABM / HUMSS' : 'e.g. B.S. Information Technology'}
-                  />
-                  {errors.course && (
-                    <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.course.message}</p>
+                <div className={watch('course')?.includes('Other') ? 'md:col-span-3 space-y-3' : ''}>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Course / Academic Strand *</label>
+                    <select
+                      {...register('course')}
+                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="">-- Select Course / Academic Strand --</option>
+                      {ACADEMIC_COURSES_BY_CATEGORY.map((group) => (
+                        <optgroup key={group.category} label={group.category}>
+                          {group.courses.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
+                    </select>
+                    {errors.course && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.course.message}</p>
+                    )}
+                  </div>
+
+                  {/* Unlisted Course Exception Field */}
+                  {watch('course')?.includes('Other') && (
+                    <div className="p-3.5 bg-amber-50/90 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/80 rounded-2xl space-y-1.5 animate-in fade-in">
+                      <label className="block text-xs font-bold text-amber-900 dark:text-amber-200">
+                        Specify Complete Course / Academic Strand Title *
+                      </label>
+                      <input
+                        {...register('unlistedCourseName')}
+                        className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-amber-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                        placeholder="e.g. B.S. Artificial Intelligence, B.S. Marine Biology, etc."
+                      />
+                      <p className="text-[10px] text-amber-700 dark:text-amber-300">
+                        *Your custom course title will be saved directly and displayed on administrative review and monitoring reports.
+                      </p>
+                    </div>
                   )}
                 </div>
                 <div>
