@@ -21,6 +21,9 @@ export interface ScholarshipProgramSpec {
   tuitionGrant: string;
   stipend: string;
   totalMax: string;
+  termGrantAmount: number; // Official single-term / semester grant value
+  tuitionPerTerm: number;
+  stipendPerTerm: number;
   minGwaText: string;
   minGwaNumber?: number; // for validation
   qualifications: string[];
@@ -41,6 +44,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 10,000 / semester (PHP 20,000 / school year)',
     stipend: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     totalMax: 'PHP 15,000 / semester (PHP 30,000 / school year)',
+    termGrantAmount: 15000,
+    tuitionPerTerm: 10000,
+    stipendPerTerm: 5000,
     minGwaText: '89% GWA (Rank 1-10 or Top 10 Overall)',
     minGwaNumber: 89,
     qualifications: [
@@ -96,6 +102,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 10,000 / semester (PHP 20,000 / school year)',
     stipend: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     totalMax: 'PHP 15,000 / semester (PHP 30,000 / school year)',
+    termGrantAmount: 15000,
+    tuitionPerTerm: 10000,
+    stipendPerTerm: 5000,
     minGwaText: '89% GWA (Specialized Public SHS Track)',
     minGwaNumber: 89,
     qualifications: [
@@ -142,6 +151,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 10,000 / semester (PHP 20,000 / school year)',
     stipend: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     totalMax: 'PHP 15,000 / semester (PHP 30,000 / school year)',
+    termGrantAmount: 15000,
+    tuitionPerTerm: 10000,
+    stipendPerTerm: 5000,
     minGwaText: '85% GWA (Athletic/Arts Varsity or Awardee)',
     minGwaNumber: 85,
     qualifications: [
@@ -196,6 +208,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 10,000 / semester (PHP 20,000 / school year)',
     stipend: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     totalMax: 'PHP 15,000 / semester (PHP 30,000 / school year)',
+    termGrantAmount: 15000,
+    tuitionPerTerm: 10000,
+    stipendPerTerm: 5000,
     minGwaText: '85% GWA (SK / SSG / Youth Org Leader)',
     minGwaNumber: 85,
     qualifications: [
@@ -252,6 +267,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 55,000 / semester (PHP 110,000 / school year)',
     stipend: 'PHP 25,000 / semester (PHP 50,000 / school year)',
     totalMax: 'PHP 80,000 / semester (PHP 160,000 / school year)',
+    termGrantAmount: 80000,
+    tuitionPerTerm: 55000,
+    stipendPerTerm: 25000,
     minGwaText: '1.75 GWA (or 90% in SHS)',
     minGwaNumber: 1.75,
     qualifications: [
@@ -316,6 +334,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 40,000 / semester (PHP 80,000 / school year)',
     stipend: 'PHP 12,500 / semester (PHP 25,000 / school year)',
     totalMax: 'PHP 52,500 / semester (PHP 105,000 / school year)',
+    termGrantAmount: 52500,
+    tuitionPerTerm: 40000,
+    stipendPerTerm: 12500,
     minGwaText: '1.75 GWA (Rank 1-10 or Top 10 Honors)',
     minGwaNumber: 1.75,
     qualifications: [
@@ -371,6 +392,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 27,500 / semester (PHP 55,000 / school year)',
     stipend: 'PHP 12,500 / semester (PHP 25,000 / school year)',
     totalMax: 'PHP 40,000 / semester (PHP 80,000 / school year)',
+    termGrantAmount: 40000,
+    tuitionPerTerm: 27500,
+    stipendPerTerm: 12500,
     minGwaText: '2.50 GWA (Active Varsity / Troupe Member)',
     minGwaNumber: 2.50,
     qualifications: [
@@ -425,6 +449,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 27,500 / semester (PHP 55,000 / school year)',
     stipend: 'PHP 12,500 / semester (PHP 25,000 / school year)',
     totalMax: 'PHP 40,000 / semester (PHP 80,000 / school year)',
+    termGrantAmount: 40000,
+    tuitionPerTerm: 27500,
+    stipendPerTerm: 12500,
     minGwaText: '2.50 GWA (Student Council / SK / Org Leader)',
     minGwaNumber: 2.50,
     qualifications: [
@@ -487,6 +514,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     stipend: 'PHP 5,000 / semester (PHP 10,000 / school year)',
     totalMax: 'PHP 10,000 / semester (PHP 20,000 / school year)',
+    termGrantAmount: 10000,
+    tuitionPerTerm: 5000,
+    stipendPerTerm: 5000,
     minGwaText: '3.00 GWA / 75% (Passing Grade)',
     minGwaNumber: 3.00,
     qualifications: [
@@ -549,6 +579,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 40,000 / semester (PHP 80,000 / school year)',
     stipend: 'PHP 12,500 / semester (PHP 25,000 / school year)',
     totalMax: 'PHP 52,500 / semester (PHP 105,000 / school year)',
+    termGrantAmount: 52500,
+    tuitionPerTerm: 40000,
+    stipendPerTerm: 12500,
     minGwaText: '1.75 GWA (Filipino / Panitikan Major)',
     minGwaNumber: 1.75,
     qualifications: [
@@ -613,6 +646,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: 'PHP 27,500 / semester (PHP 55,000 / school year)',
     stipend: 'PHP 25,000 / semester (PHP 50,000 / school year)',
     totalMax: 'PHP 52,500 / semester (PHP 105,000 / school year)',
+    termGrantAmount: 52500,
+    tuitionPerTerm: 27500,
+    stipendPerTerm: 25000,
     minGwaText: '2.50 GWA (Postgraduate Equivalent)',
     minGwaNumber: 2.50,
     qualifications: [
@@ -677,6 +713,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: '— (Direct Aid)',
     stipend: 'PHP 10,000',
     totalMax: 'PHP 10,000 stipend',
+    termGrantAmount: 10000,
+    tuitionPerTerm: 0,
+    stipendPerTerm: 10000,
     minGwaText: 'Active Enrollment in Accredited Center',
     qualifications: [
       'Must be enrolled in short courses, technical-vocational training, or licensure/board/bar exam review courses.',
@@ -732,6 +771,9 @@ export const ALL_SCHOLARSHIP_PROGRAMS: ScholarshipProgramSpec[] = [
     tuitionGrant: '— (Direct Grant)',
     stipend: '₱10,000 + ₱30,000 (Pub. Aid)',
     totalMax: 'Up to PHP 40,000',
+    termGrantAmount: 40000,
+    tuitionPerTerm: 0,
+    stipendPerTerm: 40000,
     minGwaText: 'Published Work / Recognized Manuscript',
     qualifications: [
       'Must be a student, educator, or practitioner of Filipino language, literature, or creative writing.',
@@ -794,6 +836,47 @@ export const SCHOLARSHIP_PROGRAMS_MAP: Record<string, ScholarshipProgramSpec> = 
 export function getProgramById(id?: string | null): ScholarshipProgramSpec {
   if (!id) return ALL_SCHOLARSHIP_PROGRAMS[0];
   return SCHOLARSHIP_PROGRAMS_MAP[id] || ALL_SCHOLARSHIP_PROGRAMS.find(p => p.categoryId === id) || ALL_SCHOLARSHIP_PROGRAMS[0];
+}
+
+/**
+ * Returns the official single-term (per semester) grant package for any program ID or title.
+ */
+export function getProgramTermGrant(programIdOrTitle?: string | null): number {
+  if (!programIdOrTitle) return 10000;
+  const p = programIdOrTitle.toLowerCase().trim();
+
+  // 1. Direct ID lookup in map
+  const byId = SCHOLARSHIP_PROGRAMS_MAP[programIdOrTitle];
+  if (byId && typeof byId.termGrantAmount === 'number') {
+    return byId.termGrantAmount;
+  }
+
+  // 2. Search by title / shortTitle in list
+  const found = ALL_SCHOLARSHIP_PROGRAMS.find(
+    (item) =>
+      item.id.toLowerCase() === p ||
+      item.title.toLowerCase() === p ||
+      item.shortTitle.toLowerCase() === p ||
+      p.includes(item.id.toLowerCase()) ||
+      item.title.toLowerCase().includes(p)
+  );
+  if (found && typeof found.termGrantAmount === 'number') {
+    return found.termGrantAmount;
+  }
+
+  // 3. Track keyword matching
+  if (p.includes('economic') || p.includes('need-based')) return 10000;
+  if (p.includes('excel')) return 80000;
+  if (p.includes('academic') && (p.includes('tertiary') || p.includes('college'))) return 52500;
+  if (p.includes('filipino') || p.includes('panitikan')) return 52500;
+  if (p.includes('postgrad') || p.includes('thesis')) return 52500;
+  if (p.includes('athletic') && (p.includes('tertiary') || p.includes('college'))) return 40000;
+  if (p.includes('youth') && (p.includes('tertiary') || p.includes('college'))) return 40000;
+  if (p.includes('creative') || p.includes('writing') || p.includes('literary')) return 40000;
+  if (p.includes('vocational') || p.includes('continuing') || p.includes('tesda')) return 10000;
+  if (p.includes('shs') || p.includes('senior high')) return 15000;
+
+  return 10000;
 }
 
 export function getActiveStudentApplication(): any | null {

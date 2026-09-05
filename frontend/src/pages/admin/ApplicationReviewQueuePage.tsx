@@ -10,7 +10,7 @@ import { formatCurrency } from '../../utils/cn';
 import { DocumentAttachmentViewerModal } from '../../components/admin/DocumentAttachmentViewerModal';
 import { SendScholarshipNoticeModal, type NoticeRecipient } from '../../components/admin/SendScholarshipNoticeModal';
 import { getMyApplications, updateApplicationStatus } from '../../api/applications';
-import { ALL_SCHOLARSHIP_PROGRAMS } from '../../utils/scholarshipPrograms';
+import { ALL_SCHOLARSHIP_PROGRAMS, getProgramTermGrant } from '../../utils/scholarshipPrograms';
 import type { Application } from '../../types';
 
 export interface ReviewDocItem {
@@ -119,7 +119,7 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
     school: formData.school || (app as any).department || 'Bestlink College of the Philippines (BCP)',
     programId: app.program_id || (app as any).programCode || '',
     scholarshipTitle: app.program_name || app.title || 'Economic Scholarship (Need-Based Tertiary)',
-    amount: Number(app.amount) || 20000,
+    amount: Number(app.amount) || getProgramTermGrant(app.program_id || app.program_name),
     submissionDate: parseIsoDateStr(app.submission_date || app.submissionDate),
     status: status,
     complianceFlags: complianceFlags,
@@ -538,7 +538,7 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                   <th className="p-3">App ID & Student</th>
                   <th className="p-3">Applied Program Track</th>
                   <th className="p-3">GPA & Course</th>
-                  <th className="p-3">Grant Value</th>
+                  <th className="p-3">Grant Value (Per Term)</th>
                   <th className="p-3">Compliance & Attachments</th>
                   <th className="p-3 text-right">Actions</th>
                 </tr>
@@ -607,7 +607,10 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                         </span>
                         <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate max-w-[150px]">{app.program}</span>
                       </td>
-                      <td className="p-3 font-extrabold text-emerald-600 dark:text-emerald-400">{formatCurrency(app.amount)}</td>
+                      <td className="p-3 font-extrabold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(app.amount)}
+                        <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-medium">/ semester</span>
+                      </td>
                       <td className="p-3">
                         <div className="space-y-1">
                           {app.complianceFlags.length > 0 ? (
@@ -818,8 +821,8 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                 </span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Award Value</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedApp.amount)}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Term Grant Package</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedApp.amount)} / sem</span>
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Current Status</span>

@@ -43,6 +43,7 @@ import {
   getActiveStudentApplication,
   saveActiveStudentApplication,
   clearActiveStudentApplication,
+  getProgramTermGrant,
   type ScholarshipProgramSpec,
 } from '../../utils/scholarshipPrograms';
 import { getPortalSettings, type PortalSettingsData } from '../../api/portalSettings';
@@ -719,6 +720,8 @@ export const ApplicationForm: React.FC = () => {
     try {
       const generatedRefId = 'APP-QC-' + Math.floor(100000 + Math.random() * 900000);
 
+      const calculatedTermGrant = selectedProgram.termGrantAmount || getProgramTermGrant(selectedProgram.id);
+
       // Save to PostgreSQL Backend API
       try {
         await api.post('/applications', {
@@ -727,7 +730,7 @@ export const ApplicationForm: React.FC = () => {
           programName: selectedProgram.title,
           referenceId: generatedRefId,
           title: selectedProgram.title,
-          amount: selectedProgram.categoryId === 'shs' ? 30000 : selectedProgram.categoryId === 'tertiary' ? 105000 : 25000,
+          amount: calculatedTermGrant,
           progress: 33,
           status: 'Under Review',
           requirementsCount: activeRequiredDocs.length,
@@ -784,7 +787,7 @@ export const ApplicationForm: React.FC = () => {
         tuitionGrant: selectedProgram.tuitionGrant,
         stipend: selectedProgram.stipend,
         totalMax: selectedProgram.totalMax,
-        amount: 10000,
+        amount: calculatedTermGrant,
         submissionDate: new Date().toISOString().split('T')[0],
         submitted_at: new Date().toISOString(),
         status: 'pending',
