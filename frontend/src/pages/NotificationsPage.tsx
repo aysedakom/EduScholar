@@ -8,6 +8,7 @@ import type { AppNotification } from '../types';
 import { Card, CardHeader, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
+import { NotificationDetailModal } from '../components/notifications/NotificationDetailModal';
 import { formatDate } from '../utils/cn';
 
 export const NotificationsPage: React.FC = () => {
@@ -18,6 +19,7 @@ export const NotificationsPage: React.FC = () => {
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
   
   // Modals
+  const [selectedNotif, setSelectedNotif] = useState<AppNotification | null>(null);
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
@@ -77,6 +79,13 @@ export const NotificationsPage: React.FC = () => {
     } catch {
       // local state
     }
+  };
+
+  const handleSelectNotification = async (item: AppNotification) => {
+    if (!item.read) {
+      await handleToggleRead(item.id);
+    }
+    setSelectedNotif(item);
   };
 
   const confirmDelete = (id: string) => {
@@ -222,14 +231,15 @@ export const NotificationsPage: React.FC = () => {
               filteredNotifs.map((item) => (
                 <div
                   key={item.id}
-                  className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-4 ${
+                  onClick={() => handleSelectNotification(item)}
+                  className={`p-4 rounded-2xl border transition-all flex items-start justify-between gap-4 cursor-pointer hover:border-blue-400 dark:hover:border-blue-600 hover:shadow-md group ${
                     !item.read
                       ? 'bg-blue-50/40 dark:bg-blue-950/20 border-blue-300 dark:border-blue-800 shadow-medium'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-soft hover:shadow-medium'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-soft'
                   }`}
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className="h-10 w-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="h-10 w-10 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
                       {getNotificationIcon(item.type, item.title)}
                     </div>
                     <div className="space-y-1">
@@ -247,7 +257,7 @@ export const NotificationsPage: React.FC = () => {
                         )}
                       </div>
 
-                      <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white pt-0.5">
+                      <h4 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white pt-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                         {item.title}
                       </h4>
 
@@ -255,24 +265,34 @@ export const NotificationsPage: React.FC = () => {
                         {item.message}
                       </p>
 
-                      <div className="flex items-center gap-3 pt-2 text-[11px] text-slate-400">
+                      <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] text-slate-400">
                         <span className="font-medium">{formatDate(item.date || item.created_at || new Date().toISOString())}</span>
                         <span>•</span>
-                        <span className="text-slate-400 text-[10px]">Official System Notice (No direct reply)</span>
+                        <span className="text-slate-400 text-[10px]">Official System Notice</span>
+                        <span>•</span>
+                        <span className="text-blue-600 dark:text-blue-400 font-bold group-hover:underline inline-flex items-center gap-1">
+                          Click to view details & open link →
+                        </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
                     <button
-                      onClick={() => handleToggleRead(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleRead(item.id);
+                      }}
                       title={item.read ? 'Mark as Unread' : 'Mark as Read'}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <CheckCheck className={`h-4 w-4 ${item.read ? 'text-slate-300 dark:text-slate-600' : 'text-blue-600 font-bold'}`} />
                     </button>
                     <button
-                      onClick={() => setDeleteTargetId(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteTargetId(item.id);
+                      }}
                       title="Delete Notification"
                       className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
                     >
@@ -390,6 +410,14 @@ export const NotificationsPage: React.FC = () => {
           </div>
         </Modal>
       )}
+
+      {/* Notification Detail & Routing Modal */}
+      <NotificationDetailModal
+        notification={selectedNotif}
+        isOpen={Boolean(selectedNotif)}
+        onClose={() => setSelectedNotif(null)}
+        userRole={user?.role}
+      />
     </div>
   );
 };

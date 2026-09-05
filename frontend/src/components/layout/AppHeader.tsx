@@ -6,7 +6,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LanguageSwitcher } from '../ui/LanguageSwitcher';
 import { getSystemNotifications, saveSystemNotifications, mergeNotifications } from '../../utils/systemNotifications';
-import { markAllNotificationsRead, getMyNotifications } from '../../api/notifications';
+import { markAllNotificationsRead, markNotificationRead, getMyNotifications } from '../../api/notifications';
+import { NotificationDetailModal } from '../notifications/NotificationDetailModal';
 import type { AppNotification } from '../../types';
 
 interface AppHeaderProps {
@@ -29,6 +30,7 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [eservicesOpen, setEservicesOpen] = useState(false);
+  const [selectedNotif, setSelectedNotif] = useState<AppNotification | null>(null);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getSystemNotifications(user));
 
   useEffect(() => {
@@ -69,6 +71,21 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
     } catch {
       // local state already updated
     }
+  };
+
+  const handleSelectNotification = async (notif: AppNotification) => {
+    if (!notif.read) {
+      const updated = notifications.map((item) =>
+        item.id === notif.id ? { ...item, read: true } : item
+      );
+      setNotifications(updated);
+      saveSystemNotifications(updated);
+      try {
+        await markNotificationRead(notif.id);
+      } catch {}
+    }
+    setSelectedNotif(notif);
+    setNotifOpen(false);
   };
 
   useEffect(() => {
@@ -228,7 +245,8 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      className={`p-2.5 rounded-xl border text-xs transition-all ${
+                      onClick={() => handleSelectNotification(n)}
+                      className={`p-2.5 rounded-xl border text-xs transition-all cursor-pointer hover:border-blue-400 hover:shadow-xs group ${
                         n.read
                           ? 'bg-white dark:bg-slate-800/60 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-300'
                           : 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/60 text-slate-900 dark:text-slate-100 font-medium'
@@ -241,12 +259,29 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
                         <span className="text-[10px] text-slate-400">{n.date}</span>
                       </div>
                       <div className="flex justify-between items-start mb-0.5">
-                        <span className="font-extrabold text-slate-900 dark:text-white leading-tight">{n.title}</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white leading-tight group-hover:text-blue-600 transition-colors">
+                          {n.title}
+                        </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-3 whitespace-pre-line mt-0.5">{n.message}</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug line-clamp-3 whitespace-pre-line mt-0.5">
+                        {n.message}
+                      </p>
+                      <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 inline-flex items-center gap-1 mt-1">
+                        Click to view details & link →
+                      </span>
                     </div>
                   ))
                 )}
+              </div>
+
+              <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 text-center">
+                <Link
+                  to="/notifications"
+                  onClick={() => setNotifOpen(false)}
+                  className="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 inline-flex items-center gap-1"
+                >
+                  View All Notifications in Center →
+                </Link>
               </div>
             </div>
           )}
@@ -305,6 +340,13 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
           )}
         </div>
       </div>
+
+      <NotificationDetailModal
+        notification={selectedNotif}
+        isOpen={Boolean(selectedNotif)}
+        onClose={() => setSelectedNotif(null)}
+        userRole={user?.role}
+      />
     </header>
   );
 }

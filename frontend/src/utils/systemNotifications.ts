@@ -222,3 +222,147 @@ export const mergeNotifications = (
 
   return Array.from(map.values());
 };
+
+export interface NotificationDestination {
+  link: string;
+  actionLabel: string;
+  contextHint: string;
+}
+
+export const getNotificationDestination = (
+  notif?: AppNotification | null,
+  role?: string
+): NotificationDestination => {
+  if (!notif) {
+    return { link: '/dashboard', actionLabel: 'Go to Dashboard →', contextHint: 'Dashboard' };
+  }
+
+  const userRole = (role || 'student').toLowerCase();
+
+  // Explicit link on notification record
+  if (notif.link && notif.link.startsWith('/')) {
+    let actionLabel = 'Go to Associated Page →';
+    if (notif.link.includes('/applications')) actionLabel = 'Open Application Tracker →';
+    else if (notif.link.includes('/support') || notif.link.includes('/ticket')) actionLabel = 'Open Support Ticket →';
+    else if (notif.link.includes('/review')) actionLabel = 'Open Review Queue →';
+    else if (notif.link.includes('/messages')) actionLabel = 'Open Chat & Messages →';
+    else if (notif.link.includes('/documents')) actionLabel = 'Open Document Vault →';
+    else if (notif.link.includes('/school')) actionLabel = 'Open School Coordinator Portal →';
+    return { link: notif.link, actionLabel, contextHint: 'Direct System Link' };
+  }
+
+  const title = (notif.title || '').toLowerCase();
+  const msg = (notif.message || '').toLowerCase();
+
+  // 1. Support Tickets (e.g. "Support Ticket Update: TKT-2026-3910")
+  if (title.includes('ticket') || title.includes('tkt-') || msg.includes('ticket') || title.includes('support')) {
+    if (userRole === 'admin' || userRole === 'system_admin') {
+      return {
+        link: '/admin/ticket-inbox',
+        actionLabel: 'Open Ticket in Admin Desk →',
+        contextHint: 'Administrative Help Desk',
+      };
+    }
+    return {
+      link: '/support',
+      actionLabel: 'View Ticket in Support Desk →',
+      contextHint: 'Help & Support Center',
+    };
+  }
+
+  // 2. Direct Messages / Desk Inquiries (e.g. "New Message from Financial Aid Desk")
+  if (title.includes('message') || msg.includes('message') || title.includes('chat') || title.includes('desk')) {
+    if (userRole === 'admin' || userRole === 'system_admin') {
+      return {
+        link: '/admin/messages',
+        actionLabel: 'Open Messages Inbox →',
+        contextHint: 'Admin Communication Center',
+      };
+    }
+    return {
+      link: '/messages',
+      actionLabel: 'Open Chat & Messages →',
+      contextHint: 'Communication Desk',
+    };
+  }
+
+  // 3. Applications / Scholarship Submission / Review
+  if (
+    title.includes('application') ||
+    title.includes('scholarship') ||
+    msg.includes('application') ||
+    title.includes('economic') ||
+    title.includes('merit')
+  ) {
+    if (userRole === 'admin' || userRole === 'system_admin') {
+      return {
+        link: '/admin/review-queue',
+        actionLabel: 'Inspect in Review Queue →',
+        contextHint: 'Application Review Queue',
+      };
+    }
+    if (userRole === 'school_coordinator') {
+      return {
+        link: '/school/portal',
+        actionLabel: 'Open Coordinator Portal →',
+        contextHint: 'School Verification Portal',
+      };
+    }
+    if (userRole === 'supervisor') {
+      return {
+        link: '/supervisor/endorsements',
+        actionLabel: 'View Endorsement Queue →',
+        contextHint: 'Supervisor Review Portal',
+      };
+    }
+    return {
+      link: '/applications',
+      actionLabel: 'Track Application Status →',
+      contextHint: 'Live Application Tracker',
+    };
+  }
+
+  // 4. Disbursements & Financial Aid
+  if (
+    title.includes('disbursement') ||
+    title.includes('fund release') ||
+    title.includes('stipend') ||
+    msg.includes('payout')
+  ) {
+    if (userRole === 'treasury') {
+      return {
+        link: '/treasury/distribution',
+        actionLabel: 'Open Treasury Distribution →',
+        contextHint: 'Treasury Disbursement Portal',
+      };
+    }
+    return {
+      link: '/financial-aid',
+      actionLabel: 'Track Stipend Disbursement →',
+      contextHint: 'Financial Aid Release Hub',
+    };
+  }
+
+  // 5. Document Vault & Requirements
+  if (title.includes('document') || msg.includes('document') || title.includes('vault')) {
+    return {
+      link: '/documents',
+      actionLabel: 'Open Document Vault →',
+      contextHint: 'Verified Document Vault',
+    };
+  }
+
+  // Default fallback according to role
+  if (userRole === 'student') {
+    return {
+      link: '/dashboard',
+      actionLabel: 'Go to Student Dashboard →',
+      contextHint: 'Student Portal Dashboard',
+    };
+  }
+  return {
+    link: '/admin/overview',
+    actionLabel: 'Go to Admin Dashboard →',
+    contextHint: 'Administrator Overview',
+  };
+};
