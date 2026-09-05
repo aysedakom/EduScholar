@@ -949,14 +949,6 @@ export const ApplicationForm: React.FC = () => {
               >
                 Go to Scholar Dashboard
               </Button>
-              <Button
-                variant="ghost"
-                size="lg"
-                onClick={() => navigate('/scholar-prog-available')}
-                className="w-full sm:w-auto font-bold text-xs text-slate-500"
-              >
-                Browse Other Programs
-              </Button>
             </div>
           </Card>
         </main>
