@@ -1219,56 +1219,6 @@ export const ApplicationForm: React.FC = () => {
           </div>
         </div>
 
-        {/* PROGRAM QUALIFICATIONS BANNER CARD */}
-        <div className={`p-6 rounded-3xl border shadow-sm space-y-4 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-gradient-to-br from-blue-50/90 via-slate-50 to-indigo-50/40 border-blue-200'}`}>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="primary" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-0.5">
-                {selectedProgram.badge}
-              </Badge>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                {selectedProgram.categoryTitle}
-              </span>
-            </div>
-            <h2 className="font-heading font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
-              {selectedProgram.title}
-            </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300">
-              {selectedProgram.summary}
-            </p>
-          </div>
-
-          {/* Grant Metrics & Qualifications Checklist */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-slate-200/80 dark:border-slate-800">
-            <div className="p-3.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1 shadow-2xs">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Tuition Grant</span>
-              <p className="font-extrabold text-blue-600 dark:text-blue-400 text-base">{selectedProgram.tuitionGrant}</p>
-            </div>
-            <div className="p-3.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1 shadow-2xs">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Living Stipend</span>
-              <p className="font-extrabold text-emerald-600 dark:text-emerald-400 text-base">{selectedProgram.stipend}</p>
-            </div>
-            <div className="p-3.5 bg-white dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-1 shadow-2xs">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Minimum Academic Requirement</span>
-              <p className="font-extrabold text-amber-600 dark:text-amber-400 text-xs sm:text-sm">{selectedProgram.minGwaText}</p>
-            </div>
-          </div>
-
-          {/* Program Criteria Checklist */}
-          <div className="p-4 bg-white/80 dark:bg-slate-850 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-2">
-            <span className="text-xs font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-blue-600 dark:text-blue-400" /> Program Qualifications & Eligibility Checklist:
-            </span>
-            <ul className="space-y-1 text-xs text-slate-600 dark:text-slate-300 pl-1">
-              {selectedProgram.qualifications.map((q, qIdx) => (
-                <li key={qIdx} className="flex items-start gap-2">
-                  <span className="text-blue-600 dark:text-blue-400 font-bold">•</span>
-                  <span>{q}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
 
         {/* DRAFT PROMPT BANNER (Allows student to choose rather than system deciding) */}
         {pendingDraft && (
