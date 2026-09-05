@@ -19,7 +19,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getActiveStudentApplication } from '../../utils/scholarshipPrograms';
+import {
+  saveActiveStudentApplication,
+  clearActiveStudentApplication,
+} from '../../utils/scholarshipPrograms';
+import { getMyApplications } from '../../api/applications';
+import { useWebSocket } from '../../context/WebSocketContext';
 
 interface SubCategoryInfo {
   id: string;
@@ -330,18 +335,103 @@ export const ScholarProgAvailablePage: React.FC = () => {
   const [openCategoryAccordion, setOpenCategoryAccordion] = useState<string>('shs');
   const [blockedModalOpen, setBlockedModalOpen] = useState(false);
 
-  const activeApp = getActiveStudentApplication();
+  const [activeApp, setActiveApp] = useState<any | null>(null);
+  const { subscribeToTable } = useWebSocket();
 
-  const handleApply = (programId: string) => {
+  const syncApplicationFromDb = React.useCallback(async () => {
+    if (!user) {
+      setActiveApp(null);
+      return;
+    }
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res.data) ? res.data : [];
+      const active = apps.find((a: any) => {
+        const s = String(a.status || '').toLowerCase();
+        return s !== 'rejected' && s !== 'cancelled';
+      });
+
+      if (active) {
+        const unified = {
+          id: active.reference_id || active.application_code || active.id,
+          program_name: active.program_name || active.title,
+          scholarshipTitle: active.program_name || active.title,
+          status: active.status,
+          submissionDate: active.submission_date,
+        };
+        saveActiveStudentApplication(unified);
+        setActiveApp(unified);
+      } else {
+        clearActiveStudentApplication(user.email);
+        setActiveApp(null);
+      }
+    } catch (err) {
+      console.warn('[ScholarProgAvailablePage] Error checking applications:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    syncApplicationFromDb();
+  }, [syncApplicationFromDb]);
+
+  useEffect(() => {
+    const unsub = subscribeToTable('applications', () => {
+      syncApplicationFromDb();
+    });
+    return () => unsub();
+  }, [subscribeToTable, syncApplicationFromDb]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('eduscholar_app_sync');
+      channel.onmessage = (e) => {
+        if (e.data?.type === 'APPLICATION_UPDATED') {
+          syncApplicationFromDb();
+        }
+      };
+      return () => channel.close();
+    }
+  }, [syncApplicationFromDb]);
+
+  const handleApply = async (programId: string) => {
     if (!user) {
       navigate('/login?redirect=' + encodeURIComponent('/student/application-form?program=' + programId));
       return;
     }
-    if (activeApp) {
-      setBlockedModalOpen(true);
-      return;
+
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res.data) ? res.data : [];
+      const active = apps.find((a: any) => {
+        const s = String(a.status || '').toLowerCase();
+        return s !== 'rejected' && s !== 'cancelled';
+      });
+
+      if (active) {
+        const unified = {
+          id: active.reference_id || active.application_code || active.id,
+          program_name: active.program_name || active.title,
+          scholarshipTitle: active.program_name || active.title,
+          status: active.status,
+          submissionDate: active.submission_date,
+        };
+        saveActiveStudentApplication(unified);
+        setActiveApp(unified);
+        setBlockedModalOpen(true);
+        return;
+      }
+
+      // No record in database -> proceed to application form for selected program
+      clearActiveStudentApplication(user.email);
+      setActiveApp(null);
+      navigate('/student/application-form?program=' + programId);
+    } catch (err) {
+      if (activeApp) {
+        setBlockedModalOpen(true);
+        return;
+      }
+      navigate('/student/application-form?program=' + programId);
     }
-    navigate('/student/application-form?program=' + programId);
   };
 
   useEffect(() => {

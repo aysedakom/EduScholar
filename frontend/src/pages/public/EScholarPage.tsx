@@ -24,7 +24,12 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { getActiveStudentApplication } from '../../utils/scholarshipPrograms';
+import {
+  saveActiveStudentApplication,
+  clearActiveStudentApplication,
+} from '../../utils/scholarshipPrograms';
+import { getMyApplications } from '../../api/applications';
+import { useWebSocket } from '../../context/WebSocketContext';
 import { toast } from 'sonner';
 
 export const EScholarPage: React.FC = () => {
@@ -32,6 +37,7 @@ export const EScholarPage: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { t, isTagalog } = useLanguage();
+  const { subscribeToTable } = useWebSocket();
   const location = useLocation();
   const [isAlumniModalOpen, setIsAlumniModalOpen] = useState(false);
   const [eservicesOpen, setEservicesOpen] = useState(false);
@@ -40,18 +46,110 @@ export const EScholarPage: React.FC = () => {
   // Auto pop-up announcement modal state
   const [showPopup, setShowPopup] = useState(true);
 
-  const activeApp = getActiveStudentApplication();
+  const [activeApp, setActiveApp] = useState<any | null>(null);
+  const [isCheckingApp, setIsCheckingApp] = useState(false);
 
-  const handleStartNewApplication = () => {
+  // Ground-truth database sync for active application record
+  const syncApplicationFromDb = React.useCallback(async () => {
+    if (!user) {
+      setActiveApp(null);
+      return;
+    }
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res.data) ? res.data : [];
+      const active = apps.find((a: any) => {
+        const s = String(a.status || '').toLowerCase();
+        return s !== 'rejected' && s !== 'cancelled';
+      });
+
+      if (active) {
+        const unified = {
+          id: active.reference_id || active.application_code || active.id,
+          program_name: active.program_name || active.title,
+          scholarshipTitle: active.program_name || active.title,
+          status: active.status,
+          submissionDate: active.submission_date,
+        };
+        saveActiveStudentApplication(unified);
+        setActiveApp(unified);
+      } else {
+        // No record of applicant in database -> purge stale browser cache
+        clearActiveStudentApplication(user.email);
+        setActiveApp(null);
+      }
+    } catch (err) {
+      console.warn('[EScholarPage] Error querying applications from database:', err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    syncApplicationFromDb();
+  }, [syncApplicationFromDb]);
+
+  // Real-time listener for database updates & resets (WebSocket & Cross-Tab Broadcast)
+  useEffect(() => {
+    const unsub = subscribeToTable('applications', () => {
+      syncApplicationFromDb();
+    });
+    return () => unsub();
+  }, [subscribeToTable, syncApplicationFromDb]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+      const channel = new BroadcastChannel('eduscholar_app_sync');
+      channel.onmessage = (e) => {
+        if (e.data?.type === 'APPLICATION_UPDATED') {
+          syncApplicationFromDb();
+        }
+      };
+      return () => channel.close();
+    }
+  }, [syncApplicationFromDb]);
+
+  const handleStartNewApplication = async () => {
     if (!user) {
       navigate('/login?redirect=' + encodeURIComponent('/scholar-prog-available'));
       return;
     }
-    if (activeApp) {
-      setBlockedModalOpen(true);
-      return;
+
+    setIsCheckingApp(true);
+    try {
+      const res = await getMyApplications();
+      const apps = Array.isArray(res.data) ? res.data : [];
+      const active = apps.find((a: any) => {
+        const s = String(a.status || '').toLowerCase();
+        return s !== 'rejected' && s !== 'cancelled';
+      });
+
+      if (active) {
+        const unified = {
+          id: active.reference_id || active.application_code || active.id,
+          program_name: active.program_name || active.title,
+          scholarshipTitle: active.program_name || active.title,
+          status: active.status,
+          submissionDate: active.submission_date,
+        };
+        saveActiveStudentApplication(unified);
+        setActiveApp(unified);
+        setBlockedModalOpen(true);
+        return;
+      }
+
+      // No record in database -> Link them directly to scholar-prog-available so they choose their scholarship track first
+      clearActiveStudentApplication(user.email);
+      setActiveApp(null);
+      navigate('/scholar-prog-available');
+    } catch (err) {
+      console.warn('[EScholarPage] Network check error, checking cached state:', err);
+      if (activeApp) {
+        setBlockedModalOpen(true);
+      } else {
+        navigate('/scholar-prog-available');
+      }
+    } finally {
+      setIsCheckingApp(false);
     }
-    navigate('/scholar-prog-available');
   };
 
   useEffect(() => {
@@ -341,10 +439,11 @@ export const EScholarPage: React.FC = () => {
                   variant="primary"
                   size="lg"
                   onClick={handleStartNewApplication}
+                  disabled={isCheckingApp}
                   rightIcon={<ArrowRight className="h-4 w-4" />}
-                  className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer"
+                  className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer disabled:opacity-70"
                 >
-                  Start New Application
+                  {isCheckingApp ? 'Verifying Records...' : 'Start New Application'}
                 </Button>
                 <div className="text-center pt-2">
                   <Link
