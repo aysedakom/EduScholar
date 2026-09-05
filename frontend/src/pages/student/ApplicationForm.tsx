@@ -1826,7 +1826,7 @@ export const ApplicationForm: React.FC = () => {
                 <h3 className="text-xs font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
                   1. Household Financial Profile
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-bold mb-1">
                       Gross Annual Household Income (₱) *
@@ -1854,6 +1854,22 @@ export const ApplicationForm: React.FC = () => {
                     </select>
                     {errors.incomeBracket && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.incomeBracket.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Primary Financial Support Source *</label>
+                    <select
+                      {...register('financialSupport')}
+                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="">-- Select Support Source --</option>
+                      <option value="Parents">Parents / Legal Guardian</option>
+                      <option value="Self">Self-Supporting / Working Student</option>
+                      <option value="Scholarship">Scholarships / Private Grants</option>
+                      <option value="Other">Other Relatives / Sponsor</option>
+                    </select>
+                    {errors.financialSupport && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.financialSupport.message}</p>
                     )}
                   </div>
                   <div>
