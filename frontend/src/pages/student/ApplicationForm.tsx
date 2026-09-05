@@ -304,8 +304,10 @@ export const ApplicationForm: React.FC = () => {
     watch,
     reset,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<ApplicationFormData>({
+    mode: 'onChange',
     resolver: zodResolver(applicationSchema) as any,
     defaultValues: {
       firstName: user?.name?.split(' ')[0] || '',
@@ -508,9 +510,11 @@ export const ApplicationForm: React.FC = () => {
       const valid = getBarangaysByDistrict(selectedDistrict);
       if (!valid.includes(selectedBarangay)) {
         setValue('barangay', '', { shouldValidate: true });
+      } else {
+        clearErrors('barangay');
       }
     }
-  }, [selectedDistrict, selectedBarangay, setValue]);
+  }, [selectedDistrict, selectedBarangay, setValue, clearErrors]);
 
   const selectedSchool = watch('school');
   const isUnlistedSchool = selectedSchool?.includes('Other / School Not Listed');
@@ -1450,14 +1454,8 @@ export const ApplicationForm: React.FC = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold mb-1">City / LGU Jurisdiction</label>
-                    <div className={`w-full p-2.5 border rounded-xl text-xs flex items-center justify-between font-bold select-none ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
-                      <span className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-                        Quezon City
-                      </span>
-                      <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
-                        Strictly QC Residents
-                      </span>
+                    <div className={`w-full p-2.5 border rounded-xl text-xs font-medium select-none ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                      Quezon City
                     </div>
                     <input type="hidden" {...register('city')} value="Quezon City" />
                   </div>
@@ -1468,6 +1466,9 @@ export const ApplicationForm: React.FC = () => {
                       onChange={(e) => {
                         const newDistrict = e.target.value;
                         setValue('district', newDistrict, { shouldValidate: true });
+                        if (newDistrict) {
+                          clearErrors('district');
+                        }
                         const currentBarangay = watch('barangay');
                         const validBarangays = getBarangaysByDistrict(newDistrict);
                         if (!validBarangays.includes(currentBarangay)) {
@@ -1483,7 +1484,7 @@ export const ApplicationForm: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    {errors.district && (
+                    {errors.district && !watch('district') && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.district.message}</p>
                     )}
                   </div>
@@ -1500,6 +1501,13 @@ export const ApplicationForm: React.FC = () => {
                     <select
                       {...register('barangay')}
                       disabled={!selectedDistrict}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setValue('barangay', val, { shouldValidate: true });
+                        if (val) {
+                          clearErrors('barangay');
+                        }
+                      }}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
                       <option value="">
@@ -1513,7 +1521,7 @@ export const ApplicationForm: React.FC = () => {
                         </option>
                       ))}
                     </select>
-                    {errors.barangay && (
+                    {errors.barangay && !watch('barangay') && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.barangay.message}</p>
                     )}
                   </div>
