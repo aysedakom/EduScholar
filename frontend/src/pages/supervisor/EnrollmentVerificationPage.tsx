@@ -124,10 +124,10 @@ export const EnrollmentVerificationPage: React.FC = () => {
   const handleProcessAction = async () => {
     if (!targetRecord) return;
 
-    const newStatus = actionType === 'confirm' ? 'Assessment Phase' : 'Rejected';
+    const newStatus = actionType === 'confirm' ? 'Approved' : 'Rejected';
     const notes =
       actionType === 'confirm'
-        ? 'Enrollment credentials verified and endorsed by Supervisor.'
+        ? 'Enrollment credentials verified and application officially approved by Scholarship Supervisor.'
         : rejectionReason || 'Invalid Certificate of Registration';
 
     if (targetRecord.dbId) {
@@ -151,7 +151,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
     );
 
     toast.success(
-      `Enrollment for ${targetRecord.studentName} ${actionType === 'confirm' ? 'VERIFIED & TRANSITIONED TO ASSESSMENT' : 'REJECTED'}!`
+      `Enrollment for ${targetRecord.studentName} ${actionType === 'confirm' ? 'VERIFIED & OFFICIALLY APPROVED' : 'REJECTED'}!`
     );
     setTargetRecord(null);
     setRejectionReason('');
@@ -292,7 +292,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
                               leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
                               className="font-bold"
                             >
-                              Confirm
+                              Approve
                             </Button>
                           </>
                         )}
@@ -311,7 +311,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
         <Modal
           isOpen={!!targetRecord}
           onClose={() => setTargetRecord(null)}
-          title={`${actionType === 'confirm' ? 'Confirm' : 'Reject'} Enrollment: ${targetRecord.studentName}`}
+          title={`${actionType === 'confirm' ? 'Approve' : 'Reject'} Enrollment & Grant: ${targetRecord.studentName}`}
           description={`School: ${targetRecord.school} (${targetRecord.course})`}
           footer={
             <>
@@ -324,7 +324,7 @@ export const EnrollmentVerificationPage: React.FC = () => {
                 onClick={handleProcessAction}
                 className="font-bold"
               >
-                Confirm {actionType === 'confirm' ? 'Enrollment Status' : 'Rejection'}
+                {actionType === 'confirm' ? 'Confirm & Approve Application' : 'Confirm Rejection'}
               </Button>
             </>
           }

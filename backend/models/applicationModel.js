@@ -79,11 +79,13 @@ const findActiveByUserId = async (userId) => {
 
 const findById = async (id) => {
   try {
+    const isNum = !isNaN(Number(id)) && String(id).trim() !== '' && !String(id).includes('-');
+    const whereClause = isNum ? `a.id = $1` : `(a.reference_id = $1 OR a.application_code = $1 OR a.id::text = $1)`;
     const result = await pool.query(
       `SELECT a.*, u.name as applicant_name, u.email as applicant_email, u.student_id
        FROM applications a
        LEFT JOIN users u ON a.user_id = u.id
-       WHERE a.id = $1`,
+       WHERE ${whereClause}`,
       [id]
     );
     return result.rows[0] || null;
@@ -192,17 +194,26 @@ const updateStatus = async (id, status, notes, remarks) => {
       progress = 16;
     }
 
-    const result = await pool.query(
-      `UPDATE applications 
-       SET status = $2, 
-           notes = COALESCE($3, notes),
-           remarks = COALESCE($4, remarks),
-           progress = $5,
-           updated_at = NOW() 
-       WHERE id = $1 
-       RETURNING *`,
-      [id, status, notes || null, remarks || null, progress]
-    );
+    const isNum = !isNaN(Number(id)) && String(id).trim() !== '' && !String(id).includes('-');
+    const queryStr = isNum
+      ? `UPDATE applications 
+         SET status = $2, 
+             notes = COALESCE($3, notes),
+             remarks = COALESCE($4, remarks),
+             progress = $5,
+             updated_at = NOW() 
+         WHERE id = $1 
+         RETURNING *`
+      : `UPDATE applications 
+         SET status = $2, 
+             notes = COALESCE($3, notes),
+             remarks = COALESCE($4, remarks),
+             progress = $5,
+             updated_at = NOW() 
+         WHERE reference_id = $1 OR application_code = $1 OR id::text = $1 
+         RETURNING *`;
+
+    const result = await pool.query(queryStr, [id, status, notes || null, remarks || null, progress]);
 
     const updatedApp = result.rows[0];
 
