@@ -1640,17 +1640,12 @@ export const ApplicationForm: React.FC = () => {
                   <label className="block text-xs font-bold mb-1">School Institution Type *</label>
                   {!isUnlistedSchool && selectedSchool ? (
                     <div>
-                      <div className={`w-full p-2.5 border rounded-xl text-xs font-medium select-none flex items-center justify-between ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
-                        <span>
-                          {watch('schoolType') === 'Public' && 'Public Institution'}
-                          {watch('schoolType') === 'SUC' && 'State University / College (SUC)'}
-                          {watch('schoolType') === 'LUC' && 'Local University / College (LUC)'}
-                          {watch('schoolType') === 'Private' && 'Private Institution'}
-                          {!watch('schoolType') && 'Auto-detected'}
-                        </span>
-                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
-                          Auto-Detected
-                        </span>
+                      <div className={`w-full p-2.5 border rounded-xl text-xs font-medium select-none ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                        {watch('schoolType') === 'Public' && 'Public Institution'}
+                        {watch('schoolType') === 'SUC' && 'State University / College (SUC)'}
+                        {watch('schoolType') === 'LUC' && 'Local University / College (LUC)'}
+                        {watch('schoolType') === 'Private' && 'Private Institution'}
+                        {!watch('schoolType') && '—'}
                       </div>
                       <input type="hidden" {...register('schoolType')} />
                     </div>
