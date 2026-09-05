@@ -12,6 +12,11 @@ import { PhoneInput } from '../../components/ui/PhoneInput';
 import { formatPHMobile, isValidPHMobile } from '../../utils/phoneFormatter';
 import { toast } from 'sonner';
 import type { BasicProfile } from '../../types';
+import {
+  QC_DISTRICTS_DATA,
+  getBarangaysByDistrict,
+  getDistrictByBarangay,
+} from '../../utils/qcDistricts';
 
 export const BasicFormPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,6 +33,11 @@ export const BasicFormPage: React.FC = () => {
     major: existingProfile?.major || user?.major || '',
     yearLevel: existingProfile?.yearLevel || '',
     gpa: existingProfile?.gpa || (user?.gpa ? String(user.gpa) : ''),
+    district:
+      existingProfile?.district ||
+      user?.district ||
+      getDistrictByBarangay(existingProfile?.barangay || user?.barangay) ||
+      '',
     barangay: existingProfile?.barangay || user?.barangay || '',
     address: existingProfile?.address || user?.address || '',
     householdIncome: existingProfile?.householdIncome || '',
@@ -228,14 +238,71 @@ export const BasicFormPage: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                id="barangay"
-                label="QC Barangay"
-                value={form.barangay}
-                onChange={(e) => update('barangay', e.target.value)}
-                placeholder="e.g. Barangay Batasan Hills"
-                required
-              />
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">City / Jurisdiction</label>
+                <div className="h-11 px-4 text-sm bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-700 dark:text-slate-200 flex items-center justify-between font-bold select-none">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    Quezon City
+                  </span>
+                  <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                    Strictly QC Residents
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Quezon City District *</label>
+                <select
+                  value={form.district || ''}
+                  onChange={(e) => {
+                    const newDistrict = e.target.value;
+                    const valid = getBarangaysByDistrict(newDistrict);
+                    setForm((prev) => ({
+                      ...prev,
+                      district: newDistrict,
+                      barangay: valid.includes(prev.barangay) ? prev.barangay : '',
+                    }));
+                  }}
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                  required
+                >
+                  <option value="">-- Select QC District --</option>
+                  {QC_DISTRICTS_DATA.map((d) => (
+                    <option key={d.district} value={d.district} className="dark:bg-slate-900 dark:text-white">
+                      {d.district} ({d.barangays.length} Barangays)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Quezon City Barangay *</label>
+                  {form.district && (
+                    <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                      {getBarangaysByDistrict(form.district).length} in {form.district}
+                    </span>
+                  )}
+                </div>
+                <select
+                  value={form.barangay}
+                  disabled={!form.district}
+                  onChange={(e) => update('barangay', e.target.value)}
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 disabled:opacity-60 disabled:cursor-not-allowed"
+                  required
+                >
+                  <option value="">
+                    {!form.district ? '-- Select District First --' : '-- Select QC Barangay --'}
+                  </option>
+                  {getBarangaysByDistrict(form.district).map((bg) => (
+                    <option key={bg} value={bg} className="dark:bg-slate-900 dark:text-white">
+                      {bg}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="space-y-1.5">
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Household Annual Income</label>
                 <select
@@ -254,10 +321,10 @@ export const BasicFormPage: React.FC = () => {
 
             <Input
               id="address"
-              label="Complete Home Address"
+              label="Complete Home Address (House / Unit No., Street)"
               value={form.address}
               onChange={(e) => update('address', e.target.value)}
-              placeholder="e.g. 142 Commonwealth Avenue, Barangay Batasan Hills, Quezon City"
+              placeholder="e.g. Unit 4B, 142 Commonwealth Avenue"
               required
             />
 

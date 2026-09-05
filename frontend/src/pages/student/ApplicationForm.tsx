@@ -47,6 +47,11 @@ import {
 } from '../../utils/scholarshipPrograms';
 import { getPortalSettings, type PortalSettingsData } from '../../api/portalSettings';
 import { sendSystemScholarshipNotice } from '../../utils/systemNotifications';
+import {
+  QC_DISTRICTS_DATA,
+  getBarangaysByDistrict,
+  getDistrictByBarangay,
+} from '../../utils/qcDistricts';
 
 // List of accredited Quezon City Universities, Colleges & HEIs
 export const QC_SCHOOLS = [
@@ -104,9 +109,9 @@ const applicationSchema = z.object({
   mobileNumber: z.string().refine((val) => isValidPHMobile(val), {
     message: 'Please enter a valid 10-digit Philippine mobile number (e.g. +63 917 123 4567)',
   }),
-  telephoneNumber: z.string().optional(),
   address: z.string().min(1, 'House/unit number and street address is required'),
-  barangay: z.string().min(1, 'Barangay is required'),
+  district: z.string().min(1, 'Please select your Quezon City District'),
+  barangay: z.string().min(1, 'Please select your Quezon City Barangay'),
   city: z.string().optional().default('Quezon City'),
   province: z.string().optional().default('Metro Manila'),
   zipCode: z.string().optional().default('1100'),
@@ -298,6 +303,7 @@ export const ApplicationForm: React.FC = () => {
     trigger,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ApplicationFormData>({
     resolver: zodResolver(applicationSchema) as any,
@@ -308,6 +314,7 @@ export const ApplicationForm: React.FC = () => {
       mobileNumber: user?.phone ? formatPHMobile(user.phone) : '',
       city: 'Quezon City',
       province: user?.province || 'Metro Manila',
+      district: (user as any)?.district || getDistrictByBarangay(user?.barangay) || '',
       barangay: user?.barangay || '',
       zipCode: user?.zipCode || '',
       school: '',
@@ -449,8 +456,9 @@ export const ApplicationForm: React.FC = () => {
         lastName: user?.name?.split(' ').slice(1).join(' ') || '',
         email: user?.email || '',
         mobileNumber: user?.phone ? formatPHMobile(user.phone) : '',
-        city: user?.city || '',
+        city: 'Quezon City',
         province: user?.province || 'Metro Manila',
+        district: (user as any)?.district || getDistrictByBarangay(user?.barangay) || '',
         barangay: user?.barangay || '',
         zipCode: user?.zipCode || '',
         school: '',
@@ -488,8 +496,21 @@ export const ApplicationForm: React.FC = () => {
   const is4Ps = watch('is4Ps');
   const isSoloParent = watch('isSoloParent');
   const isKasambahayOrToda = watch('isKasambahayOrToda');
-
   const hasSpecialSector = Boolean(isPWD || isIndigenous || is4Ps || isSoloParent || isKasambahayOrToda);
+
+  const selectedDistrict = watch('district');
+  const selectedBarangay = watch('barangay');
+  const availableBarangays = getBarangaysByDistrict(selectedDistrict);
+
+  // When district changes, if the current barangay is not part of the selected district, reset it
+  useEffect(() => {
+    if (selectedDistrict && selectedBarangay) {
+      const valid = getBarangaysByDistrict(selectedDistrict);
+      if (!valid.includes(selectedBarangay)) {
+        setValue('barangay', '', { shouldValidate: true });
+      }
+    }
+  }, [selectedDistrict, selectedBarangay, setValue]);
 
   const selectedSchool = watch('school');
   const isUnlistedSchool = selectedSchool?.includes('Other / School Not Listed');
@@ -585,6 +606,7 @@ export const ApplicationForm: React.FC = () => {
       'email',
       'mobileNumber',
       'address',
+      'district',
       'barangay',
       'city',
     ],
@@ -1439,26 +1461,72 @@ export const ApplicationForm: React.FC = () => {
                     </div>
                     <input type="hidden" {...register('city')} value="Quezon City" />
                   </div>
-                  <div className="md:col-span-2">
+                  <div>
+                    <label className="block text-xs font-bold mb-1">Quezon City District *</label>
+                    <select
+                      {...register('district')}
+                      onChange={(e) => {
+                        const newDistrict = e.target.value;
+                        setValue('district', newDistrict, { shouldValidate: true });
+                        const currentBarangay = watch('barangay');
+                        const validBarangays = getBarangaysByDistrict(newDistrict);
+                        if (!validBarangays.includes(currentBarangay)) {
+                          setValue('barangay', '', { shouldValidate: true });
+                        }
+                      }}
+                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="">-- Select QC District --</option>
+                      {QC_DISTRICTS_DATA.map((dist) => (
+                        <option key={dist.district} value={dist.district}>
+                          {dist.district} ({dist.barangays.length} Barangays)
+                        </option>
+                      ))}
+                    </select>
+                    {errors.district && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.district.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-bold">Quezon City Barangay *</label>
+                      {selectedDistrict && (
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                          {availableBarangays.length} in {selectedDistrict}
+                        </span>
+                      )}
+                    </div>
+                    <select
+                      {...register('barangay')}
+                      disabled={!selectedDistrict}
+                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="">
+                        {!selectedDistrict
+                          ? '-- Select District First --'
+                          : '-- Select QC Barangay --'}
+                      </option>
+                      {availableBarangays.map((bg) => (
+                        <option key={bg} value={bg}>
+                          {bg}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.barangay && (
+                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.barangay.message}</p>
+                    )}
+                  </div>
+
+                  <div className="md:col-span-3">
                     <label className="block text-xs font-bold mb-1">House / Unit No., Street Address *</label>
                     <input
                       {...register('address')}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="e.g. 123 Kalayaan Avenue"
+                      placeholder="e.g. Unit 4B, 123 Kalayaan Avenue / Street name"
                     />
                     {errors.address && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.address.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold mb-1">Quezon City Barangay *</label>
-                    <input
-                      {...register('barangay')}
-                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="e.g. Barangay Central"
-                    />
-                    {errors.barangay && (
-                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.barangay.message}</p>
                     )}
                   </div>
                   <div className="md:col-span-3 p-3 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 rounded-xl flex items-center gap-2 text-[11px] text-blue-900 dark:text-blue-300">

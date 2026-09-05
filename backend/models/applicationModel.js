@@ -96,12 +96,15 @@ const findById = async (id) => {
 const create = async (data) => {
   try {
     const applicationCode = data.application_code || `APP-QC-${Date.now()}`;
+    const district = data.district || data.form_data?.district || null;
+    const barangay = data.barangay || data.form_data?.barangay || null;
+    const address = data.address || data.form_data?.address || null;
     const result = await pool.query(
       `INSERT INTO applications
          (application_code, user_id, type, program_id, program_name, reference_id, title, amount, status,
           submission_date, disbursement_date, progress, requirements_count, completed_requirements,
-          job_id, notes, form_data, documents_submitted, remarks)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
+          job_id, notes, form_data, documents_submitted, remarks, district, barangay, address)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)
        RETURNING *`,
       [
         applicationCode,
@@ -123,6 +126,9 @@ const create = async (data) => {
         JSON.stringify(data.form_data || {}),
         JSON.stringify(data.documents_submitted || []),
         data.remarks || null,
+        district,
+        barangay,
+        address,
       ]
     );
     return result.rows[0];

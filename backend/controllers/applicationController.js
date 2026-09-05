@@ -90,7 +90,9 @@ const createApplication = async (req, res) => {
       requirements_count: requirementsCount || 4,
       completed_requirements: completedRequirements || 4,
       job_id: jobId || null,
-      notes: notes || null,
+      district: req.body.district || formData?.district || null,
+      barangay: req.body.barangay || formData?.barangay || null,
+      address: req.body.address || formData?.address || null,
       form_data: formData || req.body,
       documents_submitted: documentsSubmitted || [],
       remarks: remarks || 'Application submitted via student portal. Verification in progress.',
@@ -113,8 +115,9 @@ const createApplication = async (req, res) => {
                phone = COALESCE($6, phone),
                address = COALESCE($7, address),
                barangay = COALESCE($8, barangay),
-               city = COALESCE($9, city)
-           WHERE id = $10`,
+               city = COALESCE($9, city),
+               district = COALESCE($10, district)
+           WHERE id = $11`,
           [
             studentName,
             formData.studentId || null,
@@ -125,6 +128,7 @@ const createApplication = async (req, res) => {
             formData.address || null,
             formData.barangay || null,
             formData.city || null,
+            formData.district || null,
             req.user.id
           ]
         );

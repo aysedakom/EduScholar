@@ -15,6 +15,7 @@ export interface BasicProfile {
   major: string;
   yearLevel: string;
   gpa: string;
+  district?: string;
   barangay: string;
   address: string;
   householdIncome: string;
@@ -42,6 +43,7 @@ export interface User {
   financial_aid_year?: string;
   phone?: string;
   address?: string;
+  district?: string;
   barangay?: string;
   city?: string;
   province?: string;

@@ -99,6 +99,11 @@ async function ensureTables() {
         );
         CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email, otp_purpose, consumed_at);
         ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS district VARCHAR(100);
+        ALTER TABLE applications ADD COLUMN IF NOT EXISTS district VARCHAR(100);
+        ALTER TABLE applications ADD COLUMN IF NOT EXISTS barangay VARCHAR(100);
+        ALTER TABLE applications ADD COLUMN IF NOT EXISTS address TEXT;
+        ALTER TABLE student_registry ADD COLUMN IF NOT EXISTS district VARCHAR(100);
 
         -- 1. Support Tickets Table
         CREATE TABLE IF NOT EXISTS support_tickets (
