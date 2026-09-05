@@ -107,7 +107,7 @@ const applicationSchema = z.object({
   telephoneNumber: z.string().optional(),
   address: z.string().min(1, 'House/unit number and street address is required'),
   barangay: z.string().min(1, 'Barangay is required'),
-  city: z.string().min(1, 'City or Municipality is required'),
+  city: z.string().optional().default('Quezon City'),
   province: z.string().optional().default('Metro Manila'),
   zipCode: z.string().optional().default('1100'),
 
@@ -306,7 +306,7 @@ export const ApplicationForm: React.FC = () => {
       lastName: user?.name?.split(' ').slice(1).join(' ') || '',
       email: user?.email || '',
       mobileNumber: user?.phone ? formatPHMobile(user.phone) : '',
-      city: user?.city || '',
+      city: 'Quezon City',
       province: user?.province || 'Metro Manila',
       barangay: user?.barangay || '',
       zipCode: user?.zipCode || '',
@@ -725,6 +725,7 @@ export const ApplicationForm: React.FC = () => {
           ? data.unlistedCourseName.trim()
           : data.course;
       data.course = resolvedCourse;
+      data.city = 'Quezon City';
 
       // 2. Save active application into LocalStorage (Locking duplicate applications)
       saveActiveStudentApplication(newApplicationRecord);
@@ -1426,15 +1427,17 @@ export const ApplicationForm: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold mb-1">City / Municipality *</label>
-                    <input
-                      {...register('city')}
-                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                      placeholder="e.g. Quezon City"
-                    />
-                    {errors.city && (
-                      <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.city.message}</p>
-                    )}
+                    <label className="block text-xs font-bold mb-1">City / LGU Jurisdiction</label>
+                    <div className={`w-full p-2.5 border rounded-xl text-xs flex items-center justify-between font-bold select-none ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                        Quezon City
+                      </span>
+                      <span className="text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                        Strictly QC Residents
+                      </span>
+                    </div>
+                    <input type="hidden" {...register('city')} value="Quezon City" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-xs font-bold mb-1">House / Unit No., Street Address *</label>
@@ -1457,6 +1460,12 @@ export const ApplicationForm: React.FC = () => {
                     {errors.barangay && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.barangay.message}</p>
                     )}
+                  </div>
+                  <div className="md:col-span-3 p-3 bg-blue-50/80 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/60 rounded-xl flex items-center gap-2 text-[11px] text-blue-900 dark:text-blue-300">
+                    <ShieldCheck className="h-4 w-4 text-blue-600 shrink-0" />
+                    <span>
+                      <strong>QCSP Residency Policy:</strong> Applications are strictly reserved for bona fide Quezon City residents. Proof of residency (QCitizen ID or QC Barangay Certificate) must be uploaded in Step 4.
+                    </span>
                   </div>
                 </div>
               </div>
