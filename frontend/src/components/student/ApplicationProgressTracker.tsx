@@ -64,14 +64,14 @@ function resolveApplicationStage(app: any): {
     };
   }
 
-  // 2. Stage 5: Approved or Disapproved (Official Board Decision by Admin)
+  // 2. Stage 6 (In-progress remittance): Approved / Granted (Passed Stage 5 Board Approval, advanced to Treasury Remittance)
   if (status === 'approved' || status === 'granted') {
     return {
-      stage: 5,
+      stage: 6,
       label: 'Approved / Granted',
       type: 'approved',
-      remark: remarks || 'Congratulations! Your scholarship application has been officially approved by the QCYDO Board.',
-      progress: 83,
+      remark: remarks || 'Congratulations! Your scholarship application has been officially approved by the QCYDO Board and advanced to Confirmation & Stipend Remittance.',
+      progress: 90,
     };
   }
 
@@ -365,7 +365,9 @@ export const ApplicationProgressTracker: React.FC = () => {
             <div className="flex items-center justify-between text-xs font-bold">
               <span className="text-slate-300 flex items-center gap-2">
                 <span>Stage {currentStage} of 6:</span>
-                <strong className="text-blue-300 font-extrabold">{MILESTONES[currentStage - 1]?.name}</strong>
+                <strong className="text-blue-300 font-extrabold">
+                  {progressPercent === 100 ? 'Confirmation & Disbursed' : MILESTONES[currentStage - 1]?.name}
+                </strong>
               </span>
               <span className="text-emerald-400 font-extrabold">{progressPercent}% Completed</span>
             </div>
@@ -383,8 +385,9 @@ export const ApplicationProgressTracker: React.FC = () => {
         <CardContent className="p-5 sm:p-6 bg-slate-50/50 dark:bg-slate-900/50">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {MILESTONES.map(m => {
-              const isPassed = currentStage > m.step;
-              const isCurrent = currentStage === m.step;
+              const isDisbursed = progressPercent === 100 || appData.statusLabel === 'Confirmed & Disbursed';
+              const isPassed = isDisbursed ? true : currentStage > m.step;
+              const isCurrent = !isDisbursed && currentStage === m.step;
               const isRejected = isCurrent && appData.statusType === 'rejected';
 
               return (
@@ -445,16 +448,40 @@ export const ApplicationProgressTracker: React.FC = () => {
                 {appData.validationRemark}
               </p>
 
-              {/* Expected Verification Timeline (7-10 Days) for Under Review / Submitted Applications */}
-              <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs border-t border-slate-100 dark:border-slate-700">
-                <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-bold">
-                  <Clock className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Expected Verification Status:</span>
+              {/* Dynamic Status / Expected Timeline Banner */}
+              {currentStage >= 6 ? (
+                <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                    <span>Official Approval & Remittance Status:</span>
+                  </div>
+                  <Badge variant="success" size="sm" className="bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-mono font-bold text-[10px]">
+                    {progressPercent === 100
+                      ? 'Grant Disbursed & Released by City Treasury'
+                      : 'Officially Approved — Queued for Treasury Remittance'}
+                  </Badge>
                 </div>
-                <Badge variant="primary" size="sm" className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono font-bold text-[10px]">
-                  7–10 Business Days (Within {new Date(new Date(appData.dateFiled).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})
-                </Badge>
-              </div>
+              ) : appData.statusType === 'rejected' ? (
+                <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400 font-bold">
+                    <XCircle className="h-3.5 w-3.5 text-rose-600" />
+                    <span>Evaluation Decision:</span>
+                  </div>
+                  <Badge variant="destructive" size="sm" className="bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-mono font-bold text-[10px]">
+                    Application Disapproved
+                  </Badge>
+                </div>
+              ) : (
+                <div className="pt-2 flex items-center justify-between flex-wrap gap-2 text-xs border-t border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-bold">
+                    <Clock className="h-3.5 w-3.5 text-blue-600" />
+                    <span>Expected Verification Status:</span>
+                  </div>
+                  <Badge variant="primary" size="sm" className="bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-mono font-bold text-[10px]">
+                    7–10 Business Days (Within {new Date(new Date(appData.dateFiled).getTime() + 10 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })})
+                  </Badge>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
