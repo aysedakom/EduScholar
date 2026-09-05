@@ -89,6 +89,32 @@ export const QC_SCHOOLS = [
   'Other / School Not Listed (Exception Flow - Requires Certificate of Enrollment)',
 ];
 
+// Helper to resolve official institution classification from school name
+export const getInstitutionTypeBySchool = (schoolName: string): 'Public' | 'SUC' | 'LUC' | 'Private' | '' => {
+  if (!schoolName) return '';
+  if (schoolName.includes('Quezon City University') || schoolName.includes('QCU')) {
+    return 'LUC';
+  }
+  if (
+    schoolName.includes('University of the Philippines') ||
+    schoolName.includes('UPD') ||
+    schoolName.includes('Polytechnic University of the Philippines') ||
+    schoolName.includes('PUP') ||
+    schoolName.includes('Eulogio "Amang" Rodriguez') ||
+    schoolName.includes('EARIST')
+  ) {
+    return 'SUC';
+  }
+  if (schoolName.includes('Quezon City High School')) {
+    return 'Public';
+  }
+  if (schoolName.includes('Other / School Not Listed')) {
+    return '';
+  }
+  // All other listed QC HEIs / Colleges are Private
+  return 'Private';
+};
+
 // Dynamic Validation Schema
 const applicationSchema = z.object({
   // Step 1: Basic Information
@@ -518,6 +544,19 @@ export const ApplicationForm: React.FC = () => {
 
   const selectedSchool = watch('school');
   const isUnlistedSchool = selectedSchool?.includes('Other / School Not Listed');
+
+  // Synchronize institution type automatically when a pre-accredited school is chosen
+  useEffect(() => {
+    if (selectedSchool) {
+      if (!isUnlistedSchool) {
+        const autoType = getInstitutionTypeBySchool(selectedSchool);
+        if (autoType) {
+          setValue('schoolType', autoType as any, { shouldValidate: true });
+          clearErrors('schoolType');
+        }
+      }
+    }
+  }, [selectedSchool, isUnlistedSchool, setValue, clearErrors]);
 
   const baseRequiredDocs = selectedProgram.requiredDocuments.filter((doc) => {
     if (doc.id === 'sectoral_proof') {
@@ -1539,6 +1578,20 @@ export const ApplicationForm: React.FC = () => {
                   </label>
                   <select
                     {...register('school')}
+                    onChange={(e) => {
+                      const selected = e.target.value;
+                      setValue('school', selected, { shouldValidate: true });
+                      if (selected) {
+                        clearErrors('school');
+                      }
+                      const autoType = getInstitutionTypeBySchool(selected);
+                      if (autoType) {
+                        setValue('schoolType', autoType as any, { shouldValidate: true });
+                        clearErrors('schoolType');
+                      } else if (selected.includes('Other')) {
+                        setValue('schoolType', '' as any, { shouldValidate: true });
+                      }
+                    }}
                     className={`w-full p-2.5 border rounded-xl text-xs font-semibold outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
                     <option value="">-- Select School / University --</option>
@@ -1548,7 +1601,7 @@ export const ApplicationForm: React.FC = () => {
                       </option>
                     ))}
                   </select>
-                  {errors.school && (
+                  {errors.school && !watch('school') && (
                     <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.school.message}</p>
                   )}
                 </div>
@@ -1585,17 +1638,43 @@ export const ApplicationForm: React.FC = () => {
                 )}
                 <div>
                   <label className="block text-xs font-bold mb-1">School Institution Type *</label>
-                  <select
-                    {...register('schoolType')}
-                    className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
-                  >
-                    <option value="">-- Select Institution Type --</option>
-                    <option value="Public">Public Institution</option>
-                    <option value="SUC">State University / College (SUC)</option>
-                    <option value="LUC">Local University / College (LUC)</option>
-                    <option value="Private">Private Institution</option>
-                  </select>
-                  {errors.schoolType && (
+                  {!isUnlistedSchool && selectedSchool ? (
+                    <div>
+                      <div className={`w-full p-2.5 border rounded-xl text-xs font-medium select-none flex items-center justify-between ${isDark ? 'bg-slate-800/80 border-slate-700 text-slate-200' : 'bg-slate-100 border-slate-200 text-slate-700'}`}>
+                        <span>
+                          {watch('schoolType') === 'Public' && 'Public Institution'}
+                          {watch('schoolType') === 'SUC' && 'State University / College (SUC)'}
+                          {watch('schoolType') === 'LUC' && 'Local University / College (LUC)'}
+                          {watch('schoolType') === 'Private' && 'Private Institution'}
+                          {!watch('schoolType') && 'Auto-detected'}
+                        </span>
+                        <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
+                          Auto-Detected
+                        </span>
+                      </div>
+                      <input type="hidden" {...register('schoolType')} />
+                    </div>
+                  ) : (
+                    <select
+                      {...register('schoolType')}
+                      disabled={!selectedSchool}
+                      onChange={(e) => {
+                        const val = e.target.value as any;
+                        setValue('schoolType', val, { shouldValidate: true });
+                        if (val) clearErrors('schoolType');
+                      }}
+                      className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    >
+                      <option value="">
+                        {!selectedSchool ? '-- Select School First --' : '-- Select Institution Type --'}
+                      </option>
+                      <option value="Public">Public Institution</option>
+                      <option value="SUC">State University / College (SUC)</option>
+                      <option value="LUC">Local University / College (LUC)</option>
+                      <option value="Private">Private Institution</option>
+                    </select>
+                  )}
+                  {errors.schoolType && !watch('schoolType') && (
                     <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.schoolType.message}</p>
                   )}
                 </div>
