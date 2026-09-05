@@ -37,7 +37,7 @@ import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
-import { ACADEMIC_COURSES_BY_CATEGORY } from '../../utils/courses';
+import { ACADEMIC_COURSES_BY_CATEGORY, getYearLevelsForCourse } from '../../utils/courses';
 import {
   getProgramById,
   getActiveStudentApplication,
@@ -557,6 +557,20 @@ export const ApplicationForm: React.FC = () => {
       }
     }
   }, [selectedSchool, isUnlistedSchool, setValue, clearErrors]);
+
+  const selectedCourse = watch('course');
+  const availableYearLevels = getYearLevelsForCourse(selectedCourse, selectedProgram?.categoryId);
+
+  // Automatically validate and reset yearLevel if the chosen course does not support the current yearLevel
+  useEffect(() => {
+    if (selectedCourse) {
+      const allowed = getYearLevelsForCourse(selectedCourse, selectedProgram?.categoryId);
+      const currentYear = watch('yearLevel');
+      if (currentYear && !allowed.some((lvl) => lvl.value === currentYear)) {
+        setValue('yearLevel', '' as any, { shouldValidate: true });
+      }
+    }
+  }, [selectedCourse, selectedProgram?.categoryId, setValue]);
 
   const baseRequiredDocs = selectedProgram.requiredDocuments.filter((doc) => {
     if (doc.id === 'sectoral_proof') {
@@ -1697,6 +1711,17 @@ export const ApplicationForm: React.FC = () => {
                     <label className="block text-xs font-bold mb-1">Course / Academic Strand *</label>
                     <select
                       {...register('course')}
+                      onChange={(e) => {
+                        const newCourse = e.target.value;
+                        setValue('course', newCourse, { shouldValidate: true });
+                        if (newCourse) clearErrors('course');
+
+                        const allowedYears = getYearLevelsForCourse(newCourse, selectedProgram?.categoryId);
+                        const currentYear = watch('yearLevel');
+                        if (currentYear && !allowedYears.some((lvl) => lvl.value === currentYear)) {
+                          setValue('yearLevel', '' as any, { shouldValidate: true });
+                        }
+                      }}
                       className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                     >
                       <option value="">-- Select Course / Academic Strand --</option>
@@ -1710,7 +1735,7 @@ export const ApplicationForm: React.FC = () => {
                         </optgroup>
                       ))}
                     </select>
-                    {errors.course && (
+                    {errors.course && !watch('course') && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.course.message}</p>
                     )}
                   </div>
@@ -1733,22 +1758,34 @@ export const ApplicationForm: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-bold mb-1">Current Year / Grade Level *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold">Current Year / Grade Level *</label>
+                    {selectedCourse && (
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400 font-bold">
+                        {availableYearLevels.length} Level{availableYearLevels.length === 1 ? '' : 's'} Applicable
+                      </span>
+                    )}
+                  </div>
                   <select
                     {...register('yearLevel')}
-                    className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+                    disabled={!selectedCourse}
+                    onChange={(e) => {
+                      const val = e.target.value as any;
+                      setValue('yearLevel', val, { shouldValidate: true });
+                      if (val) clearErrors('yearLevel');
+                    }}
+                    className={`w-full p-2.5 border rounded-xl text-xs outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 disabled:cursor-not-allowed ${isDark ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
                   >
-                    <option value="">-- Select Year / Grade Level --</option>
-                    <option value="Grade 11">Grade 11 (SHS)</option>
-                    <option value="Grade 12">Grade 12 (SHS)</option>
-                    <option value="1st Year">1st Year College</option>
-                    <option value="2nd Year">2nd Year College</option>
-                    <option value="3rd Year">3rd Year College</option>
-                    <option value="4th Year">4th Year College</option>
-                    <option value="5th Year">5th Year College</option>
-                    <option value="Postgraduate / Reviewee">Postgraduate / Reviewee</option>
+                    <option value="">
+                      {!selectedCourse ? '-- Select Course First --' : '-- Select Year / Grade Level --'}
+                    </option>
+                    {availableYearLevels.map((lvl) => (
+                      <option key={lvl.value} value={lvl.value}>
+                        {lvl.label}
+                      </option>
+                    ))}
                   </select>
-                  {errors.yearLevel && (
+                  {errors.yearLevel && !watch('yearLevel') && (
                     <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.yearLevel.message}</p>
                   )}
                 </div>

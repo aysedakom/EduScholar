@@ -142,3 +142,90 @@ export const ACADEMIC_COURSES_BY_CATEGORY: CourseCategoryGroup[] = [
 export const ALL_COURSES_FLAT: string[] = ACADEMIC_COURSES_BY_CATEGORY.flatMap(
   (group) => group.courses
 );
+
+export interface YearLevelOption {
+  value: string;
+  label: string;
+}
+
+export const getYearLevelsForCourse = (courseName?: string, programCategory?: string): YearLevelOption[] => {
+  if (!courseName) {
+    if (programCategory === 'shs') {
+      return [
+        { value: 'Grade 11', label: 'Grade 11 (SHS)' },
+        { value: 'Grade 12', label: 'Grade 12 (SHS)' },
+      ];
+    }
+    if (programCategory === 'vocational') {
+      return [
+        { value: '1st Year', label: '1st Year / Level 1 (Vocational / Tech-Voc)' },
+        { value: '2nd Year', label: '2nd Year / Level 2 (Vocational / Tech-Voc)' },
+      ];
+    }
+    // Default / All
+    return [
+      { value: 'Grade 11', label: 'Grade 11 (SHS)' },
+      { value: 'Grade 12', label: 'Grade 12 (SHS)' },
+      { value: '1st Year', label: '1st Year College' },
+      { value: '2nd Year', label: '2nd Year College' },
+      { value: '3rd Year', label: '3rd Year College' },
+      { value: '4th Year', label: '4th Year College' },
+      { value: '5th Year', label: '5th Year College' },
+      { value: 'Postgraduate / Reviewee', label: 'Postgraduate / Reviewee' },
+    ];
+  }
+
+  // 1. Senior High School (SHS) Strands
+  const shsGroup = ACADEMIC_COURSES_BY_CATEGORY.find((g) => g.category.includes('Senior High School'));
+  const isShsCourse =
+    shsGroup?.courses.includes(courseName) ||
+    courseName.startsWith('STEM') ||
+    courseName.startsWith('ABM') ||
+    courseName.startsWith('HUMSS') ||
+    courseName.startsWith('GAS') ||
+    courseName.startsWith('TVL') ||
+    courseName.includes('Arts and Design') ||
+    courseName.includes('Sports Track') ||
+    courseName.includes('(SHS)');
+
+  if (isShsCourse) {
+    return [
+      { value: 'Grade 11', label: 'Grade 11 (SHS)' },
+      { value: 'Grade 12', label: 'Grade 12 (SHS)' },
+    ];
+  }
+
+  // 2. Vocational / Technical Skills
+  if (courseName.includes('Vocational') || courseName.includes('Technical Skills')) {
+    return [
+      { value: '1st Year', label: '1st Year / Level 1 (Vocational / Tech-Voc)' },
+      { value: '2nd Year', label: '2nd Year / Level 2 (Vocational / Tech-Voc)' },
+    ];
+  }
+
+  // 3. Postgraduate / Master's / Law
+  const isPostgradOrLaw =
+    courseName.includes('Juris Doctor') ||
+    courseName.includes('Bachelor of Laws') ||
+    courseName.includes('Master') ||
+    courseName.includes('Postgraduate');
+
+  if (isPostgradOrLaw) {
+    return [
+      { value: '1st Year', label: '1st Year Postgrad / Law' },
+      { value: '2nd Year', label: '2nd Year Postgrad / Law' },
+      { value: '3rd Year', label: '3rd Year Postgrad / Law' },
+      { value: '4th Year', label: '4th Year Postgrad / Law' },
+      { value: 'Postgraduate / Reviewee', label: 'Postgraduate / Reviewee' },
+    ];
+  }
+
+  // 4. Undergraduate College Degree Courses (e.g. BSIT, BSCS, Engineering, Business, Nursing, etc.)
+  return [
+    { value: '1st Year', label: '1st Year College' },
+    { value: '2nd Year', label: '2nd Year College' },
+    { value: '3rd Year', label: '3rd Year College' },
+    { value: '4th Year', label: '4th Year College' },
+    { value: '5th Year', label: '5th Year College' },
+  ];
+};

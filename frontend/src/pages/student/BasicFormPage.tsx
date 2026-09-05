@@ -7,7 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
 import { Badge } from '../../components/ui/Badge';
 import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
-import { ACADEMIC_COURSES_BY_CATEGORY } from '../../utils/courses';
+import { ACADEMIC_COURSES_BY_CATEGORY, getYearLevelsForCourse } from '../../utils/courses';
 import { PhoneInput } from '../../components/ui/PhoneInput';
 import { formatPHMobile, isValidPHMobile } from '../../utils/phoneFormatter';
 import { toast } from 'sonner';
@@ -46,6 +46,7 @@ export const BasicFormPage: React.FC = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const availableYearLevels = getYearLevelsForCourse(form.major);
 
   const update = (key: keyof BasicProfile, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -183,7 +184,16 @@ export const BasicFormPage: React.FC = () => {
                 <select
                   id="major"
                   value={form.major}
-                  onChange={(e) => update('major', e.target.value)}
+                  onChange={(e) => {
+                    const newMajor = e.target.value;
+                    const allowedYears = getYearLevelsForCourse(newMajor);
+                    const stillValid = allowedYears.some((lvl) => lvl.value === form.yearLevel);
+                    setForm((prev) => ({
+                      ...prev,
+                      major: newMajor,
+                      yearLevel: stillValid ? prev.yearLevel : '',
+                    }));
+                  }}
                   className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 cursor-pointer"
                   required
                 >
@@ -200,18 +210,29 @@ export const BasicFormPage: React.FC = () => {
                 </select>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Year Level</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">Current Year / Grade Level *</label>
+                  {form.major && availableYearLevels.length > 0 && (
+                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                      {availableYearLevels.length} Level{availableYearLevels.length === 1 ? '' : 's'} Applicable
+                    </span>
+                  )}
+                </div>
                 <select
                   value={form.yearLevel}
                   onChange={(e) => update('yearLevel', e.target.value)}
-                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900"
+                  disabled={!form.major}
+                  className="w-full h-11 px-4 text-sm bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:outline-none focus:border-blue-600 focus:bg-white dark:focus:bg-slate-900 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  required
                 >
-                  <option value="">-- Select Year Level --</option>
-                  <option value="1st Year" className="dark:bg-slate-900 dark:text-white">1st Year (Freshman)</option>
-                  <option value="2nd Year" className="dark:bg-slate-900 dark:text-white">2nd Year (Sophomore)</option>
-                  <option value="3rd Year" className="dark:bg-slate-900 dark:text-white">3rd Year (Junior)</option>
-                  <option value="4th Year" className="dark:bg-slate-900 dark:text-white">4th Year (Senior)</option>
-                  <option value="Graduate / Post-Grad" className="dark:bg-slate-900 dark:text-white">Graduate / Post-Grad</option>
+                  <option value="">
+                    {!form.major ? '-- Please select Course / Track first --' : '-- Select Year / Grade Level --'}
+                  </option>
+                  {availableYearLevels.map((lvl) => (
+                    <option key={lvl.value} value={lvl.value} className="dark:bg-slate-900 dark:text-white">
+                      {lvl.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <Input
