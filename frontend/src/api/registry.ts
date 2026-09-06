@@ -17,6 +17,21 @@ export interface ScholarRegistryRecord {
   status: string;
   grant_amount: number;
   disbursement_status: string;
+  
+  // Extended verification fields for Treasury Audit
+  phone?: string;
+  address?: string;
+  barangay?: string;
+  district?: string;
+  is_pwd?: boolean;
+  is_solo_parent?: boolean;
+  is_4ps?: boolean;
+  is_kasambahay_or_toda?: boolean;
+  application_code?: string;
+  application_remarks?: string;
+  submission_date?: string;
+  form_data?: any;
+  documents_submitted?: any;
 }
 
 export const getScholars = (params?: { status?: string; school?: string; search?: string }) => {

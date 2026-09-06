@@ -2,7 +2,6 @@
 const { pool } = require('../config/db');
 
 // @desc   Get scholars from student registry
-// @route  GET /api/registry
 const getScholars = async (req, res) => {
   try {
     const { status, school, search } = req.query;
@@ -11,22 +10,33 @@ const getScholars = async (req, res) => {
     let i = 1;
 
     if (status && status !== 'All') {
-      clauses.push(`status = $${i++}`);
+      clauses.push(`sr.status = $${i++}`);
       values.push(status);
     }
     if (school && school !== 'All') {
-      clauses.push(`school ILIKE $${i++}`);
+      clauses.push(`sr.school ILIKE $${i++}`);
       values.push(`%${school}%`);
     }
     if (search) {
-      clauses.push(`(full_name ILIKE $${i} OR student_id ILIKE $${i} OR email ILIKE $${i} OR program_name ILIKE $${i})`);
+      clauses.push(`(sr.full_name ILIKE $${i} OR sr.student_id ILIKE $${i} OR sr.email ILIKE $${i} OR sr.program_name ILIKE $${i})`);
       values.push(`%${search}%`);
       i++;
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
     const result = await pool.query(
-      `SELECT * FROM student_registry ${where} ORDER BY full_name ASC`,
+      `SELECT sr.*,
+              u.phone, u.address, u.barangay, u.district, u.is_pwd, u.is_solo_parent, u.is_4ps, u.is_kasambahay_or_toda,
+              a.application_code, a.remarks AS application_remarks, a.submission_date, a.form_data, a.documents_submitted
+       FROM student_registry sr
+       LEFT JOIN users u ON (sr.user_id = u.id OR sr.student_id = u.student_id)
+       LEFT JOIN LATERAL (
+         SELECT * FROM applications app 
+         WHERE (app.user_id = sr.user_id OR app.student_id = sr.student_id) 
+         ORDER BY app.id DESC LIMIT 1
+       ) a ON true
+       ${where} 
+       ORDER BY sr.full_name ASC`,
       values
     );
     res.json(result.rows);

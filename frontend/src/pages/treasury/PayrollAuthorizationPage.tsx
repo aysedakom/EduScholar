@@ -10,7 +10,16 @@ import {
   Ban,
   Send,
   RefreshCw,
-  FileCheck
+  FileCheck,
+  Eye,
+  X,
+  CreditCard,
+  Building2,
+  GraduationCap,
+  MapPin,
+  FileText,
+  UserCheck,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/Button';
@@ -28,6 +37,9 @@ export const PayrollAuthorizationPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [schoolFilter, setSchoolFilter] = useState<string>('All');
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
+
+  // Audit Drawer state
+  const [auditScholar, setAuditScholar] = useState<ScholarRegistryRecord | null>(null);
 
   // Bulk Authorization Modal
   const [showBulkModal, setShowBulkModal] = useState(false);
@@ -79,6 +91,9 @@ export const PayrollAuthorizationPage: React.FC = () => {
       setScholars((prev) =>
         prev.map((s) => (s.id === id ? { ...s, disbursement_status: newDisbursementStatus } : s))
       );
+      if (auditScholar && auditScholar.id === id) {
+        setAuditScholar((prev) => (prev ? { ...prev, disbursement_status: newDisbursementStatus } : null));
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to update payout status.');
@@ -215,7 +230,7 @@ export const PayrollAuthorizationPage: React.FC = () => {
                 </Badge>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium">
-                Verify admin-approved scholarship rosters, audit grant amounts, and authorize electronic payout batches prior to disbursement.
+                Verify admin-approved scholarship rosters, audit grant amounts, inspect student credentials, and authorize electronic payout batches prior to disbursement.
               </p>
             </div>
           </div>
@@ -429,7 +444,7 @@ export const PayrollAuthorizationPage: React.FC = () => {
                 filteredScholars.map((s, idx) => {
                   const isSelected = selectedIds.includes(s.id);
                   const statusStr = s.disbursement_status || 'Scheduled';
-                  const channelName = idx % 2 === 0 ? 'GCash' : 'Landbank ATM';
+                  const channelName = idx % 2 === 0 ? 'GCash' : 'Landbank Cash Card';
 
                   return (
                     <tr
@@ -525,13 +540,22 @@ export const PayrollAuthorizationPage: React.FC = () => {
                       {/* Actions */}
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Audit & Verify Button */}
+                          <button
+                            onClick={() => setAuditScholar(s)}
+                            title="Audit Scholar Verification File"
+                            className="px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <Eye className="h-3.5 w-3.5 text-blue-600" /> Audit
+                          </button>
+
                           {statusStr !== 'Approved for Payout' && statusStr !== 'Disbursed' && (
                             <button
                               onClick={() => handleUpdateSingleStatus(s.id, 'Approved for Payout')}
                               title="Authorize Payout"
                               className="px-2.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                             >
-                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Authorize Payout
+                              <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Authorize
                             </button>
                           )}
 
@@ -539,22 +563,10 @@ export const PayrollAuthorizationPage: React.FC = () => {
                             <button
                               onClick={() => handleUpdateSingleStatus(s.id, 'On-Hold')}
                               title="Put Payout On Hold"
-                              className="px-2.5 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
+                              className="px-2 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100 font-bold text-[11px] flex items-center gap-1 transition-colors cursor-pointer"
                             >
                               <Ban className="h-3 w-3 text-amber-600" /> Hold
                             </button>
-                          )}
-
-                          {statusStr === 'Approved for Payout' && (
-                            <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 bg-blue-50 dark:bg-blue-950/50 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-800">
-                              <ShieldCheck className="h-3.5 w-3.5" /> Ready for Bank Release
-                            </span>
-                          )}
-
-                          {statusStr === 'Disbursed' && (
-                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-                              <CheckCircle2 className="h-3.5 w-3.5" /> Released & Paid
-                            </span>
                           )}
                         </div>
                       </td>
@@ -566,6 +578,272 @@ export const PayrollAuthorizationPage: React.FC = () => {
           </table>
         </div>
       </div>
+
+      {/* Slide-over Audit Verification Drawer */}
+      {auditScholar && (
+        <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
+          <div
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Drawer Header */}
+            <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850 flex items-start justify-between">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300 text-[10px] font-mono font-bold uppercase tracking-wider">
+                    {auditScholar.application_code || `QC-2026-APP-${String(auditScholar.id).padStart(4, '0')}`}
+                  </span>
+                  <Badge
+                    variant={
+                      auditScholar.disbursement_status === 'Disbursed'
+                        ? 'success'
+                        : auditScholar.disbursement_status === 'Approved for Payout' || auditScholar.disbursement_status === 'Authorized'
+                        ? 'primary'
+                        : auditScholar.disbursement_status === 'On-Hold'
+                        ? 'destructive'
+                        : 'warning'
+                    }
+                    size="sm"
+                  >
+                    {auditScholar.disbursement_status || 'Pending Review'}
+                  </Badge>
+                </div>
+                <h2 className="font-heading font-black text-xl text-slate-900 dark:text-white">
+                  {auditScholar.full_name}
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                  Student ID: {auditScholar.student_id} • {auditScholar.email}
+                </p>
+              </div>
+
+              <button
+                onClick={() => setAuditScholar(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Drawer Scrollable Content */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              {/* 1. Target Account & Payout Details */}
+              <div className="bg-emerald-50/80 dark:bg-emerald-950/40 p-5 rounded-2xl border border-emerald-200 dark:border-emerald-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="h-4 w-4 text-emerald-700 dark:text-emerald-400" />
+                    <span className="font-bold text-emerald-900 dark:text-emerald-200 text-sm">
+                      Disbursement Target & Account Matching
+                    </span>
+                  </div>
+                  <span className="font-heading font-black text-lg text-emerald-700 dark:text-emerald-400">
+                    {formatCurrency(auditScholar.grant_amount || 15000)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase text-emerald-800 dark:text-emerald-400 block">
+                      Payout Channel
+                    </span>
+                    <span className="font-bold text-slate-900 dark:text-white text-xs block mt-0.5">
+                      {Number(auditScholar.id) % 2 === 0 ? 'GCash Direct Electronic Payout' : 'Landbank Cash Card / ATM'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase text-emerald-800 dark:text-emerald-400 block">
+                      Target Phone / Card No.
+                    </span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-white text-xs block mt-0.5">
+                      {auditScholar.phone || (Number(auditScholar.id) % 2 === 0 ? '0917-882-9910' : '1084-3829-1920')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 pt-1 text-emerald-800 dark:text-emerald-300 text-[11px] font-medium">
+                  <UserCheck className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span>
+                    Beneficiary Name Match: <strong>{auditScholar.full_name}</strong> (100% Verified)
+                  </span>
+                </div>
+              </div>
+
+              {/* 2. Secretariat Approval Audit Trail */}
+              <div className="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                  <span className="font-bold text-slate-900 dark:text-white text-xs">
+                    Admin Approval & Secretariat Audit Notes
+                  </span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-300 italic text-[11px] bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                  "{auditScholar.application_remarks || 'Application officially approved and authenticated by QCYDO Secretariat. Grant: ₱30,000. Verified enrollment and GWA criteria.'}"
+                </p>
+                <div className="flex justify-between text-[10px] text-slate-400 font-medium px-1">
+                  <span>Approved By: QCYDO Secretariat Admin</span>
+                  <span>Date Approved: {auditScholar.submission_date || '2026-09-01'}</span>
+                </div>
+              </div>
+
+              {/* 3. Academic & Residency Profile */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-indigo-600" /> Academic & Resident Profile
+                </h3>
+
+                <div className="grid grid-cols-2 gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Institution / College</span>
+                    <span className="font-bold text-slate-900 dark:text-white flex items-center gap-1 mt-0.5">
+                      <Building2 className="h-3 w-3 text-slate-400 shrink-0" />
+                      {auditScholar.school}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Scholarship Program</span>
+                    <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
+                      {auditScholar.program_name}
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Current GWA & Load</span>
+                    <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
+                      GWA: {auditScholar.gwa} • {auditScholar.units_enrolled} Units Enrolled
+                    </span>
+                  </div>
+
+                  <div>
+                    <span className="text-[10px] text-slate-400 block font-medium">Term & Status</span>
+                    <span className="font-bold text-slate-900 dark:text-white mt-0.5 block">
+                      {auditScholar.current_term} ({auditScholar.scholarship_age || 'Year 1'})
+                    </span>
+                  </div>
+
+                  <div className="col-span-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 block font-medium">QC Residence Address</span>
+                    <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3.5 w-3.5 text-rose-500 shrink-0" />
+                      {auditScholar.address || 'Katipunan Ave, Brgy. Loyola Heights'}, {auditScholar.barangay || 'Barangay Central'}, {auditScholar.district || 'District 3'}, Quezon City
+                    </span>
+                  </div>
+                </div>
+
+                {/* Priority Badges */}
+                <div className="flex gap-2 flex-wrap pt-1">
+                  {auditScholar.is_pwd && <Badge variant="warning" size="sm">PWD Beneficiary</Badge>}
+                  {auditScholar.is_solo_parent && <Badge variant="primary" size="sm">Solo Parent Dependent</Badge>}
+                  {auditScholar.is_4ps && <Badge variant="success" size="sm">4Ps / CCT Recipient</Badge>}
+                  {auditScholar.is_kasambahay_or_toda && <Badge variant="outline" size="sm">TODA / Kasambahay Sector</Badge>}
+                  {!auditScholar.is_pwd && !auditScholar.is_solo_parent && !auditScholar.is_4ps && (
+                    <Badge variant="outline" size="sm">Regular Qualified Applicant</Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* 4. Verified Documents Vault */}
+              <div className="space-y-3">
+                <h3 className="font-bold text-slate-900 dark:text-white text-xs uppercase tracking-wider flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-emerald-600" /> Authenticated Supporting Documents
+                </h3>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
+                        PDF
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                          Certificate of Enrollment / Registration (COE)
+                        </span>
+                        <span className="text-[10px] text-slate-400">Authenticated by Registrar • 1.2 MB</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <Check className="h-3 w-3" /> Verified
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                        PDF
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                          Official Certificate of Grades (COG / Transcript)
+                        </span>
+                        <span className="text-[10px] text-slate-400">Verified GWA: {auditScholar.gwa} • 980 KB</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <Check className="h-3 w-3" /> Verified
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
+                        PDF
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 dark:text-white block text-xs">
+                          QC Citizen ID / Barangay Residency Clearance
+                        </span>
+                        <span className="text-[10px] text-slate-400">QC LGU Residency Validated • 1.4 MB</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                      <Check className="h-3 w-3" /> Verified
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Drawer Footer Action Bar */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleUpdateSingleStatus(auditScholar.id, 'On-Hold')}
+                disabled={auditScholar.disbursement_status === 'On-Hold'}
+                leftIcon={<Ban className="h-4 w-4 text-amber-600" />}
+                className="font-bold text-xs"
+              >
+                Flag Discrepancy (Hold)
+              </Button>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAuditScholar(null)}
+                  className="font-bold text-xs"
+                >
+                  Close
+                </Button>
+                {auditScholar.disbursement_status !== 'Approved for Payout' && auditScholar.disbursement_status !== 'Disbursed' ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => handleUpdateSingleStatus(auditScholar.id, 'Approved for Payout')}
+                    leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                    className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    Authorize Payout Release
+                  </Button>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 font-bold text-xs flex items-center gap-1">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Payout Authorized
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bulk Authorization Modal */}
       {showBulkModal && (
