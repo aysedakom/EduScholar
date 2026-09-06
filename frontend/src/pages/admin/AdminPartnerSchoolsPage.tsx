@@ -446,8 +446,9 @@ export const matchPartnerSchool = (schoolInput: string | undefined | null, partn
 };
 export const AdminPartnerSchoolsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isCoordinator = user?.role === 'school_coordinator';
+  const { user, role } = useAuth();
+  const currentRole = role || user?.role || (localStorage.getItem('user_role') as any) || 'admin';
+  const isCoordinator = currentRole === 'school_coordinator';
 
   const [schools, setSchools] = useState<AdminPartnerSchool[]>(DEFAULT_PARTNER_SCHOOLS);
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>('SCH-QC-001');
@@ -456,7 +457,7 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
   const [allApplications, setAllApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [scholarSearchQuery, setScholarSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'students' | 'directory'>('students');
+  const [viewMode, setViewMode] = useState<'students' | 'directory'>(isCoordinator ? 'students' : 'directory');
 
   // Modals for admin management
   const [showAddModal, setShowAddModal] = useState(false);
@@ -678,23 +679,48 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
         <div className="space-y-1">
-          {/* Breadcrumb Navigation Matching Exact Design */}
+          {/* Breadcrumb Navigation */}
           <div className="flex items-center gap-2 mb-1">
-            <Link
-              to={isCoordinator ? '/school/portal' : (user?.role === 'admin' || user?.role === 'superadmin') ? '/dashboard' : '/e-scholar'}
-              className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> {isCoordinator ? 'Coordinator Portal' : (user?.role === 'admin' || user?.role === 'superadmin') ? 'Admin Dashboard' : 'E-SCHOLAR Hub'}
-            </Link>
+            {viewMode === 'students' && !isCoordinator ? (
+              <button
+                type="button"
+                onClick={() => setViewMode('directory')}
+                className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors cursor-pointer"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Partner School Directory
+              </button>
+            ) : (
+              <Link
+                to={isCoordinator ? '/school/portal' : '/dashboard'}
+                className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> {isCoordinator ? 'Coordinator Portal' : 'Admin Dashboard'}
+              </Link>
+            )}
             <span className="text-slate-400 text-xs">/</span>
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Partner School Database</span>
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+              {viewMode === 'students' ? currentSchool.schoolName : 'Partner School Database'}
+            </span>
           </div>
-          <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
-            Students & Applicants: {currentSchool.schoolName}
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-            Institution ID: <strong className="text-slate-700 dark:text-slate-300 font-mono">{currentSchool.schoolId}</strong> • Classification: <strong className="text-slate-700 dark:text-slate-300">{currentSchool.schoolType}</strong> • Quota: <strong className="text-blue-600 dark:text-blue-400">{currentSchool.scholarshipSlots} Slots</strong>
-          </p>
+          {viewMode === 'students' ? (
+            <>
+              <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                Students & Applicants: {currentSchool.schoolName}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Institution ID: <strong className="text-slate-700 dark:text-slate-300 font-mono">{currentSchool.schoolId}</strong> • Classification: <strong className="text-slate-700 dark:text-slate-300">{currentSchool.schoolType}</strong> • Quota: <strong className="text-blue-600 dark:text-blue-400">{currentSchool.scholarshipSlots} Slots</strong>
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
+                Partner School Database & Institutions
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Accredited universities, state colleges, and partner institutions with active LGU scholarship partnerships.
+              </p>
+            </>
+          )}
         </div>
 
         {/* Institution Switcher & Top Actions */}
