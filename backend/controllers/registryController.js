@@ -120,6 +120,22 @@ const updateScholarStatus = async (req, res) => {
       } catch (appSyncErr) {
         console.warn('[registryController] Application sync warning:', appSyncErr.message);
       }
+    } else if (disbursementStatus === 'Scheduled' || disbursementStatus === 'Pending') {
+      // Revert application status for testing
+      try {
+        await pool.query(
+          `UPDATE applications 
+           SET status = 'Approved',
+               progress = 80,
+               disbursement_date = NULL,
+               updated_at = NOW(),
+               remarks = 'Application approved by QCYDO Admin. Pending Treasury Disbursing Officer authorization.'
+           WHERE (user_id = $1 OR student_id = $2)`,
+          [scholar.user_id, scholar.student_id]
+        );
+      } catch (revertErr) {
+        console.warn('[registryController] Revert application sync warning:', revertErr.message);
+      }
     }
 
     res.json(scholar);

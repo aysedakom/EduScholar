@@ -10,7 +10,8 @@ import {
   Ban,
   Send,
   RefreshCw,
-  FileCheck
+  FileCheck,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/Button';
@@ -70,7 +71,12 @@ export const PayrollAuthorizationPage: React.FC = () => {
   const handleUpdateSingleStatus = async (id: string | number, newDisbursementStatus: string) => {
     try {
       await updateScholarStatus(id, 'Active Good Standing', newDisbursementStatus);
-      toast.success(`Scholar payout status updated to "${newDisbursementStatus}".`);
+      if (newDisbursementStatus === 'Scheduled' || newDisbursementStatus === 'Pending') {
+        localStorage.removeItem('qc_active_student_application');
+        toast.success(`Scholar payout status reset back to "Pending Review". You can now test the process again!`);
+      } else {
+        toast.success(`Scholar payout status updated to "${newDisbursementStatus}".`);
+      }
       setScholars((prev) =>
         prev.map((s) => (s.id === id ? { ...s, disbursement_status: newDisbursementStatus } : s))
       );
@@ -540,17 +546,14 @@ export const PayrollAuthorizationPage: React.FC = () => {
                             </button>
                           )}
 
-                          {statusStr === 'Approved for Payout' && (
-                            <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                              <ShieldCheck className="h-3.5 w-3.5" /> Ready for Bank Release
-                            </span>
-                          )}
-
-                          {statusStr === 'Disbursed' && (
-                            <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                              <CheckCircle2 className="h-3.5 w-3.5" /> Released & Paid
-                            </span>
-                          )}
+                          {/* Reset to Pending Review button */}
+                          <button
+                            onClick={() => handleUpdateSingleStatus(s.id, 'Scheduled')}
+                            title="Reset Payout Status back to Pending Review for Testing"
+                            className="px-2 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-bold text-[11px] flex items-center gap-1 transition-colors"
+                          >
+                            <RotateCcw className="h-3 w-3" /> Reset
+                          </button>
                         </div>
                       </td>
                     </tr>
