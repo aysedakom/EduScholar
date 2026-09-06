@@ -19,6 +19,7 @@ import {
 export const BudgetPage: React.FC = () => {
   const [funds, setFunds] = useState<FundPoolItem[]>([]);
   const [drawdowns, setDrawdowns] = useState<DrawdownRequestItem[]>([]);
+  const [selectedDrawdown, setSelectedDrawdown] = useState<DrawdownRequestItem | null>(null);
 
   // Create Allocation Pool Modal
   const [showModal, setShowModal] = useState(false);
@@ -91,6 +92,32 @@ export const BudgetPage: React.FC = () => {
       await loadData();
     } catch (err) {
       toast.error('Failed to authorize drawdown request');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handlePreAudit = async (reqId: string) => {
+    setIsProcessing(true);
+    try {
+      await updateDrawdownStatus(reqId, 'Pending Treasury Warrant', 'Pre-Audited by City Accountant');
+      toast.success('Drawdown pre-audited. Ready for Treasury Warrant issuance.');
+      await loadData();
+    } catch (err) {
+      toast.error('Failed to pre-audit request');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleIssueWarrant = async (reqId: string) => {
+    setIsProcessing(true);
+    try {
+      await updateDrawdownStatus(reqId, 'Ready for Disbursement', 'Treasury Warrant Issued');
+      toast.success('Treasury Warrant Issued! Ready for final credit authorization.');
+      await loadData();
+    } catch (err) {
+      toast.error('Failed to issue warrant');
     } finally {
       setIsProcessing(false);
     }
@@ -276,30 +303,67 @@ export const BudgetPage: React.FC = () => {
                         variant={
                           d.status === 'Transferred & Credited'
                             ? 'success'
-                            : d.status === 'Under Funder Treasury Review'
+                            : d.status === 'Pending Accountant Pre-Audit'
                             ? 'warning'
-                            : 'destructive'
+                            : 'primary'
                         }
                         size="sm"
                       >
                         {d.status}
                       </Badge>
                     </td>
-                    <td className="p-4 text-right">
-                      {d.status !== 'Transferred & Credited' ? (
+                    <td className="p-4 text-right space-x-2">
+                      {d.status === 'Pending Accountant Pre-Audit' && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handlePreAudit(d.id)}
+                          disabled={isProcessing}
+                          className="font-bold text-[10px] bg-amber-600 hover:bg-amber-700 text-white"
+                        >
+                          Accountant Pre-Audit
+                        </Button>
+                      )}
+                      
+                      {d.status === 'Pending Treasury Warrant' && (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleIssueWarrant(d.id)}
+                          disabled={isProcessing}
+                          className="font-bold text-[10px] bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          Issue Warrant
+                        </Button>
+                      )}
+
+                      {d.status === 'Ready for Disbursement' && (
                         <Button
                           variant="primary"
                           size="sm"
                           onClick={() => handleAuthorizeDrawdown(d.id)}
                           disabled={isProcessing}
-                          leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                          className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                          leftIcon={<CheckCircle2 className="h-3 w-3" />}
+                          className="font-bold text-[10px] bg-emerald-600 hover:bg-emerald-700 text-white"
                         >
-                          Authorize & Credit Grant
+                          Authorize & Credit
                         </Button>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> Credited to Vault
+                      )}
+
+                      {(d.status === 'Ready for Disbursement' || d.status === 'Transferred & Credited') && (
+                         <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setSelectedDrawdown(d)}
+                         className="font-bold text-[10px]"
+                       >
+                         View Voucher
+                       </Button>
+                      )}
+
+                      {d.status === 'Transferred & Credited' && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 ml-2">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Credited
                         </span>
                       )}
                     </td>
@@ -439,6 +503,97 @@ export const BudgetPage: React.FC = () => {
               />
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL: VIEW / PRINT OFFICIAL VOUCHER                                      */}
+      {/* ========================================================================= */}
+      {selectedDrawdown && (
+        <Modal
+          isOpen={!!selectedDrawdown}
+          onClose={() => setSelectedDrawdown(null)}
+          title="Official Treasury Warrant Voucher"
+          maxWidth="2xl"
+        >
+          <div className="space-y-6 text-xs">
+            {/* Printable Area - We simulate a nice document look here */}
+            <div id="printable-voucher" className="bg-white p-8 border border-slate-300 rounded-xl shadow-sm space-y-6 print:shadow-none print:border-none print:p-0">
+              
+              <div className="text-center border-b-2 border-slate-900 pb-4">
+                <h1 className="font-serif font-bold text-xl text-slate-900 uppercase tracking-widest">Republic of the Philippines</h1>
+                <h2 className="font-serif font-bold text-lg text-slate-900">Quezon City Local Government</h2>
+                <h3 className="font-sans font-bold text-base text-slate-600 mt-2 uppercase">Official Treasury Warrant / Disbursement Voucher</h3>
+              </div>
+
+              <div className="flex justify-between items-start font-mono text-sm text-slate-800">
+                <div>
+                  <p><strong>VOUCHER NO:</strong> {selectedDrawdown.voucher_number}</p>
+                  <p><strong>DATE:</strong> {new Date().toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p><strong>FUND ID:</strong> {selectedDrawdown.fund_id}</p>
+                  <p><strong>STATUS:</strong> <span className="uppercase">{selectedDrawdown.status}</span></p>
+                </div>
+              </div>
+
+              <table className="w-full border-collapse border border-slate-400 text-sm">
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-400 p-2 bg-slate-100 font-bold w-1/3">Payee / Requesting Office</td>
+                    <td className="border border-slate-400 p-2 font-semibold">Scholarship Board Executive Secretariat</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 p-2 bg-slate-100 font-bold">Funding Source / Agency</td>
+                    <td className="border border-slate-400 p-2">{selectedDrawdown.fund_name} - {selectedDrawdown.funder_agency}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 p-2 bg-slate-100 font-bold">Purpose / Justification</td>
+                    <td className="border border-slate-400 p-2 whitespace-pre-wrap">{selectedDrawdown.justification}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-400 p-2 bg-slate-100 font-bold">Tranche details</td>
+                    <td className="border border-slate-400 p-2">{selectedDrawdown.tranche_name}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <div className="border border-slate-400 p-4 flex justify-between items-center bg-slate-50">
+                <span className="font-bold text-lg text-slate-900 uppercase">Total Amount Approved</span>
+                <span className="font-bold text-2xl text-slate-900 border-b-2 border-slate-900">
+                  ₱{selectedDrawdown.requested_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8 pt-12">
+                <div className="text-center">
+                  <div className="border-b border-slate-400 mb-2 h-8"></div>
+                  <span className="font-bold text-slate-800 uppercase text-[10px]">Pre-Audited By (City Accountant)</span>
+                </div>
+                <div className="text-center">
+                  <div className="border-b border-slate-400 mb-2 h-8"></div>
+                  <span className="font-bold text-slate-800 uppercase text-[10px]">Approved for Payment (City Treasurer)</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4 border-t border-slate-200 dark:border-slate-800 print:hidden">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  toast.success('Document sent to printer spooler');
+                  window.print();
+                }}
+                className="font-bold bg-slate-100 dark:bg-slate-800"
+              >
+                Print Document
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setSelectedDrawdown(null)} className="font-bold">
+                Close
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

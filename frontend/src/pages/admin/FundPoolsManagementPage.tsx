@@ -20,7 +20,6 @@ import {
   getFundPools,
   getDrawdownRequests,
   submitDrawdownRequest,
-  updateDrawdownStatus,
   createFundPool,
   type FundPoolItem,
   type DrawdownRequestItem,
@@ -133,21 +132,6 @@ export const FundPoolsManagementPage: React.FC = () => {
     } catch (err) {
       console.error(err);
       toast.error('Failed to create fund pool');
-    }
-  };
-
-  // Approve Drawdown Request (Treasury Simulation)
-  const handleApproveDrawdown = async (reqId: string) => {
-    try {
-      await updateDrawdownStatus(reqId, 'Transferred & Credited');
-      toast.success(`Drawdown ${reqId} APPROVED by Treasury! ₱ Funds transferred to Disbursement Vault.`);
-      loadData();
-      if (selectedDrawdown?.id === reqId) {
-        setSelectedDrawdown(null);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error('Failed to approve drawdown request');
     }
   };
 
@@ -468,7 +452,7 @@ export const FundPoolsManagementPage: React.FC = () => {
                         variant={
                           req.status === 'Transferred & Credited'
                             ? 'success'
-                            : req.status.includes('Review')
+                            : req.status === 'Pending Accountant Pre-Audit'
                             ? 'warning'
                             : 'primary'
                         }
@@ -489,19 +473,6 @@ export const FundPoolsManagementPage: React.FC = () => {
                       >
                         Voucher
                       </Button>
-
-                      {req.status !== 'Transferred & Credited' && (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => handleApproveDrawdown(req.id)}
-                          leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                          className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                          title="Simulate Treasury Transfer & Credit to Disbursement Vault"
-                        >
-                          Credit Vault
-                        </Button>
-                      )}
                     </td>
                   </tr>
                 ))}

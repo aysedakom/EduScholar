@@ -28,7 +28,7 @@ export interface DrawdownRequestItem {
   tranche_name: string;
   target_programs: string[];
   justification: string;
-  status: 'Submitted to Funder Treasury' | 'Under Funder Treasury Review' | 'Transferred & Credited' | 'Rejected';
+  status: 'Submitted to Funder Treasury' | 'Pending Accountant Pre-Audit' | 'Pending Treasury Warrant' | 'Ready for Disbursement' | 'Under Funder Treasury Review' | 'Transferred & Credited' | 'Rejected';
   requested_by: string;
   requested_date: string;
   approved_date?: string | null;

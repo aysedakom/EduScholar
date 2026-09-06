@@ -76,7 +76,7 @@ class FundManagementService {
     const insertRes = await pool.query(
       `INSERT INTO treasury_drawdown_requests
        (id, fund_id, fund_name, funder_agency, requested_amount, tranche_name, target_programs, justification, status, requested_by, requested_date, voucher_number, disbursed_to_vault)
-       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, 'Submitted to Funder Treasury', $9, $10, $11, FALSE)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, 'Pending Accountant Pre-Audit', $9, $10, $11, FALSE)
        RETURNING *`,
       [
         reqId,
