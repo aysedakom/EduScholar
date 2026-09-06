@@ -18,12 +18,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor: Automatic Localhost failover when network connection drops
+// Interceptor: Automatic Localhost failover when network connection drops (Local Dev only)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    const isDev = (import.meta as any).env?.DEV === true;
     if (
+      isDev &&
       (!error.response || error.code === 'ERR_NETWORK') &&
       originalRequest &&
       !originalRequest._retryLocal &&
@@ -45,8 +47,11 @@ api.interceptors.response.use(
 // Reconnection Listener: Auto-sync flush when internet connection is restored
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    console.log('🌐 Internet connection restored. Triggering auto-sync to cloud...');
-    axios.post('http://localhost:5000/api/sync/trigger').catch(() => {});
+    console.log('🌐 Internet connection restored. Triggering auto-sync...');
+    const isDev = (import.meta as any).env?.DEV === true;
+    if (isDev) {
+      axios.post('http://localhost:5000/api/sync/trigger').catch(() => {});
+    }
     api.post('/sync/trigger').catch(() => {});
   });
 }
