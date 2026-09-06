@@ -105,6 +105,11 @@ async function ensureTables() {
         ALTER TABLE applications ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE student_registry ADD COLUMN IF NOT EXISTS district VARCHAR(100);
 
+        -- Drop restrictive CHECK constraints on status/disbursement_status to allow Treasury payout authorization statuses
+        ALTER TABLE student_registry DROP CONSTRAINT IF EXISTS student_registry_disbursement_status_check;
+        ALTER TABLE student_registry DROP CONSTRAINT IF EXISTS student_registry_status_check;
+        ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check;
+
         -- 1. Support Tickets Table
         CREATE TABLE IF NOT EXISTS support_tickets (
           id SERIAL PRIMARY KEY,

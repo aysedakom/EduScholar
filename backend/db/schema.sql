@@ -255,9 +255,9 @@ CREATE TABLE student_registry (
   scholarship_age VARCHAR(100) DEFAULT 'Year 2 (3rd Semester)',
   gwa NUMERIC(4,2) DEFAULT 1.75,
   units_enrolled INTEGER DEFAULT 18,
-  status VARCHAR(50) DEFAULT 'Active Good Standing' CHECK (status IN ('Active Good Standing', 'Dean''s List Honor', 'Renewal Pending', 'Academic Warning', 'Graduated')),
+  status VARCHAR(50) DEFAULT 'Active Good Standing',
   grant_amount NUMERIC(12,2) DEFAULT 10000,
-  disbursement_status VARCHAR(50) DEFAULT 'Disbursed' CHECK (disbursement_status IN ('Disbursed', 'Processing', 'Scheduled', 'On-Hold')),
+  disbursement_status VARCHAR(50) DEFAULT 'Disbursed',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
