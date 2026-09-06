@@ -261,7 +261,9 @@ export const BudgetPage: React.FC = () => {
                       {Array.isArray(d.target_programs) ? d.target_programs.join(', ') : 'All Programs'}
                     </span>
                   </td>
-                  <td className="p-4 text-slate-500 font-medium">{d.requested_date}</td>
+                  <td className="p-4 text-slate-500 font-medium">
+                    {d.requested_date ? String(d.requested_date).split('T')[0] : 'N/A'}
+                  </td>
                   <td className="p-4 text-center">
                     <Badge
                       variant={
