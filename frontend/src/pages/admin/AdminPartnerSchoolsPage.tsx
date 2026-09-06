@@ -681,10 +681,10 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
           {/* Breadcrumb Navigation Matching Exact Design */}
           <div className="flex items-center gap-2 mb-1">
             <Link
-              to={isCoordinator ? '/school/portal' : '/e-scholar'}
+              to={isCoordinator ? '/school/portal' : (user?.role === 'admin' || user?.role === 'superadmin') ? '/dashboard' : '/e-scholar'}
               className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors"
             >
-              <ArrowLeft className="h-3.5 w-3.5" /> {isCoordinator ? 'Coordinator Portal' : 'E-SCHOLAR Hub'}
+              <ArrowLeft className="h-3.5 w-3.5" /> {isCoordinator ? 'Coordinator Portal' : (user?.role === 'admin' || user?.role === 'superadmin') ? 'Admin Dashboard' : 'E-SCHOLAR Hub'}
             </Link>
             <span className="text-slate-400 text-xs">/</span>
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Partner School Database</span>
