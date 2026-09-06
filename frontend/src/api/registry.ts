@@ -30,3 +30,8 @@ export const addScholar = (payload: Partial<ScholarRegistryRecord>) => {
 export const updateScholarStatus = (id: number | string, status: string, disbursementStatus?: string, gwa?: number) => {
   return api.patch<ScholarRegistryRecord>(`/registry/${id}/status`, { status, disbursementStatus, gwa });
 };
+
+export const batchUpdateScholarDisbursementStatus = (ids: (number | string)[], disbursementStatus: string) => {
+  return Promise.all(ids.map((id) => updateScholarStatus(id, 'Active Good Standing', disbursementStatus)));
+};
+

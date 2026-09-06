@@ -91,6 +91,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'Treasury Portal',
     items: [
+      { label: 'Payroll Authorization', to: '/treasury/payroll', icon: CheckSquare, roles: ['treasury'] as const },
       { label: 'Budget Management', to: '/treasury/budget', icon: DollarSign, roles: ['treasury'] as const },
       { label: 'Reconciliation', to: '/treasury/reconciliation', icon: FileText, roles: ['treasury'] as const },
     ],

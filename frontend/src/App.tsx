@@ -46,6 +46,7 @@ import { MyAssignedStudentsPage } from './pages/supervisor/MyAssignedStudentsPag
 import { AcademicMonitoringPage } from './pages/school/AcademicMonitoringPage';
 import { BudgetPage } from './pages/treasury/BudgetPage';
 import { ReconciliationPage } from './pages/treasury/ReconciliationPage';
+import { PayrollAuthorizationPage } from './pages/treasury/PayrollAuthorizationPage';
 
 // Student TODO.md Specific Pages
 import { BasicFormPage } from './pages/student/BasicFormPage';
@@ -185,6 +186,8 @@ export function App() {
 
               {/* Treasury Routes */}
               <Route element={<ProtectedRoute allowedRoles={['treasury', 'system_admin', 'admin']} />}>
+                <Route path="/treasury/payroll" element={<PayrollAuthorizationPage />} />
+                <Route path="/treasury/authorization" element={<PayrollAuthorizationPage />} />
                 <Route path="/treasury/budget" element={<BudgetPage />} />
                 <Route path="/treasury/reports" element={<ReportsModulePage />} />
                 <Route path="/treasury/reconciliation" element={<ReconciliationPage />} />
