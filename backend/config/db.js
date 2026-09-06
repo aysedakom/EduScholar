@@ -175,7 +175,81 @@ async function ensureTables() {
         INSERT INTO portal_settings (setting_key, setting_value)
         VALUES ('application_portal', '{"isOpen": true, "academicYear": "AY 2026-2027", "term": "1st Semester", "openingDate": "2026-08-01", "closingDate": "2026-09-30", "closedMessage": "The Quezon City Scholarship Application Portal is currently closed for new submissions. Evaluators are processing active candidate queues.", "nextCycleOpening": "October 15, 2026"}'::jsonb)
         ON CONFLICT (setting_key) DO NOTHING;
+
+        -- 5. Treasury Fund Pools Table
+        CREATE TABLE IF NOT EXISTS treasury_fund_pools (
+          id VARCHAR(50) PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          funder_agency VARCHAR(255),
+          funder_type VARCHAR(150),
+          revenue_source VARCHAR(255),
+          total_budget NUMERIC(14,2) DEFAULT 0,
+          disbursed_amount NUMERIC(14,2) DEFAULT 0,
+          committed_amount NUMERIC(14,2) DEFAULT 0,
+          fiscal_year VARCHAR(50) DEFAULT 'FY 2026-2027',
+          status VARCHAR(50) DEFAULT 'Active',
+          contact_person VARCHAR(150),
+          tranches_released INTEGER DEFAULT 0,
+          last_drawdown_date DATE,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        -- 6. Treasury Drawdown Requests Table
+        CREATE TABLE IF NOT EXISTS treasury_drawdown_requests (
+          id VARCHAR(50) PRIMARY KEY,
+          fund_id VARCHAR(50) REFERENCES treasury_fund_pools(id),
+          fund_name VARCHAR(255),
+          funder_agency VARCHAR(255),
+          requested_amount NUMERIC(14,2) NOT NULL,
+          tranche_name VARCHAR(255),
+          target_programs JSONB DEFAULT '[]',
+          justification TEXT,
+          status VARCHAR(100) DEFAULT 'Submitted to Funder Treasury',
+          requested_by VARCHAR(150),
+          requested_date DATE DEFAULT CURRENT_DATE,
+          approved_date DATE,
+          voucher_number VARCHAR(100),
+          disbursed_to_vault BOOLEAN DEFAULT FALSE,
+          approval_notes TEXT,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
       `);
+
+      // Seed default Treasury Fund Pools if missing
+      const fundPoolsSeed = [
+        ['FUND-QC-SEF', 'Quezon City Special Education Fund (SEF)', 'Quezon City Local School Board & City Treasury', 'LGU Special Education Tax Allocation', 'Local Real Property Tax (SEF 1% Surcharge)', 50000000.00, 18500000.00, 12000000.00, 'FY 2026-2027', 'Active', 'Office of City Treasurer / City Council', 3, '2026-07-15'],
+        ['FUND-QC-YOUTH', 'Quezon City Executive Youth Financial Aid Fund', 'Quezon City Youth Development Office (QCYDO)', 'LGU Executive Budget Line', 'QC General Appropriations Ordinance', 25000000.00, 8200000.00, 6500000.00, 'FY 2026-2027', 'Active', 'Executive Director, QCYDO', 2, '2026-06-20'],
+        ['FUND-CHED-TES', 'CHED UniFAST Tertiary Education Subsidy (TES) Equity', 'Commission on Higher Education (CHED) & UniFAST Board', 'National Government Co-Funding Tranche', 'Republic Act 10931 National Subsidy Pool', 30000000.00, 12000000.00, 8000000.00, 'FY 2026-2027', 'Active', 'UniFAST Regional Operations Office', 2, '2026-05-10'],
+        ['FUND-DOST-STEM', 'DOST-SEI STEM Excellence Co-Funding Grant Pool', 'Department of Science and Technology (DOST-SEI)', 'National Science & Technology Endowment', 'DOST Science Education Institute Fund', 15000000.00, 4500000.00, 3000000.00, 'FY 2026-2027', 'Active', 'DOST-SEI Scholarship Division', 1, '2026-04-12'],
+        ['FUND-QC-NEED', 'Quezon City General Revenue Need-Based Aid Pool', 'Quezon City Social Services & Development Dept. (SSDD)', 'LGU Indigency & Welfare Allocation', 'City Welfare & Educational Equity Fund', 20000000.00, 7000000.00, 5000000.00, 'FY 2026-2027', 'Active', 'SSDD Educational Grants Desk', 2, '2026-06-05']
+      ];
+
+      for (const fp of fundPoolsSeed) {
+        await pool.query(`
+          INSERT INTO treasury_fund_pools 
+          (id, name, funder_agency, funder_type, revenue_source, total_budget, disbursed_amount, committed_amount, fiscal_year, status, contact_person, tranches_released, last_drawdown_date)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ON CONFLICT (id) DO NOTHING
+        `, fp);
+      }
+
+      // Seed default Drawdown Requests if missing
+      const drawdownsSeed = [
+        ['DR-QC-2026-001', 'FUND-QC-SEF', 'Quezon City Special Education Fund (SEF)', 'Quezon City Local School Board & City Treasury', 10000000.00, 'Tranche 1: 1st Semester AY 2026-2027 Major Grants', JSON.stringify(['Tertiary Academic Scholarship', 'Economic Scholarship', 'Senior High School Aid']), 'Disbursement allocation for 1,000 qualified tertiary and SHS scholars for 1st Semester matriculation & stipends.', 'Transferred & Credited', 'Office of the City Mayor - Scholarship Administrator', '2026-07-01', '2026-07-15', 'QC-TREASURY-VCH-2026-8819', true],
+        ['DR-QC-2026-002', 'FUND-QC-YOUTH', 'Quezon City Executive Youth Financial Aid Fund', 'Quezon City Youth Development Office (QCYDO)', 5000000.00, 'Tranche 2: Specialized & Youth Leadership Grants', JSON.stringify(['Youth Leaders Scholarship', 'Athletic & Arts Grant']), 'Financial assistance for accredited youth leaders and varsity student scholars.', 'Transferred & Credited', 'Quezon City Scholarship Board', '2026-08-01', '2026-08-10', 'QC-TREASURY-VCH-2026-9042', true],
+        ['DR-QC-2026-003', 'FUND-CHED-TES', 'CHED UniFAST Tertiary Education Subsidy (TES) Equity', 'Commission on Higher Education (CHED) & UniFAST Board', 8000000.00, 'Tranche 1: Tertiary Need-Based Equity Subsidy', JSON.stringify(['Economic Scholarship (Need-Based Financial Assistance)']), 'Supplementary stipend assistance for indigent college students in partner HEIs.', 'Under Funder Treasury Review', 'LGU Higher Education Coordination Unit', '2026-08-20', null, 'CHED-DRAWDOWN-REQ-2026-019', false]
+      ];
+
+      for (const dr of drawdownsSeed) {
+        await pool.query(`
+          INSERT INTO treasury_drawdown_requests
+          (id, fund_id, fund_name, funder_agency, requested_amount, tranche_name, target_programs, justification, status, requested_by, requested_date, approved_date, voucher_number, disbursed_to_vault)
+          VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, $9, $10, $11, $12, $13, $14)
+          ON CONFLICT (id) DO NOTHING
+        `, dr);
+      }
 
       // Ensure primary official accounts (Admin, Treasury, School Coordinator, Supervisor, System Admin, Student) have January10 password in cloud/local DB
       const bcrypt = require('bcryptjs');

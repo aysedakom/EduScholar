@@ -417,12 +417,50 @@ CREATE TABLE IF NOT EXISTS announcements (
 CREATE INDEX IF NOT EXISTS idx_announcements_status ON announcements(status, created_at);
 
 -- ============================================================
--- 17. PORTAL SETTINGS
+-- 17. PORTAL SETTINGS & TREASURY FUND MANAGEMENT
 -- ============================================================
 CREATE TABLE IF NOT EXISTS portal_settings (
   id SERIAL PRIMARY KEY,
   setting_key VARCHAR(100) UNIQUE NOT NULL,
   setting_value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS treasury_fund_pools (
+  id VARCHAR(50) PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  funder_agency VARCHAR(255),
+  funder_type VARCHAR(150),
+  revenue_source VARCHAR(255),
+  total_budget NUMERIC(14,2) DEFAULT 0,
+  disbursed_amount NUMERIC(14,2) DEFAULT 0,
+  committed_amount NUMERIC(14,2) DEFAULT 0,
+  fiscal_year VARCHAR(50) DEFAULT 'FY 2026-2027',
+  status VARCHAR(50) DEFAULT 'Active',
+  contact_person VARCHAR(150),
+  tranches_released INTEGER DEFAULT 0,
+  last_drawdown_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS treasury_drawdown_requests (
+  id VARCHAR(50) PRIMARY KEY,
+  fund_id VARCHAR(50) REFERENCES treasury_fund_pools(id),
+  fund_name VARCHAR(255),
+  funder_agency VARCHAR(255),
+  requested_amount NUMERIC(14,2) NOT NULL,
+  tranche_name VARCHAR(255),
+  target_programs JSONB DEFAULT '[]',
+  justification TEXT,
+  status VARCHAR(100) DEFAULT 'Submitted to Funder Treasury',
+  requested_by VARCHAR(150),
+  requested_date DATE DEFAULT CURRENT_DATE,
+  approved_date DATE,
+  voucher_number VARCHAR(100),
+  disbursed_to_vault BOOLEAN DEFAULT FALSE,
+  approval_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 

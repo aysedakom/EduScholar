@@ -7,148 +7,27 @@ const { broadcast } = require('../realtime/socketServer');
  * 
  * Manages government fund sources, donor endowments, and Funder Drawdown Pull Requests.
  * Allows administrators to request budget tranches from the City Treasury / Sponsoring Agencies
- * with official voucher issuance and audit trail.
+ * with official voucher issuance and audit trail. Connected to PostgreSQL.
  */
-
-let FUND_POOLS = [
-  {
-    id: 'FUND-QC-SEF',
-    name: 'Quezon City Special Education Fund (SEF)',
-    funder_agency: 'Quezon City Local School Board & City Treasury',
-    funder_type: 'LGU Special Education Tax Allocation',
-    revenue_source: 'Local Real Property Tax (SEF 1% Surcharge)',
-    total_budget: 50000000.00,
-    disbursed_amount: 18500000.00,
-    committed_amount: 12000000.00,
-    fiscal_year: 'FY 2026-2027',
-    status: 'Active',
-    contact_person: 'Office of City Treasurer / City Council',
-    tranches_released: 3,
-    last_drawdown_date: '2026-07-15',
-  },
-  {
-    id: 'FUND-QC-YOUTH',
-    name: 'Quezon City Executive Youth Financial Aid Fund',
-    funder_agency: 'Quezon City Youth Development Office (QCYDO)',
-    funder_type: 'LGU Executive Budget Line',
-    revenue_source: 'QC General Appropriations Ordinance',
-    total_budget: 25000000.00,
-    disbursed_amount: 8200000.00,
-    committed_amount: 6500000.00,
-    fiscal_year: 'FY 2026-2027',
-    status: 'Active',
-    contact_person: 'Executive Director, QCYDO',
-    tranches_released: 2,
-    last_drawdown_date: '2026-06-20',
-  },
-  {
-    id: 'FUND-CHED-TES',
-    name: 'CHED UniFAST Tertiary Education Subsidy (TES) Equity',
-    funder_agency: 'Commission on Higher Education (CHED) & UniFAST Board',
-    funder_type: 'National Government Co-Funding Tranche',
-    revenue_source: 'Republic Act 10931 National Subsidy Pool',
-    total_budget: 30000000.00,
-    disbursed_amount: 12000000.00,
-    committed_amount: 8000000.00,
-    fiscal_year: 'FY 2026-2027',
-    status: 'Active',
-    contact_person: 'UniFAST Regional Operations Office',
-    tranches_released: 2,
-    last_drawdown_date: '2026-05-10',
-  },
-  {
-    id: 'FUND-DOST-STEM',
-    name: 'DOST-SEI STEM Excellence Co-Funding Grant Pool',
-    funder_agency: 'Department of Science and Technology (DOST-SEI)',
-    funder_type: 'National Science & Technology Endowment',
-    revenue_source: 'DOST Science Education Institute Fund',
-    total_budget: 15000000.00,
-    disbursed_amount: 4500000.00,
-    committed_amount: 3000000.00,
-    fiscal_year: 'FY 2026-2027',
-    status: 'Active',
-    contact_person: 'DOST-SEI Scholarship Division',
-    tranches_released: 1,
-    last_drawdown_date: '2026-04-12',
-  },
-  {
-    id: 'FUND-QC-NEED',
-    name: 'Quezon City General Revenue Need-Based Aid Pool',
-    funder_agency: 'Quezon City Social Services & Development Dept. (SSDD)',
-    funder_type: 'LGU Indigency & Welfare Allocation',
-    revenue_source: 'City Welfare & Educational Equity Fund',
-    total_budget: 20000000.00,
-    disbursed_amount: 7000000.00,
-    committed_amount: 5000000.00,
-    fiscal_year: 'FY 2026-2027',
-    status: 'Active',
-    contact_person: 'SSDD Educational Grants Desk',
-    tranches_released: 2,
-    last_drawdown_date: '2026-06-05',
-  }
-];
-
-let DRAWDOWN_REQUESTS = [
-  {
-    id: 'DR-QC-2026-001',
-    fund_id: 'FUND-QC-SEF',
-    fund_name: 'Quezon City Special Education Fund (SEF)',
-    funder_agency: 'Quezon City Local School Board & City Treasury',
-    requested_amount: 10000000.00,
-    tranche_name: 'Tranche 1: 1st Semester AY 2026-2027 Major Grants',
-    target_programs: ['Tertiary Academic Scholarship', 'Economic Scholarship', 'Senior High School Aid'],
-    justification: 'Disbursement allocation for 1,000 qualified tertiary and SHS scholars for 1st Semester matriculation & stipends.',
-    status: 'Transferred & Credited',
-    requested_by: 'Office of the City Mayor - Scholarship Administrator',
-    requested_date: '2026-07-01',
-    approved_date: '2026-07-15',
-    voucher_number: 'QC-TREASURY-VCH-2026-8819',
-    disbursed_to_vault: true,
-  },
-  {
-    id: 'DR-QC-2026-002',
-    fund_id: 'FUND-QC-YOUTH',
-    fund_name: 'Quezon City Executive Youth Financial Aid Fund',
-    funder_agency: 'Quezon City Youth Development Office (QCYDO)',
-    requested_amount: 5000000.00,
-    tranche_name: 'Tranche 2: Specialized & Youth Leadership Grants',
-    target_programs: ['Youth Leaders Scholarship', 'Athletic & Arts Grant'],
-    justification: 'Financial assistance for accredited youth leaders and varsity student scholars.',
-    status: 'Transferred & Credited',
-    requested_by: 'Quezon City Scholarship Board',
-    requested_date: '2026-08-01',
-    approved_date: '2026-08-10',
-    voucher_number: 'QC-TREASURY-VCH-2026-9042',
-    disbursed_to_vault: true,
-  },
-  {
-    id: 'DR-QC-2026-003',
-    fund_id: 'FUND-CHED-TES',
-    fund_name: 'CHED UniFAST Tertiary Education Subsidy (TES) Equity',
-    funder_agency: 'Commission on Higher Education (CHED) & UniFAST Board',
-    requested_amount: 8000000.00,
-    tranche_name: 'Tranche 1: Tertiary Need-Based Equity Subsidy',
-    target_programs: ['Economic Scholarship (Need-Based Financial Assistance)'],
-    justification: 'Supplementary stipend assistance for indigent college students in partner HEIs.',
-    status: 'Under Funder Treasury Review',
-    requested_by: 'LGU Higher Education Coordination Unit',
-    requested_date: '2026-08-20',
-    approved_date: null,
-    voucher_number: 'CHED-DRAWDOWN-REQ-2026-019',
-    disbursed_to_vault: false,
-  }
-];
 
 class FundManagementService {
   /**
    * Get all fund pools with calculated remaining balances
    */
   async getFundPools() {
-    return FUND_POOLS.map((pool) => {
-      const remaining = pool.total_budget - (pool.disbursed_amount + pool.committed_amount);
-      const utilization = Math.round(((pool.disbursed_amount + pool.committed_amount) / pool.total_budget) * 100);
+    const res = await pool.query('SELECT * FROM treasury_fund_pools ORDER BY created_at ASC');
+    return res.rows.map((pool) => {
+      const totalBudget = parseFloat(pool.total_budget) || 0;
+      const disbursed = parseFloat(pool.disbursed_amount) || 0;
+      const committed = parseFloat(pool.committed_amount) || 0;
+      const remaining = totalBudget - (disbursed + committed);
+      const utilization = totalBudget > 0 ? Math.round(((disbursed + committed) / totalBudget) * 100) : 0;
+
       return {
         ...pool,
+        total_budget: totalBudget,
+        disbursed_amount: disbursed,
+        committed_amount: committed,
         remaining_balance: Math.max(0, remaining),
         utilization_rate: `${utilization}%`,
       };
@@ -159,41 +38,76 @@ class FundManagementService {
    * Get all funder drawdown pull requests
    */
   async getDrawdownRequests() {
-    return DRAWDOWN_REQUESTS;
+    const res = await pool.query('SELECT * FROM treasury_drawdown_requests ORDER BY requested_date DESC, created_at DESC');
+    return res.rows.map((req) => ({
+      ...req,
+      requested_amount: parseFloat(req.requested_amount) || 0,
+      target_programs: typeof req.target_programs === 'string' ? JSON.parse(req.target_programs) : (req.target_programs || []),
+    }));
   }
 
   /**
    * Create a new formal Funder Drawdown Pull Request
    */
   async createDrawdownRequest({ fund_id, requested_amount, tranche_name, target_programs, justification, requested_by }) {
-    const fund = FUND_POOLS.find((f) => f.id === fund_id) || FUND_POOLS[0];
+    // Fetch target fund pool
+    let fund;
+    if (fund_id) {
+      const fundRes = await pool.query('SELECT * FROM treasury_fund_pools WHERE id = $1', [fund_id]);
+      fund = fundRes.rows[0];
+    }
+    if (!fund) {
+      const defaultFundRes = await pool.query('SELECT * FROM treasury_fund_pools ORDER BY created_at ASC LIMIT 1');
+      fund = defaultFundRes.rows[0];
+    }
+
     const amount = parseFloat(requested_amount) || 1000000.00;
-    const reqId = `DR-QC-2026-${String(DRAWDOWN_REQUESTS.length + 1).padStart(3, '0')}`;
+
+    // Count existing requests to build sequential ID
+    const countRes = await pool.query('SELECT COUNT(*) FROM treasury_drawdown_requests');
+    const nextSeq = parseInt(countRes.rows[0].count, 10) + 1;
+    const reqId = `DR-QC-2026-${String(nextSeq).padStart(3, '0')}`;
     const voucherNumber = `QC-TREASURY-REQ-${Date.now().toString().slice(-6)}`;
+    const reqDate = new Date().toISOString().split('T')[0];
+    const programsArr = Array.isArray(target_programs) && target_programs.length > 0 
+      ? target_programs 
+      : ['Economic Scholarship (Need-Based)', 'Tertiary Academic'];
+
+    const insertRes = await pool.query(
+      `INSERT INTO treasury_drawdown_requests
+       (id, fund_id, fund_name, funder_agency, requested_amount, tranche_name, target_programs, justification, status, requested_by, requested_date, voucher_number, disbursed_to_vault)
+       VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8, 'Submitted to Funder Treasury', $9, $10, $11, FALSE)
+       RETURNING *`,
+      [
+        reqId,
+        fund.id,
+        fund.name,
+        fund.funder_agency,
+        amount,
+        tranche_name || `Disbursement Tranche (${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`,
+        JSON.stringify(programsArr),
+        justification || 'Official scholarship grant tranche requested for qualified student scholars.',
+        requested_by || 'Quezon City Scholarship Board Administrator',
+        reqDate,
+        voucherNumber,
+      ]
+    );
 
     const newRequest = {
-      id: reqId,
-      fund_id: fund.id,
-      fund_name: fund.name,
-      funder_agency: fund.funder_agency,
+      ...insertRes.rows[0],
       requested_amount: amount,
-      tranche_name: tranche_name || `Disbursement Tranche (${new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })})`,
-      target_programs: Array.isArray(target_programs) && target_programs.length > 0 ? target_programs : ['Economic Scholarship (Need-Based)', 'Tertiary Academic'],
-      justification: justification || 'Official scholarship grant tranche requested for qualified student scholars.',
-      status: 'Submitted to Funder Treasury',
-      requested_by: requested_by || 'Quezon City Scholarship Board Administrator',
-      requested_date: new Date().toISOString().split('T')[0],
-      approved_date: null,
-      voucher_number: voucherNumber,
-      disbursed_to_vault: false,
+      target_programs: programsArr,
     };
 
-    DRAWDOWN_REQUESTS = [newRequest, ...DRAWDOWN_REQUESTS];
-
     // Update committed amount in the fund pool
-    fund.committed_amount = (fund.committed_amount || 0) + amount;
+    await pool.query(
+      `UPDATE treasury_fund_pools 
+       SET committed_amount = committed_amount + $1, updated_at = NOW() 
+       WHERE id = $2`,
+      [amount, fund.id]
+    );
 
-    // Dispatch real-time in-app notification to City Treasury and Supervisors
+    // Dispatch real-time in-app notification to City Treasury and System Admins
     try {
       const treasuryUsers = await pool.query("SELECT id FROM users WHERE role IN ('treasury', 'system_admin')");
       for (const tUser of treasuryUsers.rows) {
@@ -228,24 +142,45 @@ class FundManagementService {
    * Update status of Funder Drawdown Request (Approve / Credit to Vault)
    */
   async updateDrawdownStatus(id, newStatus, approvalNotes = '') {
-    const req = DRAWDOWN_REQUESTS.find((r) => r.id === id);
+    const reqRes = await pool.query('SELECT * FROM treasury_drawdown_requests WHERE id = $1', [id]);
+    const req = reqRes.rows[0];
     if (!req) {
       throw new Error('Drawdown request not found');
     }
 
-    req.status = newStatus;
-    if (newStatus === 'Transferred & Credited' || newStatus === 'Approved') {
-      req.approved_date = new Date().toISOString().split('T')[0];
-      req.disbursed_to_vault = true;
+    const reqAmount = parseFloat(req.requested_amount) || 0;
+    const isApproved = newStatus === 'Transferred & Credited' || newStatus === 'Approved';
+    const approvedDate = isApproved ? new Date().toISOString().split('T')[0] : req.approved_date;
+    const disbursedToVault = isApproved ? true : req.disbursed_to_vault;
 
+    const updateReqRes = await pool.query(
+      `UPDATE treasury_drawdown_requests
+       SET status = $1, approved_date = $2, disbursed_to_vault = $3, approval_notes = $4, updated_at = NOW()
+       WHERE id = $5
+       RETURNING *`,
+      [newStatus, approvedDate, disbursedToVault, approvalNotes || req.approval_notes, id]
+    );
+
+    const updatedReq = {
+      ...updateReqRes.rows[0],
+      requested_amount: reqAmount,
+      target_programs: typeof updateReqRes.rows[0].target_programs === 'string'
+        ? JSON.parse(updateReqRes.rows[0].target_programs)
+        : (updateReqRes.rows[0].target_programs || []),
+    };
+
+    if (isApproved) {
       // Move from committed to disbursed in fund pool
-      const fund = FUND_POOLS.find((f) => f.id === req.fund_id);
-      if (fund) {
-        fund.committed_amount = Math.max(0, (fund.committed_amount || 0) - req.requested_amount);
-        fund.disbursed_amount = (fund.disbursed_amount || 0) + req.requested_amount;
-        fund.tranches_released = (fund.tranches_released || 0) + 1;
-        fund.last_drawdown_date = req.approved_date;
-      }
+      await pool.query(
+        `UPDATE treasury_fund_pools 
+         SET committed_amount = GREATEST(0, committed_amount - $1),
+             disbursed_amount = disbursed_amount + $1,
+             tranches_released = tranches_released + 1,
+             last_drawdown_date = $2,
+             updated_at = NOW()
+         WHERE id = $3`,
+        [reqAmount, approvedDate, req.fund_id]
+      );
 
       // Dispatch notification to Admins that funds have been credited
       try {
@@ -256,15 +191,15 @@ class FundManagementService {
              VALUES ($1, $2, $3, 'success', FALSE, 'fund_credited', '/admin/funds')`,
             [
               aUser.id,
-              `✅ Funds Credited: ₱${req.requested_amount.toLocaleString()}`,
-              `City Treasury approved and credited ${req.tranche_name} (₱${req.requested_amount.toLocaleString()}) to active vault.`,
+              `✅ Funds Credited: ₱${reqAmount.toLocaleString()}`,
+              `City Treasury approved and credited ${req.tranche_name} (₱${reqAmount.toLocaleString()}) to active vault.`,
             ]
           );
         }
 
         broadcast({
           type: 'FUND_CREDITED',
-          data: req,
+          data: updatedReq,
           timestamp: new Date().toISOString(),
         });
       } catch (notifErr) {
@@ -275,7 +210,7 @@ class FundManagementService {
     return {
       success: true,
       message: `Drawdown Request ${id} status updated to "${newStatus}"`,
-      data: req,
+      data: updatedReq,
     };
   }
 
@@ -284,24 +219,34 @@ class FundManagementService {
    */
   async createFundPool(poolData) {
     const id = `FUND-CUSTOM-${Date.now().toString().slice(-4)}`;
-    const newPool = {
-      id,
-      name: poolData.name,
-      funder_agency: poolData.funder_agency || 'Quezon City Local Government Unit',
-      funder_type: poolData.funder_type || 'LGU Educational Appropriation',
-      revenue_source: poolData.revenue_source || 'City Special Education Allocation',
-      total_budget: parseFloat(poolData.total_budget) || 5000000.00,
-      disbursed_amount: 0.00,
-      committed_amount: 0.00,
-      fiscal_year: poolData.fiscal_year || 'FY 2026-2027',
-      status: 'Active',
-      contact_person: poolData.contact_person || 'City Budget Office',
-      tranches_released: 0,
-      last_drawdown_date: null,
-    };
+    const totalBudget = parseFloat(poolData.total_budget) || 5000000.00;
 
-    FUND_POOLS = [newPool, ...FUND_POOLS];
-    return newPool;
+    const res = await pool.query(
+      `INSERT INTO treasury_fund_pools 
+       (id, name, funder_agency, funder_type, revenue_source, total_budget, disbursed_amount, committed_amount, fiscal_year, status, contact_person, tranches_released, last_drawdown_date)
+       VALUES ($1, $2, $3, $4, $5, $6, 0.00, 0.00, $7, 'Active', $8, 0, NULL)
+       RETURNING *`,
+      [
+        id,
+        poolData.name,
+        poolData.funder_agency || 'Quezon City Local Government Unit',
+        poolData.funder_type || 'LGU Educational Appropriation',
+        poolData.revenue_source || 'City Special Education Allocation',
+        totalBudget,
+        poolData.fiscal_year || 'FY 2026-2027',
+        poolData.contact_person || 'City Budget Office',
+      ]
+    );
+
+    const poolRow = res.rows[0];
+    return {
+      ...poolRow,
+      total_budget: totalBudget,
+      disbursed_amount: 0,
+      committed_amount: 0,
+      remaining_balance: totalBudget,
+      utilization_rate: '0%',
+    };
   }
 }
 
