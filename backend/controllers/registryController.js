@@ -24,22 +24,49 @@ const getScholars = async (req, res) => {
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    const result = await pool.query(
-      `SELECT sr.*,
-              u.phone, u.address, u.barangay, u.district, u.is_pwd, u.is_solo_parent, u.is_4ps, u.is_kasambahay_or_toda,
-              a.application_code, a.remarks AS application_remarks, a.submission_date, a.form_data, a.documents_submitted
-       FROM student_registry sr
-       LEFT JOIN users u ON (sr.user_id = u.id OR sr.student_id = u.student_id)
-       LEFT JOIN LATERAL (
-         SELECT * FROM applications app 
-         WHERE (app.user_id = sr.user_id OR app.student_id = sr.student_id) 
-         ORDER BY app.id DESC LIMIT 1
-       ) a ON true
-       ${where} 
-       ORDER BY sr.full_name ASC`,
-      values
-    );
-    res.json(result.rows);
+    try {
+      const result = await pool.query(
+        `SELECT sr.*,
+                u.phone, u.address, u.barangay, u.district, u.is_pwd, u.is_solo_parent, u.is_4ps, u.is_kasambahay_or_toda,
+                a.application_code, a.remarks AS application_remarks, a.submission_date, a.form_data, a.documents_submitted
+         FROM student_registry sr
+         LEFT JOIN users u ON (sr.user_id = u.id OR (sr.student_id IS NOT NULL AND u.student_id IS NOT NULL AND sr.student_id = u.student_id))
+         LEFT JOIN LATERAL (
+           SELECT * FROM applications app 
+           WHERE (app.user_id = sr.user_id OR (u.id IS NOT NULL AND app.user_id = u.id))
+           ORDER BY app.id DESC LIMIT 1
+         ) a ON true
+         ${where} 
+         ORDER BY sr.full_name ASC`,
+        values
+      );
+      return res.json(result.rows);
+    } catch (joinErr) {
+      console.warn('[registryController] Detailed JOIN query warning, falling back to simple query:', joinErr.message);
+      // Fallback simple query
+      const fallbackClauses = [];
+      const fallbackValues = [];
+      let fi = 1;
+      if (status && status !== 'All') {
+        fallbackClauses.push(`status = $${fi++}`);
+        fallbackValues.push(status);
+      }
+      if (school && school !== 'All') {
+        fallbackClauses.push(`school ILIKE $${fi++}`);
+        fallbackValues.push(`%${school}%`);
+      }
+      if (search) {
+        fallbackClauses.push(`(full_name ILIKE $${fi} OR student_id ILIKE $${fi} OR email ILIKE $${fi} OR program_name ILIKE $${fi})`);
+        fallbackValues.push(`%${search}%`);
+        fi++;
+      }
+      const fallbackWhere = fallbackClauses.length ? `WHERE ${fallbackClauses.join(' AND ')}` : '';
+      const fallbackRes = await pool.query(
+        `SELECT * FROM student_registry ${fallbackWhere} ORDER BY full_name ASC`,
+        fallbackValues
+      );
+      return res.json(fallbackRes.rows);
+    }
   } catch (error) {
     console.error('[registryController] getScholars error:', error);
     res.status(500).json({ message: 'Failed to fetch student registry' });
