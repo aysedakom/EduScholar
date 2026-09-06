@@ -117,14 +117,16 @@ const addScholar = async (req, res) => {
 const updateScholarStatus = async (req, res) => {
   try {
     const { status, disbursementStatus, gwa } = req.body;
+    const targetId = req.params.id;
+
     const result = await pool.query(
       `UPDATE student_registry 
        SET status = COALESCE($2, status),
            disbursement_status = COALESCE($3, disbursement_status),
            gwa = COALESCE($4, gwa),
            updated_at = NOW()
-       WHERE id = $1 RETURNING *`,
-      [req.params.id, status || null, disbursementStatus || null, gwa || null]
+       WHERE (id::text = $1 OR student_id = $1) RETURNING *`,
+      [targetId, status || null, disbursementStatus || null, gwa || null]
     );
     if (!result.rows[0]) return res.status(404).json({ message: 'Scholar record not found' });
     const scholar = result.rows[0];
@@ -139,7 +141,7 @@ const updateScholarStatus = async (req, res) => {
                disbursement_date = CURRENT_DATE,
                updated_at = NOW(),
                remarks = 'Stipend and educational grant officially remitted and disbursed by City Treasury.'
-           WHERE (user_id = $1 OR student_id = $2) AND LOWER(status) IN ('approved', 'granted')`,
+           WHERE (user_id = $1 OR user_id IN (SELECT id FROM users WHERE student_id = $2)) AND LOWER(status) IN ('approved', 'granted')`,
           [scholar.user_id, scholar.student_id]
         );
 
@@ -167,7 +169,7 @@ const updateScholarStatus = async (req, res) => {
                disbursement_date = NULL,
                updated_at = NOW(),
                remarks = 'Application approved by QCYDO Admin. Pending Treasury Disbursing Officer authorization.'
-           WHERE (user_id = $1 OR student_id = $2)`,
+           WHERE (user_id = $1 OR user_id IN (SELECT id FROM users WHERE student_id = $2))`,
           [scholar.user_id, scholar.student_id]
         );
       } catch (revertErr) {
@@ -178,7 +180,7 @@ const updateScholarStatus = async (req, res) => {
     res.json(scholar);
   } catch (error) {
     console.error('[registryController] updateScholarStatus error:', error);
-    res.status(500).json({ message: 'Failed to update scholar' });
+    res.status(500).json({ message: 'Failed to update scholar status: ' + error.message });
   }
 };
 
