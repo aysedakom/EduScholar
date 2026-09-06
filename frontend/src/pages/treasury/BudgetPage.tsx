@@ -239,65 +239,73 @@ export const BudgetPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {drawdowns.map((d) => (
-                <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="p-4">
-                    <div>
-                      <span className="font-mono font-bold text-slate-900 dark:text-white block">{d.id}</span>
-                      <span className="font-mono text-[10px] text-slate-400">{d.voucher_number}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div>
-                      <span className="font-semibold text-slate-800 dark:text-slate-200 block">{d.fund_name}</span>
-                      <span className="text-[10px] text-slate-500">{d.tranche_name}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right font-black text-slate-950 dark:text-emerald-400">
-                    {formatCurrency(d.requested_amount)}
-                  </td>
-                  <td className="p-4">
-                    <span className="text-[11px] text-slate-600 dark:text-slate-300 max-w-[200px] truncate block">
-                      {Array.isArray(d.target_programs) ? d.target_programs.join(', ') : 'All Programs'}
-                    </span>
-                  </td>
-                  <td className="p-4 text-slate-500 font-medium">
-                    {d.requested_date ? String(d.requested_date).split('T')[0] : 'N/A'}
-                  </td>
-                  <td className="p-4 text-center">
-                    <Badge
-                      variant={
-                        d.status === 'Transferred & Credited'
-                          ? 'success'
-                          : d.status === 'Under Funder Treasury Review'
-                          ? 'warning'
-                          : 'destructive'
-                      }
-                      size="sm"
-                    >
-                      {d.status}
-                    </Badge>
-                  </td>
-                  <td className="p-4 text-right">
-                    {d.status !== 'Transferred & Credited' ? (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleAuthorizeDrawdown(d.id)}
-                        disabled={isProcessing}
-                        leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                        className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                      >
-                        Authorize & Credit Grant
-                      </Button>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Credited to Vault
-                      </span>
-                    )}
+              {drawdowns.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-slate-400 dark:text-slate-500">
+                    No active grant or drawdown requests found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                drawdowns.map((d) => (
+                  <tr key={d.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="p-4">
+                      <div>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white block">{d.id}</span>
+                        <span className="font-mono text-[10px] text-slate-400">{d.voucher_number}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200 block">{d.fund_name}</span>
+                        <span className="text-[10px] text-slate-500">{d.tranche_name}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right font-black text-slate-950 dark:text-emerald-400">
+                      {formatCurrency(d.requested_amount)}
+                    </td>
+                    <td className="p-4">
+                      <span className="text-[11px] text-slate-600 dark:text-slate-300 max-w-[200px] truncate block">
+                        {Array.isArray(d.target_programs) ? d.target_programs.join(', ') : 'All Programs'}
+                      </span>
+                    </td>
+                    <td className="p-4 text-slate-500 font-medium">
+                      {d.requested_date ? String(d.requested_date).split('T')[0] : 'N/A'}
+                    </td>
+                    <td className="p-4 text-center">
+                      <Badge
+                        variant={
+                          d.status === 'Transferred & Credited'
+                            ? 'success'
+                            : d.status === 'Under Funder Treasury Review'
+                            ? 'warning'
+                            : 'destructive'
+                        }
+                        size="sm"
+                      >
+                        {d.status}
+                      </Badge>
+                    </td>
+                    <td className="p-4 text-right">
+                      {d.status !== 'Transferred & Credited' ? (
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleAuthorizeDrawdown(d.id)}
+                          disabled={isProcessing}
+                          leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                          className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                        >
+                          Authorize & Credit Grant
+                        </Button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Credited to Vault
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -333,38 +341,46 @@ export const BudgetPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {funds.map((b) => {
-                const util = b.total_budget > 0 ? (b.disbursed_amount / b.total_budget) * 100 : 0;
-                return (
-                  <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="p-4 font-mono font-bold text-slate-500 dark:text-slate-400">{b.id}</td>
-                    <td className="p-4 font-semibold text-slate-800 dark:text-white">
-                      <div>
-                        <span>{b.name}</span>
-                        <span className="text-[10px] text-slate-400 block font-normal">{b.revenue_source}</span>
-                      </div>
-                    </td>
-                    <td className="p-4 text-slate-600 dark:text-slate-300 font-medium">{b.funder_agency}</td>
-                    <td className="p-4 text-right font-bold text-slate-900 dark:text-white">
-                      {formatCurrency(b.total_budget)}
-                    </td>
-                    <td className="p-4 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                      {formatCurrency(b.disbursed_amount)}
-                    </td>
-                    <td className="p-4 text-right font-bold text-slate-700 dark:text-slate-300">
-                      {formatCurrency(b.remaining_balance)}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="w-20 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
-                          <div className="bg-blue-600 h-full rounded-full" style={{ width: `${Math.min(100, util)}%` }} />
+              {funds.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-8 text-center text-slate-400 dark:text-slate-500">
+                    No fund allocation pools created yet. Click "+ Create Allocation Pool" above to allocate funds.
+                  </td>
+                </tr>
+              ) : (
+                funds.map((b) => {
+                  const util = b.total_budget > 0 ? (b.disbursed_amount / b.total_budget) * 100 : 0;
+                  return (
+                    <tr key={b.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="p-4 font-mono font-bold text-slate-500 dark:text-slate-400">{b.id}</td>
+                      <td className="p-4 font-semibold text-slate-800 dark:text-white">
+                        <div>
+                          <span>{b.name}</span>
+                          <span className="text-[10px] text-slate-400 block font-normal">{b.revenue_source}</span>
                         </div>
-                        <span className="font-bold text-slate-700 dark:text-slate-200">{util.toFixed(0)}%</span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="p-4 text-slate-600 dark:text-slate-300 font-medium">{b.funder_agency}</td>
+                      <td className="p-4 text-right font-bold text-slate-900 dark:text-white">
+                        {formatCurrency(b.total_budget)}
+                      </td>
+                      <td className="p-4 text-right font-bold text-emerald-600 dark:text-emerald-400">
+                        {formatCurrency(b.disbursed_amount)}
+                      </td>
+                      <td className="p-4 text-right font-bold text-slate-700 dark:text-slate-300">
+                        {formatCurrency(b.remaining_balance)}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="w-20 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden border border-slate-200 dark:border-slate-700">
+                            <div className="bg-blue-600 h-full rounded-full" style={{ width: `${Math.min(100, util)}%` }} />
+                          </div>
+                          <span className="font-bold text-slate-700 dark:text-slate-200">{util.toFixed(0)}%</span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
