@@ -581,9 +581,12 @@ export const PayrollAuthorizationPage: React.FC = () => {
 
       {/* Slide-over Audit Verification Drawer */}
       {auditScholar && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-xs flex justify-end animate-fade-in-backdrop"
+          onClick={() => setAuditScholar(null)}
+        >
           <div
-            className="w-full max-w-2xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-300"
+            className="w-full max-w-2xl bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col border-l border-slate-200 dark:border-slate-800 animate-slide-in-right"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drawer Header */}
