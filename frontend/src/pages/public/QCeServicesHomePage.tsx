@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'sonner';
+import scholarHatBg from '../../assets/ScholarHat.png';
 
 export const QCeServicesHomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -387,22 +388,24 @@ export const QCeServicesHomePage: React.FC = () => {
           <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('home.dirSubtitle')}</p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {serviceCards.map((card, idx) => {
             return (
               <div
                 key={idx}
                 onClick={() => handleCardClick(card.title, card.path)}
-                className="group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.015] border border-slate-200/80 dark:border-slate-800"
-                style={{
-                  backgroundImage: "url('/Scholarship.png')",
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                }}
+                className="group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 min-h-[260px] sm:min-h-[300px] flex items-center"
               >
+                {/* Background image explicitly via img tag for reliable rendering */}
+                <img
+                  src={scholarHatBg}
+                  alt="Scholarship Hat Background"
+                  className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none transition-transform duration-700 group-hover:scale-105"
+                />
+
                 {/* Backdrop gradient overlay for crystal clear text visibility while maintaining background artwork */}
                 <div
-                  className={`p-8 sm:p-12 transition-all duration-300 ${
+                  className={`relative z-10 w-full h-full min-h-[260px] sm:min-h-[300px] p-8 sm:p-14 flex flex-col justify-center transition-all duration-300 ${
                     isDark
                       ? 'bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-950/50 hover:bg-slate-950/80 backdrop-blur-[2px]'
                       : 'bg-gradient-to-r from-white/95 via-white/85 to-white/50 hover:bg-white/80 backdrop-blur-[2px]'
@@ -417,7 +420,7 @@ export const QCeServicesHomePage: React.FC = () => {
                       {card.title}
                     </h3>
                     <p
-                      className={`text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${
+                      className={`text-base sm:text-lg lg:text-xl leading-relaxed font-semibold ${
                         isDark ? 'text-slate-200' : 'text-slate-700'
                       }`}
                     >
