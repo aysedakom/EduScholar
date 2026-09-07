@@ -199,10 +199,10 @@ export const EducationMonitoringReportsPage: React.FC = () => {
 
   // Calculate Statistics across all audited records
   const totalAudited = auditRecords.length;
-  const avgGwa = (auditRecords.reduce((acc, curr) => acc + curr.currentGwa, 0) / (totalAudited || 1)).toFixed(2);
-  const avgAttendance = (auditRecords.reduce((acc, curr) => acc + curr.classAttendanceRate, 0) / (totalAudited || 1)).toFixed(1);
-  const totalPassedUnits = auditRecords.reduce((acc, curr) => acc + curr.unitsPassed, 0);
-  const totalEnrolledUnits = auditRecords.reduce((acc, curr) => acc + curr.unitsEnrolled, 0);
+  const avgGwa = (auditRecords.reduce((acc, curr) => acc + (Number(curr.currentGwa) || 0), 0) / (totalAudited || 1)).toFixed(2);
+  const avgAttendance = (auditRecords.reduce((acc, curr) => acc + (Number(curr.classAttendanceRate) || 0), 0) / (totalAudited || 1)).toFixed(1);
+  const totalPassedUnits = auditRecords.reduce((acc, curr) => acc + (Number(curr.unitsPassed) || 0), 0);
+  const totalEnrolledUnits = auditRecords.reduce((acc, curr) => acc + (Number(curr.unitsEnrolled) || 0), 0);
   const unitPassingRate = ((totalPassedUnits / (totalEnrolledUnits || 1)) * 100).toFixed(1);
   const retentionClearedCount = auditRecords.filter((r) => r.retentionStatus === 'Retention Cleared' || r.retentionStatus === 'Dean’s List Honors').length;
   const retentionRate = ((retentionClearedCount / (totalAudited || 1)) * 100).toFixed(1);

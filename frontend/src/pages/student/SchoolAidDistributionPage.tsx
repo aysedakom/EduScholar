@@ -226,7 +226,7 @@ export const SchoolAidDistributionPage: React.FC = () => {
             gpa: parseFloat(activeApp.gpa) || 3.85,
             scholarshipTitle: activeApp.scholarshipTitle || 'Quezon City Tertiary Scholarship Program',
             lguCategory: 'Need-Based Aid',
-            amount: activeApp.amount || 10000,
+            amount: Number(String(activeApp.amount || 10000).replace(/[^0-9.-]+/g, '')) || 10000,
             paymentMethod: 'GCash',
             accountNumber: activeApp.mobile || '0917-882-9901',
             scheduledDate: new Date().toISOString().split('T')[0],
@@ -305,7 +305,7 @@ export const SchoolAidDistributionPage: React.FC = () => {
           gpa: Number(s.gwa) || 1.75,
           scholarshipTitle: s.program_name,
           lguCategory,
-          amount: s.grant_amount || 10000,
+          amount: Number(String(s.grant_amount || 10000).replace(/[^0-9.-]+/g, '')) || 10000,
           paymentMethod: 'GCash' as const,
           accountNumber: '0917-882-9901',
           scheduledDate: '2026-08-01',
@@ -357,10 +357,14 @@ export const SchoolAidDistributionPage: React.FC = () => {
     ? disbursements.filter((d) => d.schoolId === selectedSchoolId)
     : disbursements;
 
-  const totalScopePending = currentScopeDisbursements.filter((d) => d.status === 'Pending').reduce((acc, curr) => acc + curr.amount, 0);
-  const totalScopeCompleted = currentScopeDisbursements.filter((d) => d.status === 'Completed').reduce((acc, curr) => acc + curr.amount, 0);
+  const totalScopePending = currentScopeDisbursements
+    .filter((d) => d.status === 'Pending')
+    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  const totalScopeCompleted = currentScopeDisbursements
+    .filter((d) => d.status === 'Completed')
+    .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   const totalScopeFailedCount = currentScopeDisbursements.filter((d) => d.status === 'Failed').length;
-  const totalScopeApprovedAid = currentScopeDisbursements.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalScopeApprovedAid = currentScopeDisbursements.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
   const handleRetryPayment = async (id: string) => {
     const studentId = id.replace('DISB-', '').replace('LIVE-', '');

@@ -50,10 +50,10 @@ export const BudgetPage: React.FC = () => {
   }, []);
 
   // Aggregates
-  const totalAllocated = funds.reduce((acc, curr) => acc + curr.total_budget, 0);
-  const totalDisbursed = funds.reduce((acc, curr) => acc + curr.disbursed_amount, 0);
-  const totalCommitted = funds.reduce((acc, curr) => acc + curr.committed_amount, 0);
-  const totalRemaining = funds.reduce((acc, curr) => acc + curr.remaining_balance, 0);
+  const totalAllocated = funds.reduce((acc, curr) => acc + (Number(curr.total_budget) || 0), 0);
+  const totalDisbursed = funds.reduce((acc, curr) => acc + (Number(curr.disbursed_amount) || 0), 0);
+  const totalCommitted = funds.reduce((acc, curr) => acc + (Number(curr.committed_amount) || 0), 0);
+  const totalRemaining = funds.reduce((acc, curr) => acc + (Number(curr.remaining_balance) || 0), 0);
   const utilizationRate = totalAllocated > 0 ? (totalDisbursed / totalAllocated) * 100 : 0;
 
   const handleCreatePool = async (e: React.FormEvent) => {

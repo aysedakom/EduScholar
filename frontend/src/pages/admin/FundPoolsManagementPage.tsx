@@ -73,10 +73,10 @@ export const FundPoolsManagementPage: React.FC = () => {
   }, []);
 
   // Aggregate Metrics
-  const totalAllocatedBudget = funds.reduce((sum, f) => sum + f.total_budget, 0);
-  const totalDisbursedAmount = funds.reduce((sum, f) => sum + f.disbursed_amount, 0);
-  const totalCommittedAmount = funds.reduce((sum, f) => sum + f.committed_amount, 0);
-  const totalRemainingBalance = funds.reduce((sum, f) => sum + f.remaining_balance, 0);
+  const totalAllocatedBudget = funds.reduce((sum, f) => sum + (Number(f.total_budget) || 0), 0);
+  const totalDisbursedAmount = funds.reduce((sum, f) => sum + (Number(f.disbursed_amount) || 0), 0);
+  const totalCommittedAmount = funds.reduce((sum, f) => sum + (Number(f.committed_amount) || 0), 0);
+  const totalRemainingBalance = funds.reduce((sum, f) => sum + (Number(f.remaining_balance) || 0), 0);
 
   // Submit Drawdown Pull Request Handler
   const handleCreateDrawdown = async (e: React.FormEvent) => {

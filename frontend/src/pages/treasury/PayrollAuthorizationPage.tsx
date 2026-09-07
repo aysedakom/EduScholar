@@ -191,7 +191,7 @@ export const PayrollAuthorizationPage: React.FC = () => {
 
   const totalPendingAmount = scholars
     .filter((s) => ['Scheduled', 'Pending Treasury Review', 'Pending'].includes(s.disbursement_status || 'Scheduled'))
-    .reduce((acc, curr) => acc + (curr.grant_amount || 15000), 0);
+    .reduce((acc, curr) => acc + (Number(curr.grant_amount) || 15000), 0);
 
   const totalAuthorizedCount = scholars.filter((s) =>
     ['Approved for Payout', 'Authorized'].includes(s.disbursement_status)
@@ -199,7 +199,7 @@ export const PayrollAuthorizationPage: React.FC = () => {
 
   const totalAuthorizedAmount = scholars
     .filter((s) => ['Approved for Payout', 'Authorized'].includes(s.disbursement_status))
-    .reduce((acc, curr) => acc + (curr.grant_amount || 15000), 0);
+    .reduce((acc, curr) => acc + (Number(curr.grant_amount) || 15000), 0);
 
   const totalOnHoldCount = scholars.filter((s) =>
     ['On-Hold', 'Failed', 'Discrepancy'].includes(s.disbursement_status)
@@ -207,7 +207,7 @@ export const PayrollAuthorizationPage: React.FC = () => {
 
   const selectedTotalAmount = scholars
     .filter((s) => selectedIds.includes(s.id))
-    .reduce((acc, curr) => acc + (curr.grant_amount || 15000), 0);
+    .reduce((acc, curr) => acc + (Number(curr.grant_amount) || 15000), 0);
 
   const uniqueSchools = Array.from(new Set(scholars.map((s) => s.school).filter(Boolean)));
 
