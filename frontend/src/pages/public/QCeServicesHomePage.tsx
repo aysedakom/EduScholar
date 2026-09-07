@@ -1,17 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   GraduationCap,
-  BookOpen,
-  FileText,
-  RotateCw,
-  Sparkles,
-  ShieldCheck,
   ExternalLink,
   Sun,
   Moon,
   ChevronDown,
-  Menu,
-  ArrowRight
+  Menu
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -69,68 +63,12 @@ export const QCeServicesHomePage: React.FC = () => {
 
   const serviceCards = [
     {
-      title: t('service.edu.title', 'Education & Scholarship Management'),
-      description: t('service.edu.desc', 'QC Campus Aid Hub: Tertiary scholarships, school aid distribution, educational subsidies & student grants.'),
+      title: t('service.edu.title'),
+      description: t('service.edu.desc'),
       icon: GraduationCap,
       color: 'bg-blue-600 text-white',
-      badge: isTagalog ? 'Pangunahing Portal' : 'Primary Active Portal',
       active: true,
       path: '/education-scholarship',
-    },
-    {
-      title: isTagalog ? 'Katalogo ng mga Bukas na Programa' : 'Available Scholarship Programs Catalog',
-      description: isTagalog
-        ? 'Tingnan ang lahat ng bukas na scholarship tracks, slot quotas, at mga kaukulang grant para sa mga mag-aaral.'
-        : 'Browse the live catalog of open scholarship tracks, slot quotas, eligibility criteria, and institutional grants.',
-      icon: BookOpen,
-      color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400',
-      badge: isTagalog ? 'Bukas na Programa' : 'Open Catalog',
-      active: true,
-      path: '/scholar-prog-available',
-    },
-    {
-      title: isTagalog ? 'E-Gabay sa Patakaran ng Iskolarship' : 'Scholarship Policy & Requirements E-Guide',
-      description: isTagalog
-        ? 'Opisyal na alituntunin sa QCSP Grant Matrix, 10-hakbang na proseso, at mga patakaran sa pagpapanatili ng grado.'
-        : 'Comprehensive guidelines on the QCSP Grant Matrix, 10-step application procedure, and grade retention rules.',
-      icon: FileText,
-      color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400',
-      badge: isTagalog ? 'Opisyal na E-Gabay' : 'Official Guide',
-      active: true,
-      path: '/scholar-eguide',
-    },
-    {
-      title: isTagalog ? 'QC E-Scholar Services Hub' : 'QC E-Scholar Services Hub',
-      description: isTagalog
-        ? 'Pinag-isang portal para sa mga iskolar, pagsubaybay sa aplikasyon, self-service tools, at student assistance.'
-        : 'Unified digital services portal for scholars, live application tracking, self-service tools, and student portal.',
-      icon: Sparkles,
-      color: 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400',
-      badge: isTagalog ? 'Portal ng Mag-aaral' : 'Student Portal',
-      active: true,
-      path: '/e-scholar',
-    },
-    {
-      title: isTagalog ? '1-Click Scholarship Renewal Desk' : '1-Click Scholarship Renewal Desk',
-      description: isTagalog
-        ? 'Mabilis na semestral renewal processing, re-validation ng mga dokumento, at pag-verify ng akademikong katayuan.'
-        : 'Fast semestral renewal processing, document re-validation, and academic standing verification.',
-      icon: RotateCw,
-      color: 'bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400',
-      badge: isTagalog ? 'Renewal Desk' : 'Renewal Desk',
-      active: true,
-      path: '/renewal',
-    },
-    {
-      title: isTagalog ? 'Karta ng Mamamayan at Gabay sa Tulong' : 'Citizen’s Charter & Assistance Guidelines',
-      description: isTagalog
-        ? 'Alamin ang mga pamantayan sa serbisyo ng QC, takdang panahon ng pagproseso, at mga channel sa pakikipag-ugnayan.'
-        : 'Explore official municipal service standards, processing turnaround times, and citizen support channels.',
-      icon: ShieldCheck,
-      color: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950 dark:text-cyan-400',
-      badge: isTagalog ? 'Karta at Suporta' : 'Charter & Support',
-      active: true,
-      path: '/contact',
     },
   ];
 
@@ -444,20 +382,12 @@ export const QCeServicesHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Education & Scholarship Active Services Grid: PURE WHITE in Light Mode, Slate-950 in Dark Mode */}
+      {/* 10 eServices Cards Grid: PURE WHITE in Light Mode, Slate-950 in Dark Mode */}
       <section className={`py-16 px-4 sm:px-6 max-w-7xl mx-auto space-y-8 transition-colors duration-300 ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
         <div className="text-center space-y-2">
-          <Badge variant="primary" size="sm" className={`font-bold shadow-md ${isDark ? 'bg-blue-950 text-amber-300' : 'bg-slate-900 text-amber-300'}`}>
-            {isTagalog ? 'Mga Serbisyo sa Edukasyon at Iskolarship' : 'Education & Scholarship Services'}
-          </Badge>
-          <h2 className={`font-heading font-extrabold text-2xl sm:text-4xl ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            {isTagalog ? 'Tuklasin ang QC Scholarship Portals' : 'Explore QC Scholarship Portals'}
-          </h2>
-          <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-            {isTagalog
-              ? 'Pumili ng serbisyo sa ibaba upang mag-aplay para sa tulong-pinansyal, sumangguni sa e-gabay, o pamahalaan ang iyong iskolarship.'
-              : 'Select an active scholarship service below to access digital applications, explore open grant programs, and manage scholar renewals.'}
-          </p>
+          <Badge variant="primary" size="sm" className={`font-bold shadow-md ${isDark ? 'bg-blue-950 text-amber-300' : 'bg-slate-900 text-amber-300'}`}>{t('home.dirTag')}</Badge>
+          <h2 className={`font-heading font-extrabold text-2xl sm:text-4xl ${isDark ? 'text-white' : 'text-slate-900'}`}>{t('home.dirTitle')}</h2>
+          <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('home.dirSubtitle')}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -474,24 +404,17 @@ export const QCeServicesHomePage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div
-                      className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-md ${
-                        card.color.includes('bg-blue-600') ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' : card.color
-                      }`}
+                      className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-md bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                     >
                       <IconComponent className="h-6 w-6" />
                     </div>
-                    <Badge
-                      variant="primary"
-                      size="sm"
-                      className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md"
-                    >
-                      {card.badge}
+                    <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      {t('home.activePortal')}
                     </Badge>
                   </div>
                   <div>
-                    <h3 className={`text-base font-extrabold transition-colors flex items-center justify-between gap-1.5 ${isDark ? 'text-white group-hover:text-blue-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
+                    <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
                       <span>{card.title}</span>
-                      <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all text-blue-600 shrink-0" />
                     </h3>
                     <p className={`text-xs leading-relaxed mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                       {card.description}
