@@ -387,23 +387,43 @@ export const QCeServicesHomePage: React.FC = () => {
           <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('home.dirSubtitle')}</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-4xl mx-auto">
           {serviceCards.map((card, idx) => {
             return (
               <div
                 key={idx}
                 onClick={() => handleCardClick(card.title, card.path)}
-                className={`group p-6 rounded-2xl transition-all duration-300 cursor-pointer shadow-lg ${
-                  isDark ? 'bg-slate-800/90 text-white' : 'bg-white text-slate-900'
-                } hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]`}
+                className="group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.015] border border-slate-200/80 dark:border-slate-800"
+                style={{
+                  backgroundImage: "url('/Scholarship.png')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
               >
-                <div className="space-y-2">
-                  <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
-                    <span>{card.title}</span>
-                  </h3>
-                  <p className={`text-xs leading-relaxed font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    {card.description}
-                  </p>
+                {/* Backdrop gradient overlay for crystal clear text visibility while maintaining background artwork */}
+                <div
+                  className={`p-8 sm:p-12 transition-all duration-300 ${
+                    isDark
+                      ? 'bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-950/50 hover:bg-slate-950/80 backdrop-blur-[2px]'
+                      : 'bg-gradient-to-r from-white/95 via-white/85 to-white/50 hover:bg-white/80 backdrop-blur-[2px]'
+                  }`}
+                >
+                  <div className="max-w-2xl space-y-4">
+                    <h3
+                      className={`text-2xl sm:text-3xl lg:text-4xl font-heading font-black tracking-tight transition-colors ${
+                        isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {card.title}
+                    </h3>
+                    <p
+                      className={`text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${
+                        isDark ? 'text-slate-200' : 'text-slate-700'
+                      }`}
+                    >
+                      {card.description}
+                    </p>
+                  </div>
                 </div>
               </div>
             );
