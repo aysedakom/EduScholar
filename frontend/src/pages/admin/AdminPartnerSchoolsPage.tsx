@@ -632,33 +632,34 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const getStatusBadge = (status: AdminPartnerSchool['partnershipStatus']) => {
-    switch (status) {
-      case 'Active':
-        return (
-          <Badge variant="success" size="sm">
-            <CheckCircle2 className="h-3 w-3 mr-1" /> Active
-          </Badge>
-        );
-      case 'Pending':
-        return (
-          <Badge variant="warning" size="sm">
-            <Clock className="h-3 w-3 mr-1" /> Pending
-          </Badge>
-        );
-      case 'Expired':
-        return (
-          <Badge variant="destructive" size="sm">
-            <AlertTriangle className="h-3 w-3 mr-1" /> Expired
-          </Badge>
-        );
-      default:
-        return (
-          <Badge variant="secondary" size="sm">
-            <XCircle className="h-3 w-3 mr-1" /> Inactive
-          </Badge>
-        );
+  const getStatusBadge = (status: string | undefined | null) => {
+    const s = (status || '').toLowerCase();
+    if (s.includes('active') || s.includes('accredited') || s.includes('partner')) {
+      return (
+        <Badge variant="success" size="sm" className="font-bold">
+          <CheckCircle2 className="h-3 w-3 mr-1" /> Active MOU
+        </Badge>
+      );
     }
+    if (s.includes('pending')) {
+      return (
+        <Badge variant="warning" size="sm" className="font-bold">
+          <Clock className="h-3 w-3 mr-1" /> Pending Renewal
+        </Badge>
+      );
+    }
+    if (s.includes('expired')) {
+      return (
+        <Badge variant="destructive" size="sm" className="font-bold">
+          <AlertTriangle className="h-3 w-3 mr-1" /> Expired MOU
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" size="sm">
+        <XCircle className="h-3 w-3 mr-1" /> Inactive
+      </Badge>
+    );
   };
 
   const filteredDirectorySchools = schools.filter((school) => {
@@ -1163,12 +1164,20 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                     <th className="p-4">Contact Officer</th>
                     <th className="p-4">Status</th>
                     <th className="p-4">MOU Validity</th>
-                    <th className="p-4 text-center">Quota Slots</th>
+                    <th className="p-4 text-center">Scholars & Quota</th>
                     <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredDirectorySchools.map((school) => (
+                  {filteredDirectorySchools.map((school) => {
+                    const enrolledCount = allScholars.filter((s) => matchPartnerSchool(s.school, school)).length;
+                    const applicantsCount = allApplications.filter((app) => {
+                      const fd = app.form_data || (app as any).formData || {};
+                      const appSchool = fd.school || fd.university || fd.schoolName || fd.institution || (app as any).school || app.notes || '';
+                      return matchPartnerSchool(appSchool, school);
+                    }).length;
+
+                    return (
                     <tr key={school.schoolId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="p-4">
                         <button
@@ -1198,13 +1207,17 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                         </div>
                       </td>
                       <td className="p-4">{getStatusBadge(school.partnershipStatus)}</td>
-                      <td className="p-4 text-slate-600 dark:text-slate-400 text-[11px]">
-                        <div className="font-semibold">{school.partnershipStart}</div>
-                        <div className="text-slate-400">to {school.partnershipEnd}</div>
+                      <td className="p-4 text-slate-600 dark:text-slate-400 text-[11px] whitespace-nowrap">
+                        <div className="font-semibold">{school.partnershipStart ? String(school.partnershipStart).split('T')[0] : 'N/A'}</div>
+                        <div className="text-slate-400">to {school.partnershipEnd ? String(school.partnershipEnd).split('T')[0] : 'N/A'}</div>
                       </td>
                       <td className="p-4 text-center">
-                        <span className="font-heading font-extrabold text-sm text-blue-700 dark:text-blue-300 block">
-                          {school.scholarshipSlots} slots
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-extrabold text-xs">
+                          <GraduationCap className="h-3.5 w-3.5" />
+                          <span>{enrolledCount} {enrolledCount === 1 ? 'Scholar' : 'Scholars'}</span>
+                        </div>
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 block mt-1">
+                          {Number(school.scholarshipSlots).toLocaleString()} slots • {applicantsCount} {applicantsCount === 1 ? 'applicant' : 'applicants'}
                         </span>
                       </td>
                       <td className="p-4 text-right space-x-1">
@@ -1234,7 +1247,8 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </CardContent>
