@@ -65,9 +65,6 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.edu.title'),
       description: t('service.edu.desc'),
-      icon: GraduationCap,
-      color: 'bg-blue-600 text-white',
-      active: true,
       path: '/education-scholarship',
     },
   ];
@@ -392,7 +389,6 @@ export const QCeServicesHomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {serviceCards.map((card, idx) => {
-            const IconComponent = card.icon;
             return (
               <div
                 key={idx}
@@ -401,22 +397,13 @@ export const QCeServicesHomePage: React.FC = () => {
                   isDark ? 'bg-slate-800/90 text-white' : 'bg-white text-slate-900'
                 } hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]`}
               >
-                <div className="space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div
-                      className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-md bg-blue-600 text-white shadow-lg shadow-blue-600/30"
-                    >
-                      <IconComponent className="h-6 w-6" />
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
-                      <span>{card.title}</span>
-                    </h3>
-                    <p className={`text-xs leading-relaxed mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {card.description}
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
+                    <span>{card.title}</span>
+                  </h3>
+                  <p className={`text-xs leading-relaxed font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                    {card.description}
+                  </p>
                 </div>
               </div>
             );
