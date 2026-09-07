@@ -388,30 +388,19 @@ export const QCeServicesHomePage: React.FC = () => {
           <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('home.dirSubtitle')}</p>
         </div>
 
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl lg:max-w-5xl mx-auto">
           {serviceCards.map((card, idx) => {
             return (
               <div
                 key={idx}
                 onClick={() => handleCardClick(card.title, card.path)}
-                className="group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 min-h-[260px] sm:min-h-[300px] flex items-center"
+                className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 ${
+                  isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
+                }`}
               >
-                {/* Background image explicitly via img tag for reliable rendering */}
-                <img
-                  src={scholarHatBg}
-                  alt="Scholarship Hat Background"
-                  className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none transition-transform duration-700 group-hover:scale-105"
-                />
-
-                {/* Backdrop gradient overlay for crystal clear text visibility while maintaining background artwork */}
-                <div
-                  className={`relative z-10 w-full h-full min-h-[260px] sm:min-h-[300px] p-8 sm:p-14 flex flex-col justify-center transition-all duration-300 ${
-                    isDark
-                      ? 'bg-gradient-to-r from-slate-950/95 via-slate-950/85 to-slate-950/50 hover:bg-slate-950/80 backdrop-blur-[2px]'
-                      : 'bg-gradient-to-r from-white/95 via-white/85 to-white/50 hover:bg-white/80 backdrop-blur-[2px]'
-                  }`}
-                >
-                  <div className="max-w-2xl space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 items-center min-h-[260px] sm:min-h-[290px]">
+                  {/* Left Content Area */}
+                  <div className="p-8 sm:p-10 lg:p-12 md:col-span-7 z-10 space-y-4">
                     <h3
                       className={`text-2xl sm:text-3xl lg:text-4xl font-heading font-black tracking-tight transition-colors ${
                         isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
@@ -420,12 +409,27 @@ export const QCeServicesHomePage: React.FC = () => {
                       {card.title}
                     </h3>
                     <p
-                      className={`text-base sm:text-lg lg:text-xl leading-relaxed font-semibold ${
-                        isDark ? 'text-slate-200' : 'text-slate-700'
+                      className={`text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${
+                        isDark ? 'text-slate-300' : 'text-slate-600'
                       }`}
                     >
                       {card.description}
                     </p>
+                  </div>
+
+                  {/* Right Image Area displaying the graduation cap photograph in full clarity */}
+                  <div className="md:col-span-5 h-64 sm:h-72 md:h-full min-h-[240px] md:min-h-[290px] relative overflow-hidden flex items-center justify-center bg-slate-100 dark:bg-slate-800/60">
+                    <img
+                      src={scholarHatBg}
+                      alt="Scholarship Graduation Hat"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    />
+                    {/* Seamless gradient fade on the left edge of the image */}
+                    <div
+                      className={`hidden md:block absolute inset-y-0 left-0 w-24 pointer-events-none bg-gradient-to-r ${
+                        isDark ? 'from-slate-900 to-transparent' : 'from-white to-transparent'
+                      }`}
+                    />
                   </div>
                 </div>
               </div>
