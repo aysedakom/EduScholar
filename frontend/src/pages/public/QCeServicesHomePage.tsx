@@ -394,24 +394,13 @@ export const QCeServicesHomePage: React.FC = () => {
               <div
                 key={idx}
                 onClick={() => handleCardClick(card.title, card.path)}
-                className="group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 min-h-[260px] sm:min-h-[280px] flex items-center"
+                className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 ${
+                  isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
+                }`}
               >
-                {/* Full Card Background Image aligned to the right */}
-                <img
-                  src={scholarHatBg}
-                  alt="Scholarship Hat Background"
-                  className="absolute inset-0 w-full h-full object-cover object-right pointer-events-none transition-transform duration-700 group-hover:scale-105"
-                />
-
-                {/* Seamless single-layer gradient overlay for text readability with zero dividers */}
-                <div
-                  className={`relative z-10 w-full h-full min-h-[260px] sm:min-h-[280px] p-8 sm:p-12 lg:p-14 flex flex-col justify-center transition-all duration-300 ${
-                    isDark
-                      ? 'bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent'
-                      : 'bg-gradient-to-r from-white via-white/75 to-transparent'
-                  }`}
-                >
-                  <div className="max-w-xl space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-12 items-center min-h-[260px] sm:min-h-[290px]">
+                  {/* Left Content Area */}
+                  <div className="p-8 sm:p-10 lg:p-12 md:col-span-7 z-10 space-y-4">
                     <h3
                       className={`text-2xl sm:text-3xl lg:text-4xl font-heading font-black tracking-tight transition-colors ${
                         isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
@@ -421,11 +410,24 @@ export const QCeServicesHomePage: React.FC = () => {
                     </h3>
                     <p
                       className={`text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${
-                        isDark ? 'text-slate-200' : 'text-slate-700'
+                        isDark ? 'text-slate-300' : 'text-slate-600'
                       }`}
                     >
                       {card.description}
                     </p>
+                  </div>
+
+                  {/* Right Image Area with CSS Mask Image for flawless seamless fade without lines */}
+                  <div className="md:col-span-5 h-64 sm:h-72 md:h-full min-h-[240px] md:min-h-[290px] relative overflow-hidden flex items-center justify-center">
+                    <img
+                      src={scholarHatBg}
+                      alt="Scholarship Graduation Hat"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      style={{
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
+                        maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
+                      }}
+                    />
                   </div>
                 </div>
               </div>
