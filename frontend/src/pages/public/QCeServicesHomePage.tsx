@@ -408,9 +408,6 @@ export const QCeServicesHomePage: React.FC = () => {
                     >
                       <IconComponent className="h-6 w-6" />
                     </div>
-                    <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                      {t('home.activePortal')}
-                    </Badge>
                   </div>
                   <div>
                     <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
