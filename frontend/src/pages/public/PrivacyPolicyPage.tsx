@@ -44,7 +44,7 @@ export const PrivacyPolicyPage: React.FC = () => {
           </p>
         </div>
 
-        <div className={`p-6 sm:p-8 rounded-3xl border shadow-xl space-y-6 ${isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'}`}>
+        <div className="space-y-8">
           <section className="space-y-3">
             <h2 className="text-xl font-extrabold font-heading flex items-center gap-2 text-blue-600 dark:text-blue-400">
               <Lock className="h-5 w-5" />
