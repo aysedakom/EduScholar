@@ -102,63 +102,38 @@ export const QCeServicesHomePage: React.FC = () => {
                 <span>{t('nav.home')}</span>
               </Link>
 
-              {/* eSERVICES Dropdown */}
-              <div className="relative home-eservices-dropdown">
-                <button
-                  onClick={() => setEservicesOpen(!eservicesOpen)}
-                  className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${isDark ? 'text-slate-300 hover:text-blue-400 hover:bg-slate-800' : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100'}`}
-                >
-                  <span>{t('nav.eservices')}</span>
-                  <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
-                </button>
+              {/* eSERVICES Dropdown - Only show when NOT logged in */}
+              {!user && (
+                <div className="relative home-eservices-dropdown">
+                  <button
+                    onClick={() => setEservicesOpen(!eservicesOpen)}
+                    className={`flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${isDark ? 'text-slate-300 hover:text-blue-400 hover:bg-slate-800' : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100'}`}
+                  >
+                    <span>{t('nav.eservices')}</span>
+                    <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
+                  </button>
 
-                {eservicesOpen && (
-                  <div className={`absolute left-0 top-11 w-80 rounded-2xl shadow-2xl overflow-hidden z-50 p-2 animate-in fade-in duration-150 border border-slate-200 dark:border-slate-800 ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
-                    <div className={`px-3 py-2 rounded-xl mb-1 ${isDark ? 'bg-slate-800/80' : 'bg-slate-50/80'}`}>
-                      <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{t('nav.available')}</p>
-                    </div>
-
-                    <Link
-                      to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"}
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-blue-950/50 hover:bg-blue-900/60' : 'bg-blue-50/80 hover:bg-blue-100/80'}`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <p className={`text-xs font-extrabold group-hover:text-blue-600 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{t('nav.eduScholarTitle')}</p>
-                        <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
+                  {eservicesOpen && (
+                    <div className={`absolute left-0 top-11 w-80 rounded-2xl shadow-2xl overflow-hidden z-50 p-2 animate-in fade-in duration-150 border border-slate-200 dark:border-slate-800 ${isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'}`}>
+                      <div className={`px-3 py-2 rounded-xl mb-1 ${isDark ? 'bg-slate-800/80' : 'bg-slate-50/80'}`}>
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">{t('nav.available')}</p>
                       </div>
-                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{t('nav.eduScholarDesc')}</p>
-                    </Link>
 
-                    <Link
-                      to="/scholar-prog-available"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50'}`}
-                    >
-                      <p className={`text-xs font-bold group-hover:text-blue-600 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{isTagalog ? 'Katalogo ng mga Programa' : 'Available Programs Catalog'}</p>
-                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{isTagalog ? 'Tingnan ang lahat ng bukas na scholarship tracks' : 'Browse open tracks, slot quotas & criteria'}</p>
-                    </Link>
-
-                    <Link
-                      to="/scholar-eguide"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50'}`}
-                    >
-                      <p className={`text-xs font-bold group-hover:text-blue-600 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{isTagalog ? 'E-Gabay sa Patakaran' : 'Scholarship Policy E-Guide'}</p>
-                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{isTagalog ? 'Alituntunin sa marka, requirements, at proseso' : 'Grant matrix, requirements & retention rules'}</p>
-                    </Link>
-
-                    <Link
-                      to="/e-scholar"
-                      onClick={() => setEservicesOpen(false)}
-                      className={`block p-2.5 rounded-xl shadow-sm transition-all group ${isDark ? 'hover:bg-slate-800' : 'hover:bg-slate-50'}`}
-                    >
-                      <p className={`text-xs font-bold group-hover:text-blue-600 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{isTagalog ? 'E-SCHOLAR Hub' : 'QC E-Scholar Services Hub'}</p>
-                      <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{isTagalog ? 'Aplikasyon, pagsubaybay, at renewal' : 'Online application & renewal portal'}</p>
-                    </Link>
-                  </div>
-                )}
-              </div>
+                      <Link
+                        to="/login?redirect=%2Feducation-scholarship"
+                        onClick={() => setEservicesOpen(false)}
+                        className={`block p-2.5 rounded-xl shadow-sm transition-all group ${isDark ? 'bg-blue-950/50 hover:bg-blue-900/60' : 'bg-blue-50/80 hover:bg-blue-100/80'}`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-xs font-extrabold group-hover:text-blue-600 ${isDark ? 'text-blue-300' : 'text-blue-900'}`}>{t('nav.eduScholarTitle')}</p>
+                          <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
+                        </div>
+                        <p className={`text-[10px] font-medium mt-0.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{t('nav.eduScholarDesc')}</p>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <a
                 href="/citizens_charter.pdf"
@@ -289,28 +264,16 @@ export const QCeServicesHomePage: React.FC = () => {
               >
                 {t('nav.home')}
               </Link>
-              <Link
-                to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"}
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
-              >
-                <span>{t('nav.eduScholarTitle')}</span>
-                <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
-              </Link>
-              <Link
-                to="/scholar-prog-available"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                {t('nav.programs')}
-              </Link>
-              <Link
-                to="/scholar-eguide"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                {t('nav.eguide')}
-              </Link>
+              {!user && (
+                <Link
+                  to="/login?redirect=%2Feducation-scholarship"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
+                >
+                  <span>{t('nav.eduScholarTitle')}</span>
+                  <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{t('nav.primary')}</span>
+                </Link>
+              )}
               <a
                 href="/citizens_charter.pdf"
                 target="_blank"
