@@ -5,18 +5,7 @@ export function AuthBrandPanel() {
       <div className="absolute -left-32 -top-32 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
       <div className="absolute -right-32 -bottom-32 h-80 w-80 rounded-full bg-emerald-500/5 blur-3xl pointer-events-none" />
 
-      {/* Brand Header */}
-      <div className="relative z-10 flex items-center gap-3">
-        <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-500/10 p-1.5 rounded-xl border border-blue-500/20" />
-        <div className="flex flex-col">
-          <span className="font-heading text-lg font-black tracking-wide text-white leading-tight">
-            GovServe
-          </span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-            Quezon City Government
-          </span>
-        </div>
-      </div>
+
 
       {/* Center Seal Graphic */}
       <div className="relative z-10 my-auto flex flex-col items-center justify-center text-center">
