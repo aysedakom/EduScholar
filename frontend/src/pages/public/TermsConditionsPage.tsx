@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, CheckCircle2, ArrowLeft, Building2, Scale } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, ArrowLeft, Building2 } from 'lucide-react';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Lock, Eye, FileText, ArrowLeft, Building2, Mail, Phone } from 'lucide-react';
+import { Lock, Eye, FileText, ArrowLeft, Building2, Mail, Phone } from 'lucide-react';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';

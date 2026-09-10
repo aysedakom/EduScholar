@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Cookie, ShieldCheck, ArrowLeft, Info, Settings } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Info, Settings } from 'lucide-react';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';

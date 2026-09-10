@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { BadgeCheck, ArrowLeft, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, HeartHandshake } from 'lucide-react';
 import { PublicFooter } from '../../components/layout/PublicFooter';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
