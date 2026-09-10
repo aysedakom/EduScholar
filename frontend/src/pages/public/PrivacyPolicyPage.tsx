@@ -32,10 +32,6 @@ export const PrivacyPolicyPage: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <div className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
-            <ShieldCheck className="h-4 w-4" />
-            <span>RA 10173 / Data Privacy Act Compliance Statement</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight">
             {isTagalog ? 'Kebatasang Patakaran sa Pribasya' : 'Privacy Policy & Data Notice'}
           </h1>

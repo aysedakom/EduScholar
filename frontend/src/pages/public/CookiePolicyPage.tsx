@@ -30,10 +30,6 @@ export const CookiePolicyPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <div className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-            <Cookie className="h-4 w-4" />
-            <span>Data Transparency & Cookie Disclosure</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight">
             {isTagalog ? 'Patakaran sa Cookie at Local Storage' : 'Cookie & Browser Storage Policy'}
           </h1>

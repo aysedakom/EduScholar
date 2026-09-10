@@ -30,10 +30,6 @@ export const TermsConditionsPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <div className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-            <Scale className="h-4 w-4" />
-            <span>Official Government Portal Service Terms</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight">
             {isTagalog ? 'Mga Alituntunin at Kondisyon' : 'Terms & Conditions of Service'}
           </h1>

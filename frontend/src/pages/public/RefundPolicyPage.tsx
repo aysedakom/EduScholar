@@ -30,10 +30,6 @@ export const RefundPolicyPage: React.FC = () => {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-12 space-y-8">
         <div className="space-y-3 text-center sm:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
-            <BadgeCheck className="h-4 w-4" />
-            <span>100% Free Public Government Service</span>
-          </div>
           <h1 className="text-3xl sm:text-4xl font-heading font-black tracking-tight">
             {isTagalog ? 'Polisiya sa Bayad at Libreng Serbisyo' : 'Fee Disclosure & Refund Policy'}
           </h1>
