@@ -77,6 +77,17 @@ const updateProfile = async (id, fields) => {
   return findById(id);
 };
 
+const updatePassword = async (email, hashedPassword) => {
+  const result = await pool.query(
+    `UPDATE users 
+     SET password = $1, updated_at = NOW() 
+     WHERE LOWER(email) = LOWER($2) 
+     RETURNING id, name, email, role, status`,
+    [hashedPassword, email.toLowerCase().trim()]
+  );
+  return result.rows[0];
+};
+
 const saveFcmToken = async (userId, token) => {
   try {
     await pool.query(`UPDATE users SET fcm_token = $1, updated_at = NOW() WHERE id = $2`, [token, userId]);
