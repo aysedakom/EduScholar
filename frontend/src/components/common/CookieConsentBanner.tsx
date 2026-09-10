@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Cookie, ShieldCheck, X } from 'lucide-react';
-import { Button } from '../ui/Button';
 
 export const CookieConsentBanner: React.FC = () => {
   const [visible, setVisible] = useState(false);
@@ -59,22 +58,20 @@ export const CookieConsentBanner: React.FC = () => {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
+              type="button"
               onClick={handleAcceptEssential}
-              className="text-[11px] font-bold border-slate-700 hover:bg-slate-800 text-slate-200"
+              className="h-8 px-3 text-[11px] font-bold rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all cursor-pointer shadow-sm"
             >
               Essential Only
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
+            </button>
+            <button
+              type="button"
               onClick={handleAcceptAll}
-              className="text-[11px] font-extrabold bg-blue-600 hover:bg-blue-500 text-white shadow-md"
+              className="h-8 px-3 text-[11px] font-extrabold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all cursor-pointer shadow-md"
             >
               Accept All
-            </Button>
+            </button>
           </div>
         </div>
       </div>
