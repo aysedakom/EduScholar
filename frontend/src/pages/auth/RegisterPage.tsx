@@ -195,14 +195,23 @@ export function RegisterPage() {
               />
             </div>
 
-            {/* Terms Agreement Checkbox */}
-            <label className="flex items-start gap-2 text-xs font-semibold text-slate-650 cursor-pointer select-none py-1">
+            {/* Terms & Privacy Consent Checkbox (DPA RA 10173 Compliant) */}
+            <label className="flex items-start gap-2.5 text-xs font-semibold text-slate-600 dark:text-slate-300 cursor-pointer select-none py-1">
               <input
                 type="checkbox"
                 required
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 shrink-0"
               />
-              <span>I agree to Campus Aid Hub terms of service and privacy policy.</span>
+              <span>
+                I agree to the{' '}
+                <Link to="/terms" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-bold">
+                  Terms of Service
+                </Link>{' '}
+                and consent to data processing under the{' '}
+                <Link to="/privacy" target="_blank" className="text-blue-600 dark:text-blue-400 hover:underline font-bold">
+                  Data Privacy Policy (RA 10173)
+                </Link>.
+              </span>
             </label>
 
             {/* Submit Button */}

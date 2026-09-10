@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'sonner';
+import { PublicFooter } from '../../components/layout/PublicFooter';
 import scholarHatBg from '../../assets/ScholarHat.png';
 
 export const QCeServicesHomePage: React.FC = () => {
@@ -433,23 +434,7 @@ export const QCeServicesHomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Public Footer */}
-      <footer className="bg-slate-900 text-slate-300 py-12 px-4 sm:px-6 shadow-2xl text-xs relative z-20">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src="/logo-system.png" alt="GovServe" className="h-8 w-8 object-contain" />
-            <div>
-              <span className="font-heading font-extrabold text-white text-sm block">GovServe – {t('nav.tagline')}</span>
-              <span className="text-slate-500 text-[11px]">{isTagalog ? 'Pamahalaang Lokal ng Lungsod Quezon' : 'Quezon City Local Government Unit'}</span>
-            </div>
-          </div>
-          <p className="text-slate-400 text-center sm:text-right">
-            {isTagalog
-              ? 'Opisyal na Digital Portal ng Pamahalaang Lungsod Quezon. Pinalalakas ang mga QCitizen sa pamamagitan ng maayos na serbisyo.'
-              : 'Official Quezon City Government Digital Portal. Empowering QCitizens with seamless city services.'}
-          </p>
-        </div>
-      </footer>
+      <PublicFooter />
     </div>
   );
 };

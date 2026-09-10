@@ -82,6 +82,11 @@ import { AdvancedAnalyticsPage } from './pages/admin/AdvancedAnalyticsPage';
 
 import { WebSocketProvider } from './context/WebSocketContext';
 import { ResponsiveToaster } from './components/common/ResponsiveToaster';
+import { CookieConsentBanner } from './components/common/CookieConsentBanner';
+import { PrivacyPolicyPage } from './pages/public/PrivacyPolicyPage';
+import { TermsConditionsPage } from './pages/public/TermsConditionsPage';
+import { RefundPolicyPage } from './pages/public/RefundPolicyPage';
+import { CookiePolicyPage } from './pages/public/CookiePolicyPage';
 
 export function App() {
   return (
@@ -90,6 +95,7 @@ export function App() {
         <AuthProvider>
           <WebSocketProvider>
             <ResponsiveToaster />
+            <CookieConsentBanner />
             <BrowserRouter>
           <Routes>
           {/* Public Unauthenticated Routes */}
@@ -107,6 +113,10 @@ export function App() {
           <Route path="/student/application-form" element={<ApplicationForm />} />
           <Route path="/application-form" element={<ApplicationForm />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/privacy" element={<PrivacyPolicyPage />} />
+          <Route path="/terms" element={<TermsConditionsPage />} />
+          <Route path="/refund-policy" element={<RefundPolicyPage />} />
+          <Route path="/cookies" element={<CookiePolicyPage />} />
           <Route path="/404" element={<NotFoundPage />} />
 
           {/* Public Auth Routes */}
