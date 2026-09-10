@@ -99,7 +99,7 @@ export const PublicServicesPortalPage: React.FC = () => {
                     <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-800/80 rounded-xl mb-1">
                       <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Available eServices</p>
                     </div>
-                    <Link to="/education-scholarship" onClick={() => setEservicesOpen(false)} className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group">
+                    <Link to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"} onClick={() => setEservicesOpen(false)} className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group">
                       <div className="flex items-center gap-1.5">
                         <p className="text-xs font-extrabold text-blue-900 dark:text-blue-200 group-hover:text-blue-700 dark:group-hover:text-blue-300">Education and Scholarship</p>
                         <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">Primary</span>

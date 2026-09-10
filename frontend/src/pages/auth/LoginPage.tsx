@@ -147,14 +147,8 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const navigateAfterLogin = (roleToUse: UserRole) => {
     if (redirectParam && redirectParam !== '/login' && redirectParam !== '/') {
       navigate(redirectParam, { replace: true });
-    } else if (roleToUse === 'admin' || roleToUse === 'supervisor') {
-      navigate('/admin/review-queue', { replace: true });
-    } else if (roleToUse === 'system_admin') {
-      navigate('/admin/super', { replace: true });
-    } else if (roleToUse === 'treasury') {
-      navigate('/treasury/reconciliation', { replace: true });
-    } else if (roleToUse === 'school_coordinator') {
-      navigate('/school/portal', { replace: true });
+    } else if (roleToUse === 'student') {
+      navigate('/education-scholarship', { replace: true });
     } else {
       navigate('/dashboard', { replace: true });
     }

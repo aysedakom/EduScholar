@@ -19,5 +19,6 @@ router.post('/update-legacy-password', authLimiter, authController.updateLegacyP
 // Authenticated session endpoints
 router.get('/me', authMiddleware, authController.me);
 router.put('/profile', authMiddleware, authController.updateProfile);
+router.post('/fcm-token', authMiddleware, authController.registerFcmToken);
 
 module.exports = router;

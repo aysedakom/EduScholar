@@ -9,6 +9,7 @@
     "dev": "npm --prefix frontend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
+    "tunnel": "npx localtunnel --port 5173",
     "build": "npm --prefix frontend install && npm --prefix frontend run build && npm --prefix backend install",
     "start": "node backend/index.js"
   }

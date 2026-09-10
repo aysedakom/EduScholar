@@ -35,11 +35,7 @@ export const LandingPage: React.FC = () => {
   // Automatically direct logged-in administrators and staff to their command center dashboard
   useEffect(() => {
     if (user && user.role !== 'student') {
-      if (user.role === 'system_admin') {
-        navigate('/admin/super', { replace: true });
-      } else {
-        navigate('/dashboard', { replace: true });
-      }
+      navigate('/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
@@ -150,7 +146,7 @@ export const LandingPage: React.FC = () => {
                     </div>
 
                     <Link
-                      to="/education-scholarship"
+                      to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"}
                       onClick={() => setEservicesOpen(false)}
                       className="block p-2.5 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/80 hover:bg-blue-100/80 dark:hover:bg-blue-900/40 transition-all mb-1 group"
                     >

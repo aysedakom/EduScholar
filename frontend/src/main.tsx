@@ -3,8 +3,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { initSecurityProtection } from './utils/securityProtection'
+import { initMobileBridge } from './utils/mobileBridge'
 
 initSecurityProtection();
+initMobileBridge();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -48,7 +48,7 @@ export const QCeServicesHomePage: React.FC = () => {
       return;
     }
     if (path) {
-      if (!user && (path === '/dashboard' || path.startsWith('/admin') || path.startsWith('/supervisor'))) {
+      if (!user && (path === '/education-scholarship' || path === '/dashboard' || path.startsWith('/admin') || path.startsWith('/supervisor'))) {
         navigate(`/login?redirect=${encodeURIComponent(path)}`);
       } else {
         navigate(path);
@@ -119,7 +119,7 @@ export const QCeServicesHomePage: React.FC = () => {
                     </div>
 
                     <Link
-                      to="/education-scholarship"
+                      to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"}
                       onClick={() => setEservicesOpen(false)}
                       className={`block p-2.5 rounded-xl shadow-sm transition-all mb-1 group ${isDark ? 'bg-blue-950/50 hover:bg-blue-900/60' : 'bg-blue-50/80 hover:bg-blue-100/80'}`}
                     >
@@ -290,7 +290,7 @@ export const QCeServicesHomePage: React.FC = () => {
                 {t('nav.home')}
               </Link>
               <Link
-                to="/education-scholarship"
+                to={user ? "/education-scholarship" : "/login?redirect=%2Feducation-scholarship"}
                 onClick={() => setMobileMenuOpen(false)}
                 className="px-3 py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-between"
               >

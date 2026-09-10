@@ -577,6 +577,20 @@ const updateLegacyPassword = async (req, res) => {
   }
 };
 
+const registerFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    if (!fcmToken) {
+      return res.status(400).json({ message: 'fcmToken is required.' });
+    }
+    await userModel.saveFcmToken(req.user.id, fcmToken);
+    res.json({ success: true, message: 'Device push notification token registered successfully.' });
+  } catch (error) {
+    console.error('[authController] registerFcmToken error:', error);
+    res.status(500).json({ message: 'Failed to register push token: ' + error.message });
+  }
+};
+
 module.exports = {
   register,
   verifyEmail,
@@ -589,4 +603,5 @@ module.exports = {
   updateLegacyPassword,
   me,
   updateProfile,
+  registerFcmToken,
 };

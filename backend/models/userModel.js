@@ -77,15 +77,26 @@ const updateProfile = async (id, fields) => {
   return findById(id);
 };
 
-const updatePassword = async (email, hashedPassword) => {
-  const result = await pool.query(
-    `UPDATE users 
-     SET password = $1, updated_at = NOW() 
-     WHERE LOWER(email) = LOWER($2) 
-     RETURNING id, name, email, role, status`,
-    [hashedPassword, email.toLowerCase().trim()]
-  );
-  return result.rows[0];
+const saveFcmToken = async (userId, token) => {
+  try {
+    await pool.query(`UPDATE users SET fcm_token = $1, updated_at = NOW() WHERE id = $2`, [token, userId]);
+  } catch (err) {
+    if (err.code === '42703') { // Column does not exist
+      await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS fcm_token TEXT`);
+      await pool.query(`UPDATE users SET fcm_token = $1, updated_at = NOW() WHERE id = $2`, [token, userId]);
+    } else {
+      throw err;
+    }
+  }
 };
 
-module.exports = { findByEmail, findById, create, verifyEmail, updateProfile, updatePassword };
+const getFcmToken = async (userId) => {
+  try {
+    const result = await pool.query(`SELECT fcm_token FROM users WHERE id = $1`, [userId]);
+    return result.rows[0]?.fcm_token || null;
+  } catch (err) {
+    return null;
+  }
+};
+
+module.exports = { findByEmail, findById, create, verifyEmail, updateProfile, updatePassword, saveFcmToken, getFcmToken };
