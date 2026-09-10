@@ -94,10 +94,10 @@ export function App() {
       <LanguageProvider>
         <AuthProvider>
           <WebSocketProvider>
-            <ResponsiveToaster />
-            <CookieConsentBanner />
             <BrowserRouter>
-          <Routes>
+              <ResponsiveToaster />
+              <CookieConsentBanner />
+              <Routes>
           {/* Public Unauthenticated Routes */}
           <Route path="/" element={<QCeServicesHomePage />} />
           <Route path="/home" element={<QCeServicesHomePage />} />
