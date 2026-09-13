@@ -202,9 +202,6 @@ export const ConditionalOffersPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="font-heading font-extrabold text-2xl text-slate-900">Applicant Renewal</h1>
-            <Badge variant="primary" className="flex items-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5" /> System Compliance Audit Engine
-            </Badge>
           </div>
           <p className="text-xs text-slate-600 font-medium mt-1">
             Automated system audit scanner reading student renewal compliance, detecting missing documents (COG, SOA, COR), and managing non-compliance transaction terminations.

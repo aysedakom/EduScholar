@@ -393,11 +393,11 @@ export const ApplicationProgressTracker: React.FC = () => {
               return (
                 <div
                   key={m.step}
-                  className={`p-3.5 rounded-2xl border transition-all duration-200 space-y-1.5 ${
+                  className={`p-3.5 rounded-2xl border transition-all duration-300 hover-lift space-y-1.5 ${
                     isRejected
                       ? 'border-rose-300 dark:border-rose-800 bg-rose-50/90 dark:bg-rose-950/40 shadow-sm ring-2 ring-rose-500/20'
                       : isCurrent
-                      ? 'border-blue-400 dark:border-blue-700 bg-blue-50/90 dark:bg-blue-950/40 shadow-md ring-2 ring-blue-500/20'
+                      ? 'border-blue-400 dark:border-blue-700 bg-blue-50/90 dark:bg-blue-950/40 shadow-md ring-2 ring-blue-500/20 animate-pulse-glow'
                       : isPassed
                       ? 'border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/60 dark:bg-emerald-950/30'
                       : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 opacity-70'

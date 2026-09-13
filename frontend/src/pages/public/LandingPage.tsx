@@ -305,8 +305,8 @@ export const LandingPage: React.FC = () => {
       </header>
 
       {/* Hero Section matching design photo */}
-      <section className="relative pt-16 pb-16 px-4 sm:px-6 max-w-7xl mx-auto text-center space-y-7 animate-in fade-in duration-300">
-        <h1 className="font-heading font-extrabold text-4xl sm:text-6xl lg:text-[3.5rem] tracking-tight text-slate-900 dark:text-white leading-[1.15] max-w-4xl mx-auto">
+      <section className="relative pt-16 pb-16 px-4 sm:px-6 max-w-7xl mx-auto text-center space-y-7 animate-fade-in-up">
+        <h1 className="font-heading font-extrabold text-4xl sm:text-6xl lg:text-[3.5rem] tracking-tight text-slate-900 dark:text-white leading-[1.15] max-w-4xl mx-auto animate-scale-in">
           Education and Scholarship
         </h1>
 
@@ -326,15 +326,15 @@ export const LandingPage: React.FC = () => {
       {/* Stats Counter Row */}
       <section className="py-10 bg-white dark:bg-slate-900 border-y border-slate-200/90 dark:border-slate-800 transition-colors duration-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
-          <div>
+          <div className="hover-lift p-3 rounded-2xl transition-all">
             <p className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">50,000+</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Scholars Empowered Since 2019</p>
           </div>
-          <div>
+          <div className="hover-lift p-3 rounded-2xl transition-all">
             <p className="font-heading font-extrabold text-3xl sm:text-4xl text-emerald-600 dark:text-emerald-400">₱160,000</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Max Annual Grant per Scholar</p>
           </div>
-          <div>
+          <div className="hover-lift p-3 rounded-2xl transition-all">
             <p className="font-heading font-extrabold text-3xl sm:text-4xl text-purple-600 dark:text-purple-400">100%</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Digital Processing</p>
           </div>
@@ -343,7 +343,7 @@ export const LandingPage: React.FC = () => {
 
       {/* Core Scholarship Services & Portals Gateway */}
       <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto space-y-6">
-        <div className="text-center space-y-1.5">
+        <div className="text-center space-y-1.5 animate-fade-in-up">
           <span className="text-[11px] font-extrabold uppercase tracking-widest text-blue-600 dark:text-blue-400">
             Official QC Scholarship Hub
           </span>
@@ -359,7 +359,7 @@ export const LandingPage: React.FC = () => {
           {/* Gateway 1: E-SCHOLAR Hub */}
           <Link
             to="/e-scholar"
-            className="group p-6 rounded-3xl bg-gradient-to-br from-blue-50/90 via-white to-blue-100/30 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 shadow-soft hover:shadow-xl hover:border-blue-500 transition-all duration-300 flex flex-col justify-between"
+            className="group p-6 rounded-3xl bg-gradient-to-br from-blue-50/90 via-white to-blue-100/30 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/40 border border-blue-200/80 dark:border-blue-900/60 shadow-soft hover:shadow-xl hover:border-blue-500 hover-lift transition-all duration-300 flex flex-col justify-between"
           >
             <div className="space-y-4">
               <div className="flex items-center justify-between">

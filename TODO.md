@@ -10,4 +10,4 @@
 
 >Once the applicant done submitting their applications, applicants should see expected day of their verification status (expected that it will takes 7-10 days)
 
->Setup high security: prevent from exposing the front-end/backend to the users bcos they can access it when they do "Inspect => Network" (Disable inspect element - DevTools in the current website
+>Setup high security: prevent from exposing the front-end/backend to the users bcos they can access it when they do "Inspect => Network" (Disable inspect element - DevTools in the current website)

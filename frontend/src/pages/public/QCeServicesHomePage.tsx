@@ -313,14 +313,14 @@ export const QCeServicesHomePage: React.FC = () => {
 
       {/* Hero Section: umaga.png in Light Mode, gabi.png in Dark Mode */}
       <section
-        className="w-full relative overflow-hidden bg-center bg-cover bg-no-repeat shadow-2xl py-16 sm:py-24 text-center transition-all duration-500"
+        className="w-full relative overflow-hidden bg-center bg-cover bg-no-repeat shadow-2xl py-16 sm:py-24 text-center transition-all duration-500 animate-fade-in-up"
         style={{
           backgroundImage: isDark ? "url('/gabi.png')" : "url('/umaga.png')",
         }}
       >
         <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isDark ? 'bg-slate-950/45' : 'bg-slate-950/20'}`} />
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-          <h1 className="font-heading font-extrabold text-4xl sm:text-6xl tracking-tight text-white leading-tight max-w-4xl mx-auto drop-shadow-md">
+          <h1 className="font-heading font-extrabold text-4xl sm:text-6xl tracking-tight text-white leading-tight max-w-4xl mx-auto drop-shadow-md animate-scale-in">
             {t('home.heroTitle')}
           </h1>
           <p className="text-slate-100 text-base sm:text-xl font-semibold max-w-3xl mx-auto leading-relaxed italic drop-shadow-sm">
@@ -358,7 +358,7 @@ export const QCeServicesHomePage: React.FC = () => {
               <div
                 key={idx}
                 onClick={() => handleCardClick(card.title, card.path)}
-                className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.01] border border-slate-200/80 dark:border-slate-800 ${
+                className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover-lift hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 border border-slate-200/80 dark:border-slate-800 ${
                   isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
                 }`}
               >
@@ -386,7 +386,7 @@ export const QCeServicesHomePage: React.FC = () => {
                     <img
                       src={scholarHatBg}
                       alt="Scholarship Graduation Hat"
-                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110 animate-float-slow"
                       style={{
                         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
                         maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',

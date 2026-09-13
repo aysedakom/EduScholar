@@ -193,3 +193,113 @@
 .animate-fade-in-backdrop {
   animation: fadeInBackdrop 0.25s ease-out forwards;
 }
+
+/* ==========================================================================
+   FLUID ANIMATIONS & DYNAMIC MICRO-INTERACTIONS
+   ========================================================================== */
+
+/* Fade In Up Entrance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Scale Pop Entrance */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Floating Slow Oscillation */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+.animate-float-slow {
+  animation: floatSlow 5s ease-in-out infinite;
+}
+
+/* Radiant Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(37, 99, 235, 0.2), 0 0 30px rgba(37, 99, 235, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(37, 99, 235, 0.45), 0 0 50px rgba(37, 99, 235, 0.25);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 3s ease-in-out infinite;
+}
+
+/* Shimmer Progress / Skeleton Loader */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* Dynamic Border Glow */
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    border-color: rgba(59, 130, 246, 0.8);
+  }
+}
+
+.animate-border-glow {
+  animation: borderGlow 3s ease-in-out infinite;
+}
+
+/* Stagger Delays for Grid Cards */
+.stagger-1 { animation-delay: 0.08s; }
+.stagger-2 { animation-delay: 0.16s; }
+.stagger-3 { animation-delay: 0.24s; }
+.stagger-4 { animation-delay: 0.32s; }
+.stagger-5 { animation-delay: 0.40s; }
+
+/* Interactive Hover Lift & Smooth Transitions */
+.hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.12);
+}

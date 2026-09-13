@@ -378,87 +378,6 @@ export const ScholarshipsPage: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Scholarship Application Portal</h1>
-            {!isAdminOrStaff && (
-              <Badge variant="primary" size="md">
-                <GraduationCap className="h-3.5 w-3.5 mr-1" />
-                Unified Grants & Aid
-              </Badge>
-            )}
-          </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
-            {isAdminOrStaff
-              ? 'Configure city-sponsored scholarships, manage slots & criteria, and review active applicant pools.'
-              : 'Browse and apply for all Quezon City institutional scholarships, bursaries, and merit awards in one portal.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {isAdminOrStaff ? (
-            <>
-              {/* Clean Portal Toggle */}
-              <button
-                type="button"
-                onClick={handlePortalToggle}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-                  isPortalOpen
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60'
-                    : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100/70 dark:hover:bg-rose-900/60'
-                }`}
-                title="Toggle student application submissions"
-              >
-                <span className={`h-2 w-2 rounded-full ${isPortalOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
-                <span>{isPortalOpen ? 'Accepting Applications' : 'Submissions Closed'}</span>
-              </button>
-
-              <Button
-                variant="primary"
-                size="md"
-                onClick={() => setShowAdminCreateModal(true)}
-                leftIcon={<Plus className="h-4 w-4" />}
-                className="font-bold shadow-md shadow-blue-600/20 cursor-pointer"
-              >
-                Create Program
-              </Button>
-            </>
-          ) : (
-            <Badge variant="success" size="md" className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Profile Active {profile?.studentId || user?.studentId ? `(${profile?.studentId || user?.studentId})` : ''}
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Admin KPI Stats */}
-      {isAdminOrStaff && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
-            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Active Programs</span>
-            <span className="font-heading font-extrabold text-xl text-blue-600 dark:text-blue-400 mt-0.5 block">{items.length} Programs</span>
-          </div>
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
-            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Total Budget Allocation</span>
-            <span className="font-heading font-extrabold text-xl text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-              ₱{(items.reduce((sum, it) => sum + ((Number(it.amount) || 0) * (Number(it.slots) || 0)), 0) / 1000000).toFixed(1)}M
-            </span>
-          </div>
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
-            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Total Open Slots</span>
-            <span className="font-heading font-extrabold text-xl text-indigo-600 dark:text-indigo-400 mt-0.5 block">
-              {items.reduce((sum, it) => sum + (Number(it.slots) || 0), 0).toLocaleString()} Slots
-            </span>
-          </div>
-          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
-            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Review Queue</span>
-            <span className="font-heading font-extrabold text-xl text-amber-600 dark:text-amber-400 mt-0.5 block">{pendingReviewsCount} Applications</span>
-          </div>
-        </div>
-      )}
-
       {/* Admin Operations Segmented Navigation */}
       {isAdminOrStaff && (
         <div className="bg-slate-100/80 dark:bg-slate-800/80 p-1 rounded-2xl flex gap-1 border border-slate-200/80 dark:border-slate-700/80 max-w-xl">
@@ -484,6 +403,89 @@ export const ScholarshipsPage: React.FC = () => {
               </button>
             );
           })}
+        </div>
+      )}
+
+      {/* Header Banner - Only shown on Programs & Catalog for Admin, or for Students */}
+      {(!isAdminOrStaff || adminActiveTab === 'programs') && (
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">Scholarship Application Portal</h1>
+              {!isAdminOrStaff && (
+                <Badge variant="primary" size="md">
+                  <GraduationCap className="h-3.5 w-3.5 mr-1" />
+                  Unified Grants & Aid
+                </Badge>
+              )}
+            </div>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
+              {isAdminOrStaff
+                ? 'Configure city-sponsored scholarships, manage slots & criteria, and review active applicant pools.'
+                : 'Browse and apply for all Quezon City institutional scholarships, bursaries, and merit awards in one portal.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {isAdminOrStaff ? (
+              <>
+                {/* Clean Portal Toggle */}
+                <button
+                  type="button"
+                  onClick={handlePortalToggle}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                    isPortalOpen
+                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60'
+                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800 hover:bg-rose-100/70 dark:hover:bg-rose-900/60'
+                  }`}
+                  title="Toggle student application submissions"
+                >
+                  <span className={`h-2 w-2 rounded-full ${isPortalOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+                  <span>{isPortalOpen ? 'Accepting Applications' : 'Submissions Closed'}</span>
+                </button>
+
+                <Button
+                  variant="primary"
+                  size="md"
+                  onClick={() => setShowAdminCreateModal(true)}
+                  leftIcon={<Plus className="h-4 w-4" />}
+                  className="font-bold shadow-md shadow-blue-600/20 cursor-pointer"
+                >
+                  Create Program
+                </Button>
+              </>
+            ) : (
+              <Badge variant="success" size="md" className="bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800">
+                <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Profile Active {profile?.studentId || user?.studentId ? `(${profile?.studentId || user?.studentId})` : ''}
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Admin KPI Stats - Only shown on Programs & Catalog */}
+      {isAdminOrStaff && adminActiveTab === 'programs' && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
+            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Active Programs</span>
+            <span className="font-heading font-extrabold text-xl text-blue-600 dark:text-blue-400 mt-0.5 block">{items.length} Programs</span>
+          </div>
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
+            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Total Budget Allocation</span>
+            <span className="font-heading font-extrabold text-xl text-emerald-600 dark:text-emerald-400 mt-0.5 block">
+              ₱{(items.reduce((sum, it) => sum + ((Number(it.amount) || 0) * (Number(it.slots) || 0)), 0) / 1000000).toFixed(1)}M
+            </span>
+          </div>
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
+            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Total Open Slots</span>
+            <span className="font-heading font-extrabold text-xl text-indigo-600 dark:text-indigo-400 mt-0.5 block">
+              {items.reduce((sum, it) => sum + (Number(it.slots) || 0), 0).toLocaleString()} Slots
+            </span>
+          </div>
+          <div className="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-soft">
+            <span className="text-slate-400 dark:text-slate-400 font-bold uppercase text-[10px] block">Review Queue</span>
+            <span className="font-heading font-extrabold text-xl text-amber-600 dark:text-amber-400 mt-0.5 block">{pendingReviewsCount} Applications</span>
+          </div>
         </div>
       )}
 

@@ -87,6 +87,7 @@ import { PrivacyPolicyPage } from './pages/public/PrivacyPolicyPage';
 import { TermsConditionsPage } from './pages/public/TermsConditionsPage';
 import { RefundPolicyPage } from './pages/public/RefundPolicyPage';
 import { CookiePolicyPage } from './pages/public/CookiePolicyPage';
+import { SchoolVerificationPage } from './pages/public/SchoolVerificationPage';
 
 export function App() {
   return (
@@ -117,6 +118,7 @@ export function App() {
           <Route path="/terms" element={<TermsConditionsPage />} />
           <Route path="/refund-policy" element={<RefundPolicyPage />} />
           <Route path="/cookies" element={<CookiePolicyPage />} />
+          <Route path="/verify-school/:token" element={<SchoolVerificationPage />} />
           <Route path="/404" element={<NotFoundPage />} />
 
           {/* Public Auth Routes */}
@@ -134,6 +136,13 @@ export function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/dashboard" element={<DashboardPage />} />
+              <Route path="/admin/home" element={<DashboardPage />} />
+              <Route path="/student/dashboard" element={<DashboardPage />} />
+              <Route path="/supervisor/dashboard" element={<DashboardPage />} />
+              <Route path="/school/dashboard" element={<DashboardPage />} />
+              <Route path="/treasury/dashboard" element={<DashboardPage />} />
+              <Route path="/system-admin/dashboard" element={<DashboardPage />} />
               <Route path="/basic-form" element={<BasicFormPage />} />
               <Route path="/apply" element={<OpportunitiesPage />} />
               <Route path="/apply/scholarship" element={<ScholarshipApplyPage />} />

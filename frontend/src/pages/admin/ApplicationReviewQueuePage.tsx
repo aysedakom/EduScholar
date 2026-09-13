@@ -266,8 +266,19 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
   const flaggedCount = applications.filter((a) => a.complianceFlags.length > 0).length;
 
   const handleApprove = async (id: string) => {
-    const approvedNotes = reviewNotes || 'All documentary attachments verified and approved by QCYDO Review Committee.';
     const appRecord = applications.find(a => a.id === id);
+    const coordinatorVerdict = (appRecord as any)?.coordinatorVerdict || (appRecord?.schoolEndorsed ? 'APPROVE' : 'PENDING');
+    
+    // Enforcement: Admin CANNOT override coordinator without documented rationale
+    if (coordinatorVerdict !== 'APPROVE' && coordinatorVerdict !== 'PENDING' && !reviewNotes.trim()) {
+      toast.error('Admin Override Requires Written Rationale', {
+        description: `School coordinator verdict is "${coordinatorVerdict}". Under Segregation of Duties rules, overriding coordinator recommendations requires a documented written rationale in Evaluator Notes.`,
+        duration: 8000,
+      });
+      return;
+    }
+
+    const approvedNotes = reviewNotes || 'All documentary attachments verified and approved by QCYDO Review Committee.';
 
     if (appRecord?.dbId) {
       try {
@@ -310,6 +321,17 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
   const handleReject = async (id: string) => {
     const appToReject = applications.find((a) => a.id === id);
+    const coordinatorVerdict = (appToReject as any)?.coordinatorVerdict || (appToReject?.schoolEndorsed ? 'APPROVE' : 'PENDING');
+    
+    // Enforcement: Admin CANNOT override coordinator without documented rationale
+    if (coordinatorVerdict === 'APPROVE' && !reviewNotes.trim()) {
+      toast.error('Admin Override Requires Written Rationale', {
+        description: `School coordinator approved this student. Under Segregation of Duties rules, overriding coordinator approval requires a documented written rationale in Evaluator Notes.`,
+        duration: 8000,
+      });
+      return;
+    }
+
     const rejectNotes = reviewNotes || 'Rejected - Documentary requirements or GPA threshold not met.';
     if (appToReject?.dbId) {
       try {

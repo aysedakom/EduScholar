@@ -54,41 +54,19 @@ import {
   getDistrictByBarangay,
 } from '../../utils/qcDistricts';
 
-// List of accredited Quezon City Universities, Colleges & HEIs
+// List of accredited partner institutions (Restricted strictly to the 3 target partner schools)
 export const QC_SCHOOLS = [
   'Bestlink College of the Philippines (BCP)',
-  'Quezon City University (QCU - Main San Bartolome)',
-  'Quezon City University (QCU - Batasan Campus)',
-  'Quezon City University (QCU - San Francisco Campus)',
-  'University of the Philippines Diliman (UPD)',
-  'Ateneo de Manila University (ADMU)',
-  'Polytechnic University of the Philippines (PUP QC)',
-  'Far Eastern University (FEU Diliman)',
-  'FEU - Nicanor Reyes Medical Foundation (FEU-NRMF)',
-  'Trinity University of Asia (TUA)',
-  'Miriam College (MC)',
-  'New Era University (NEU)',
-  'Our Lady of Fatima University (OLFU QC)',
-  'National University (NU Fairview / QC)',
-  'Technological Institute of the Philippines (TIP QC)',
-  'St. Paul University Quezon City (SPUQC)',
-  'UST - Angelicum College',
-  'World Citi Colleges (WCC)',
-  'AMA Computer University (AMA QC)',
-  'STI College Novaliches',
-  'STI College Cubao',
-  'STI College Fairview',
-  'Access Computer College Novaliches',
-  'Informatics College Quezon City',
-  'Metro Manila College (MMC Novaliches)',
-  'Siena College Quezon City',
-  'Capitol Medical Center Colleges (CMCC)',
-  'Philippine Women\'s University (PWU QC)',
-  'Eulogio "Amang" Rodriguez Institute of Tech (EARIST QC)',
-  'Asian College of Science and Technology (ACSAT QC)',
-  'Quezon City High School (Public / Private SHS)',
-  'Other / School Not Listed (Exception Flow - Requires Certificate of Enrollment)',
+  'Quezon City University (QCU)',
+  'St. Claire College of Caloocan',
 ];
+
+// Official designated verification contact emails for partner schools
+export const SCHOOL_EMAIL_MAP: Record<string, string> = {
+  'Bestlink College of the Philippines (BCP)': 'bcp.edu67@gmail.com',
+  'Quezon City University (QCU)': 'qcu.edu67@gmail.com',
+  'St. Claire College of Caloocan': 'stclaire.edu67@gmail.com',
+};
 
 // Helper to resolve official institution classification from school name
 export const getInstitutionTypeBySchool = (schoolName: string): 'Public' | 'SUC' | 'LUC' | 'Private' | '' => {
@@ -96,23 +74,9 @@ export const getInstitutionTypeBySchool = (schoolName: string): 'Public' | 'SUC'
   if (schoolName.includes('Quezon City University') || schoolName.includes('QCU')) {
     return 'LUC';
   }
-  if (
-    schoolName.includes('University of the Philippines') ||
-    schoolName.includes('UPD') ||
-    schoolName.includes('Polytechnic University of the Philippines') ||
-    schoolName.includes('PUP') ||
-    schoolName.includes('Eulogio "Amang" Rodriguez') ||
-    schoolName.includes('EARIST')
-  ) {
-    return 'SUC';
+  if (schoolName.includes('Bestlink') || schoolName.includes('BCP') || schoolName.includes('St. Claire')) {
+    return 'Private';
   }
-  if (schoolName.includes('Quezon City High School')) {
-    return 'Public';
-  }
-  if (schoolName.includes('Other / School Not Listed')) {
-    return '';
-  }
-  // All other listed QC HEIs / Colleges are Private
   return 'Private';
 };
 

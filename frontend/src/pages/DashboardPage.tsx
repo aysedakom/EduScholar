@@ -378,7 +378,7 @@ export function DashboardPage() {
   // 5. STUDENT DASHBOARD VIEW
   // =========================================================================
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 animate-fade-in-up">
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <div className="flex items-center gap-2 mb-1">

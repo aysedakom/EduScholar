@@ -47,7 +47,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             const dbEvent = payload as DatabaseEvent;
             setLastEvent(dbEvent);
 
-            // Notify specific table subscribers
+            // Notify specific table subscribers (e.g. ApplicationProgressTracker, Header notifications)
             const tableSubs = subscribersRef.current.get(dbEvent.table);
             if (tableSubs) {
               tableSubs.forEach((cb) => cb(dbEvent));
@@ -56,56 +56,53 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             // Trigger custom event so header notification bell badge updates in real time
             window.dispatchEvent(new Event('qc_new_notification'));
 
-            // Real-time user popout toast feedback for key application & notification events
-            if (dbEvent.table === 'applications') {
-              const rec = dbEvent.record || {};
-              const appCode = rec.application_code || rec.reference_id || 'QCSP-APP';
-              const progName = rec.program_name || rec.title || 'Scholarship Program';
+            // Strict once-only toast deduplication & 15-second freshness filter
+            if (dbEvent.table === 'notifications') {
+              const notif = dbEvent.record || {};
+              const notifId = notif.id || `${notif.title}_${notif.created_at || dbEvent.timestamp}`;
+              const toastKey = `qc_toast_shown_${notifId}`;
+              
+              // Calculate event age
+              const eventTime = notif.created_at || dbEvent.timestamp;
+              const ageMs = eventTime ? Date.now() - new Date(eventTime).getTime() : 999999;
+              const isFresh = ageMs >= 0 && ageMs < 15000; // Fresh within 15 seconds
 
-              if (dbEvent.action === 'INSERT') {
-                toast.success('Scholarship Application Submitted', {
-                  description: `Application for ${progName} (${appCode}) has been registered and is under verification.`,
-                  duration: 8000,
-                });
-              } else if (dbEvent.action === 'UPDATE') {
-                const rawStatus = String(rec.status || '').toLowerCase();
-                if (rawStatus === 'approved' || rawStatus === 'granted') {
-                  toast.success('🎉 Application Approved!', {
-                    description: `Congratulations! Your application for ${progName} has passed and been approved. Proceed to your Document Vault for your Official Award Certificate.`,
-                    duration: 10000,
+              let alreadyShown = false;
+              try {
+                if (localStorage.getItem(toastKey)) {
+                  alreadyShown = true;
+                }
+              } catch (_) {}
+
+              // Only pop up toast ONCE for fresh notifications created in real time right now
+              if (isFresh && !alreadyShown) {
+                try {
+                  localStorage.setItem(toastKey, 'true');
+                } catch (_) {}
+
+                if (notif.type === 'success') {
+                  toast.success(notif.title || 'Portal Notice', {
+                    description: notif.message,
+                    duration: 6000,
                   });
-                } else if (rawStatus === 'rejected' || rawStatus === 'disapproved' || rawStatus === 'denied') {
-                  toast.error('Application Status Update', {
-                    description: `Your application for ${progName} was not approved. Remarks: ${rec.remarks || rec.notes || 'Documentary requirements or qualification criteria not met.'}`,
-                    duration: 10000,
+                } else if (notif.type === 'error') {
+                  toast.error(notif.title || 'Portal Alert', {
+                    description: notif.message,
+                    duration: 6000,
                   });
                 } else {
-                  toast.info(`Application Status: ${rec.status}`, {
-                    description: `Application (${appCode}) is now ${rec.status}.`,
-                    duration: 6000,
+                  toast.info(notif.title || 'Portal Notice', {
+                    description: notif.message,
+                    duration: 5000,
                   });
                 }
               }
-            } else if (dbEvent.table === 'notifications') {
-              const notif = dbEvent.record || {};
-              if (notif.type === 'success') {
-                toast.success(notif.title || 'Portal Notice', {
-                  description: notif.message,
-                  duration: 8000,
-                });
-              } else if (notif.type === 'error') {
-                toast.error(notif.title || 'Portal Alert', {
-                  description: notif.message,
-                  duration: 8000,
-                });
-              } else {
-                toast.info(notif.title || 'Portal Notice', {
-                  description: notif.message,
-                  duration: 7000,
-                });
+            } else if (dbEvent.table === 'school_aid_distributions' && dbEvent.action === 'INSERT') {
+              const distKey = `qc_dist_toast_${dbEvent.record?.id || Date.now()}`;
+              if (!localStorage.getItem(distKey)) {
+                try { localStorage.setItem(distKey, 'true'); } catch (_) {}
+                toast.success(`Disbursement Update: Batch ${dbEvent.record.batch_code} is now ${dbEvent.record.status}`);
               }
-            } else if (dbEvent.table === 'school_aid_distributions') {
-              toast.success(`Disbursement Update: Batch ${dbEvent.record.batch_code} is now ${dbEvent.record.status}`);
             }
           }
         } catch (e) {
