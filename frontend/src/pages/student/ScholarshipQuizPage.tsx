@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '../../comp
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { formatCurrency } from '../../utils/cn';
+import { ALL_SCHOLARSHIP_PROGRAMS } from '../../utils/scholarshipPrograms';
 
 interface MatchResult {
   title: string;
@@ -32,31 +33,41 @@ export const ScholarshipQuizPage: React.FC = () => {
   };
 
   const handleCalculateMatch = () => {
-    const mockMatches: MatchResult[] = [
-      {
-        title: 'QC Excel Academic Scholarship',
-        category: 'STEM / Academic',
-        amount: 110000,
-        matchScore: 98,
-        reasons: ['Your GWA of ' + gwa + ' meets the top honor threshold', 'Registered Quezon City resident in ' + barangay],
-      },
-      {
-        title: 'Dean’s Excellence in Technology Grant',
-        category: 'STEM',
-        amount: 7500,
-        matchScore: 94,
-        reasons: ['Direct field alignment with ' + course, 'High academic standing'],
-      },
-      {
-        title: 'QC Economic Aid Assistance Bursary',
-        category: 'Need-Based',
-        amount: 40000,
-        matchScore: 88,
-        reasons: ['Matches income bracket: ' + income, 'Eligible for direct tuition offset'],
-      },
-    ];
+    const numericGwa = parseFloat(gwa) || 1.75;
+    const numericIncome = parseFloat(income.replace(/[^0-9.]/g, '')) || 150000;
 
-    setResults(mockMatches);
+    const realMatches: MatchResult[] = ALL_SCHOLARSHIP_PROGRAMS.slice(0, 5).map((prog) => {
+      let score = 85;
+      const reasons: string[] = [`Verified Quezon City resident in Barangay ${barangay || 'QC Central'}`];
+
+      if (prog.id.includes('academic') || prog.id.includes('excel')) {
+        if (numericGwa <= 2.0 || numericGwa >= 89) {
+          score += 12;
+          reasons.push(`Outstanding GWA (${gwa}) satisfies ${prog.shortTitle} academic criteria`);
+        }
+      }
+
+      if (prog.id.includes('economic') || prog.id.includes('need')) {
+        if (numericIncome <= 300000) {
+          score += 10;
+          reasons.push(`Annual household income qualifies for Quezon City economic grant prioritization`);
+        }
+      }
+
+      if (course) {
+        reasons.push(`Course (${course}) aligns with eligible Quezon City field allocations`);
+      }
+
+      return {
+        title: prog.title,
+        category: prog.categoryTitle,
+        amount: prog.termGrantAmount,
+        matchScore: Math.min(score, 99),
+        reasons,
+      };
+    });
+
+    setResults(realMatches.sort((a, b) => b.matchScore - a.matchScore));
     setStep(4);
   };
 

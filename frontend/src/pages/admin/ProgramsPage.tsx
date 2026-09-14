@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, GraduationCap, Calendar, Edit3, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/Card';
@@ -7,6 +7,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
 import { Input } from '../../components/ui/Input';
 import { formatCurrency } from '../../utils/cn';
+import { getScholarships } from '../../api/scholarships';
 
 interface ScholarshipProgram {
   id: string;
@@ -53,7 +54,7 @@ const INITIAL_PROGRAMS: ScholarshipProgram[] = [
 ];
 
 export const ProgramsPage: React.FC = () => {
-  const [programs, setPrograms] = useState<ScholarshipProgram[]>(INITIAL_PROGRAMS);
+  const [programs, setPrograms] = useState<ScholarshipProgram[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
@@ -61,6 +62,34 @@ export const ProgramsPage: React.FC = () => {
   const [amount, setAmount] = useState('20000');
   const [period, setPeriod] = useState('Aug 15, 2026 - Sep 30, 2026');
   const [category, setCategory] = useState<'Need-Based' | 'Merit-Based' | 'STEM' | 'Athletic'>('Need-Based');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPrograms = async () => {
+      try {
+        const res = await getScholarships();
+        if (res.data && Array.isArray(res.data) && res.data.length > 0 && isMounted) {
+          const mapped: ScholarshipProgram[] = res.data.map((s: any) => ({
+            id: String(s.code || s.id),
+            name: s.title || s.name,
+            description: s.description || 'Quezon City Youth Development Office Educational Grant Program',
+            eligibility: s.eligibility || 'QC Resident, enrolled in an accredited tertiary institution.',
+            amount: Number(s.amount || s.grant_amount || 20000),
+            period: s.deadline ? `Deadline: ${String(s.deadline).split('T')[0]}` : 'Aug 15, 2026 - Sep 30, 2026',
+            category: (s.category || 'Need-Based') as any,
+            status: (s.status === 'Active' || s.status === 'open' ? 'Active' : 'Upcoming') as any,
+          }));
+          setPrograms(mapped);
+        } else if (isMounted) {
+          setPrograms(INITIAL_PROGRAMS);
+        }
+      } catch (err) {
+        if (isMounted) setPrograms(INITIAL_PROGRAMS);
+      }
+    };
+    fetchPrograms();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();

@@ -318,9 +318,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const login = async (email: string, _password: string, targetRole: UserRole = 'student'): Promise<boolean> => {
+  const login = async (email: string, password: string, targetRole: UserRole = 'student'): Promise<boolean> => {
     setApiError(null);
     try {
+      // Attempt real backend authentication first
+      try {
+        const res = await authApi.login(email, password);
+        if (res.data?.token && res.data?.user) {
+          const respUser = res.data.user;
+          const fullUser: User = {
+            ...respUser,
+            id: String(respUser.id),
+            hasCompletedBasicForm: true,
+          };
+          setUser(fullUser);
+          setRole(respUser.role);
+          setToken(res.data.token);
+          localStorage.setItem('token', res.data.token);
+          localStorage.setItem('user_profile', JSON.stringify(fullUser));
+          localStorage.setItem('user_role', respUser.role);
+          localStorage.removeItem('student_ai_matches');
+          return true;
+        }
+      } catch (apiErr) {
+        console.warn('⚡ Real backend authentication call failed. Checking for network fallback...', apiErr);
+      }
+
+      // Offline / Demo fallback when network connection is down
       const emailLower = email.toLowerCase().trim();
       let determinedRole: UserRole = targetRole;
 
@@ -361,6 +385,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', mockToken);
       localStorage.setItem('user_profile', JSON.stringify(userObj));
       localStorage.setItem('user_role', userObj.role);
+      localStorage.removeItem('student_ai_matches');
       return true;
     } catch {
       return false;

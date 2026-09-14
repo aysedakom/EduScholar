@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Building2, Plus, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { Modal } from '../../components/ui/Modal';
+import { getPartners } from '../../api/partners';
 
 interface EmployerPartner {
   id: string;
@@ -47,11 +48,38 @@ const INITIAL_EMPLOYERS: EmployerPartner[] = [
 ];
 
 export const EmployerManagementPage: React.FC = () => {
-  const [employers, setEmployers] = useState<EmployerPartner[]>(INITIAL_EMPLOYERS);
+  const [employers, setEmployers] = useState<EmployerPartner[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState('');
   const [industry, setIndustry] = useState('');
   const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPartners = async () => {
+      try {
+        const res = await getPartners();
+        if (res.data && Array.isArray(res.data) && res.data.length > 0 && isMounted) {
+          const mapped: EmployerPartner[] = res.data.map((p) => ({
+            id: String(p.school_id || p.id),
+            name: p.name,
+            industry: p.school_type || p.programs_offered || 'Grant & Academic Partner',
+            contactEmail: p.email || p.contact_person || 'contact@partner.qc.gov.ph',
+            activePositions: p.active_scholars || p.scholarship_slots || 10,
+            contractStatus: (p.partnership_status === 'Active' ? 'Active Contract' : 'Pending Renewal') as any,
+            expiryDate: p.partnership_end ? String(p.partnership_end).split('T')[0] : '2027-12-31',
+          }));
+          setEmployers(mapped);
+        } else if (isMounted) {
+          setEmployers(INITIAL_EMPLOYERS);
+        }
+      } catch (err) {
+        if (isMounted) setEmployers(INITIAL_EMPLOYERS);
+      }
+    };
+    fetchPartners();
+    return () => { isMounted = false; };
+  }, []);
 
   const handleAddEmployer = (e: React.FormEvent) => {
     e.preventDefault();

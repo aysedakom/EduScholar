@@ -27,7 +27,7 @@ export const UserManagementPage: React.FC = () => {
     const fetchUsers = async () => {
       try {
         const res = await getUsers();
-        if (res.data && isMounted) {
+        if (res.data && Array.isArray(res.data) && res.data.length > 0 && isMounted) {
           const roleLabelMap: Record<string, string> = {
             student: 'Student',
             admin: 'Admin',
@@ -42,13 +42,13 @@ export const UserManagementPage: React.FC = () => {
             email: u.email,
             role: (roleLabelMap[u.role] || 'Staff') as any,
             department: u.department || 'Quezon City Youth Development Office',
-            status: (u.status === 'active' ? 'Active' : 'Pending Approval') as any,
-            createdAt: u.created_at ? u.created_at.split('T')[0] : '2026-01-01',
+            status: (u.status === 'active' || u.is_email_verified ? 'Active' : 'Pending Approval') as any,
+            createdAt: u.created_at ? u.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
           }));
           setUsers(mapped);
         }
-      } catch {
-        // fallback
+      } catch (err) {
+        console.warn('Could not load user accounts from PostgreSQL:', err);
       }
     };
     fetchUsers();
