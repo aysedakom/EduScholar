@@ -516,30 +516,30 @@ export const EScholarPage: React.FC = () => {
         </section>
       </main>
 
-      {/* Auto Pop-up Announcement Modal (Frameless Overlay) */}
+      {/* Auto Pop-up Announcement Modal (Frameless Animated Overlay) */}
       {showPopup && (
         <div
           onClick={() => setShowPopup(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200 cursor-pointer"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300 cursor-pointer"
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative max-w-4xl max-h-[92vh] flex items-center justify-center cursor-default animate-in zoom-in-95 duration-200"
+            className="relative max-w-4xl max-h-[92vh] flex items-center justify-center cursor-default animate-in zoom-in-75 slide-in-from-bottom-6 duration-500 ease-out transform transition-all"
           >
-            {/* Floating Close Button */}
+            {/* Floating Animated Close Button */}
             <button
               onClick={() => setShowPopup(false)}
-              className="absolute -top-3 -right-3 z-10 p-2.5 rounded-full bg-slate-900/90 text-white hover:bg-red-600 border-2 border-white shadow-xl transition-all cursor-pointer transform hover:scale-110"
+              className="absolute -top-4 -right-4 z-20 p-3 rounded-full bg-slate-900/90 text-white hover:bg-rose-600 border-2 border-white shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-115 hover:rotate-90 animate-in zoom-in-50 delay-150"
               title="Close Announcement"
             >
               <X className="h-5 w-5" />
             </button>
 
-            {/* Frameless Announcement Image */}
+            {/* Pop-out Animated Announcement Image */}
             <img
               src="/pop-up.jpg"
               alt="QCSP Scholarship Announcement"
-              className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-2xl shadow-2xl border-0"
+              className="max-w-full max-h-[88vh] w-auto h-auto object-contain rounded-3xl shadow-[0_25px_60px_-15px_rgba(37,99,235,0.4)] border-2 border-white/20 transition-transform duration-300 hover:scale-[1.02] cursor-pointer"
             />
           </div>
         </div>
