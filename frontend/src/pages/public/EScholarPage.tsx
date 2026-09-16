@@ -169,6 +169,22 @@ export const EScholarPage: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [eservicesOpen, userDropdownOpen]);
 
+  const isRenewalWindowOpen = Boolean(
+    user &&
+      (user.status === 'Active Renewal' ||
+        user.status === 'Renewal Open' ||
+        (user as any).isRenewalTerm === true ||
+        (user as any).is_renewal_term === true)
+  );
+
+  const isConfirmedGraduate = Boolean(
+    user &&
+      (user.status === 'Graduated' ||
+        (user as any).isGraduated === true ||
+        (user as any).is_graduated === true ||
+        (user.department && user.department.toLowerCase().includes('alumni')))
+  );
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-primary/20 transition-colors duration-200">
       {/* Top Header Navbar - Edge to Edge like Home */}
@@ -452,7 +468,7 @@ export const EScholarPage: React.FC = () => {
             )}
 
             {/* Card 3: Renewal Application (Visible for active scholars during semestral renewal window) */}
-            {(!user || user.role === 'student') && (
+            {isRenewalWindowOpen && (
               <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
                 <CardHeader className="space-y-3 p-6">
                   <div className="flex items-center justify-between gap-3">
@@ -477,7 +493,7 @@ export const EScholarPage: React.FC = () => {
             )}
 
             {/* Card 4: QCSP Alumni Information Sheet (Visible for confirmed graduates) */}
-            {(!user || user.status === 'Graduated' || user.role === 'student') && (
+            {isConfirmedGraduate && (
               <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
                 <CardHeader className="space-y-3 p-6">
                   <div className="flex items-center justify-between gap-3">
