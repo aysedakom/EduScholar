@@ -207,16 +207,6 @@ export const QCeServicesHomePage: React.FC = () => {
                       )}
                     </div>
                     <Link
-                      to="/dashboard"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className={`w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-bold transition-colors ${
-                        isDark ? 'hover:bg-slate-800 text-slate-200' : 'hover:bg-slate-100 text-slate-800'
-                      }`}
-                    >
-                      <GraduationCap className="h-4 w-4 text-blue-500" />
-                      <span>{t('nav.dashboard')}</span>
-                    </Link>
-                    <Link
                       to="/education-scholarship"
                       onClick={() => setUserDropdownOpen(false)}
                       className={`w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold transition-colors ${

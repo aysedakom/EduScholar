@@ -203,12 +203,6 @@ export const LandingPage: React.FC = () => {
                 </button>
                 {userDropdownOpen && (
                   <div className="absolute right-0 top-11 w-44 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-1.5 shadow-medium z-50">
-                    <Link
-                      to="/dashboard"
-                      className="w-full block rounded-xl px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200"
-                    >
-                      {t('nav.dashboard')}
-                    </Link>
                     <button
                       onClick={logout}
                       className="w-full rounded-xl px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 text-rose-600 dark:text-rose-400 cursor-pointer"
