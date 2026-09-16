@@ -87,6 +87,7 @@ import { PrivacyPolicyPage } from './pages/public/PrivacyPolicyPage';
 import { TermsConditionsPage } from './pages/public/TermsConditionsPage';
 import { RefundPolicyPage } from './pages/public/RefundPolicyPage';
 import { CookiePolicyPage } from './pages/public/CookiePolicyPage';
+import { SchoolVerificationPage } from './pages/public/SchoolVerificationPage';
 import { SessionLockModal } from './components/common/SessionLockModal';
 
 export function App() {

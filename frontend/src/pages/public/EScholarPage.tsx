@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import {
-  GraduationCap,
-  ExternalLink,
   UserCheck,
   RotateCw,
   Sparkles,
@@ -30,7 +28,6 @@ import {
 } from '../../utils/scholarshipPrograms';
 import { getMyApplications } from '../../api/applications';
 import { useWebSocket } from '../../context/WebSocketContext';
-import { toast } from 'sonner';
 
 export const EScholarPage: React.FC = () => {
   const navigate = useNavigate();
@@ -171,11 +168,6 @@ export const EScholarPage: React.FC = () => {
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [eservicesOpen, userDropdownOpen]);
-
-  const handleOpenQcuPortal = () => {
-    toast.info('Opening Quezon City University (QCU) Portal...');
-    window.open('https://qcu.edu.ph', '_blank', 'noopener,noreferrer');
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans selection:bg-primary/20 transition-colors duration-200">
