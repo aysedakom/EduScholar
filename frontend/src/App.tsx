@@ -111,6 +111,8 @@ export function App() {
           <Route path="/campus-aid-hub" element={<PublicServicesPortalPage />} />
           <Route path="/public" element={<PublicServicesPortalPage />} />
           <Route path="/e-scholar" element={<EScholarPage />} />
+          <Route path="/escholar" element={<EScholarPage />} />
+          <Route path="/e%20scholar" element={<EScholarPage />} />
           <Route path="/eservices/education-scholarship" element={<EScholarPage />} />
           <Route path="/student/application-form" element={<ApplicationForm />} />
           <Route path="/application-form" element={<ApplicationForm />} />
