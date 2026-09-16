@@ -16,14 +16,14 @@ export function AuthBrandPanel() {
         />
 
         {/* Concentric rings seal */}
-        <div className="relative z-10 flex h-[420px] w-[420px] items-center justify-center rounded-full border border-slate-800/40 p-4">
+        <div className="relative z-10 flex h-[500px] w-[500px] items-center justify-center rounded-full border border-slate-800/40 p-4">
           
           {/* Text overlays in the center ring */}
-          <div className="z-10 flex flex-col items-center max-w-[380px] text-center px-4">
-            <h2 className="font-heading text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight drop-shadow-md">
+          <div className="z-10 flex flex-col items-center max-w-[480px] text-center px-4">
+            <h2 className="font-heading text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-white leading-[1.1] drop-shadow-lg">
               Education and Scholarship Management
             </h2>
-            <span className="text-[11px] sm:text-xs font-bold text-blue-400 mt-2 uppercase tracking-wider drop-shadow-sm">
+            <span className="text-sm sm:text-base md:text-lg font-extrabold text-blue-400 mt-4 uppercase tracking-widest drop-shadow-md">
               Republic of the Philippines • Local Government Unit
             </span>
           </div>
