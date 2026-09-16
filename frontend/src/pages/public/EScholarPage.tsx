@@ -420,119 +420,98 @@ export const EScholarPage: React.FC = () => {
               </CardContent>
             </Card>
 
-            {/* Card 2: New Application */}
-            <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
-              <CardHeader className="space-y-3 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                    <Sparkles className="h-6 w-6" />
+            {/* Card 2: New Application (Only visible if student has NEVER applied before) */}
+            {!activeApp && (
+              <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
+                <CardHeader className="space-y-3 p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
+                      <Sparkles className="h-6 w-6" />
+                    </div>
+                    <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">First-Time Applicants</Badge>
                   </div>
-                  <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">First-Time Applicants</Badge>
-                </div>
-                <CardTitle className="text-xl font-extrabold">New Application</CardTitle>
-                <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
-                  Start a fresh scholarship application for Academic Year 2026-2027. Fill out personal details and COR.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 pt-0">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleStartNewApplication}
-                  disabled={isCheckingApp}
-                  rightIcon={<ArrowRight className="h-4 w-4" />}
-                  className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer disabled:opacity-70"
-                >
-                  {isCheckingApp ? 'Verifying Records...' : 'Start New Application'}
-                </Button>
-                <div className="text-center pt-2">
-                  <Link
-                    to="/scholar-prog-available"
-                    className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                  <CardTitle className="text-xl font-extrabold">New Application</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
+                    Start a fresh scholarship application for Academic Year 2026-2027. Fill out personal details and COR.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-6 pb-6 pt-0">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={handleStartNewApplication}
+                    disabled={isCheckingApp}
+                    rightIcon={<ArrowRight className="h-4 w-4" />}
+                    className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer disabled:opacity-70"
                   >
-                    <span>Need to choose a track? Browse Available Programs</span>
-                    <span>→</span>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Card 3: Renewal Application */}
-            <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
-              <CardHeader className="space-y-3 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                    <RotateCw className="h-6 w-6" />
-                  </div>
-                  <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">Existing Scholars</Badge>
-                </div>
-                <CardTitle className="text-xl font-extrabold">Renewal Application</CardTitle>
-                <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
-                  One-click semestral renewal for existing QCSP scholars. Submit latest GWA transcript and enrollment COR.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 pt-0">
-                <Link to="/renewal">
-                  <Button variant="primary" size="lg" leftIcon={<RotateCw className="h-4 w-4" />} className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer">
-                    Submit Renewal Application
+                    {isCheckingApp ? 'Verifying Records...' : 'Start New Application'}
                   </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Card 4: QCSP Alumni Information Sheet */}
-            <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
-              <CardHeader className="space-y-3 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                    <Users className="h-6 w-6" />
+                  <div className="text-center pt-2">
+                    <Link
+                      to="/scholar-prog-available"
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                    >
+                      <span>Need to choose a track? Browse Available Programs</span>
+                      <span>→</span>
+                    </Link>
                   </div>
-                  <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">Graduates & Alumni</Badge>
-                </div>
-                <CardTitle className="text-xl font-extrabold">QCSP Alumni Info Sheet</CardTitle>
-                <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
-                  Official graduate tracer sheet for QCSP alumni to record current employment, career updates, and testimonials.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 pt-0">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={() => setIsAlumniModalOpen(true)}
-                  leftIcon={<UserCheck className="h-4 w-4" />}
-                  className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer"
-                >
-                  Fill Out Alumni Info Sheet
-                </Button>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
-            {/* Card 5: QCU Portal */}
-            <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
-              <CardHeader className="space-y-3 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
-                    <GraduationCap className="h-6 w-6" />
+            {/* Card 3: Renewal Application (Visible for active scholars during semestral renewal window) */}
+            {(!user || user.role === 'student') && (
+              <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
+                <CardHeader className="space-y-3 p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
+                      <RotateCw className="h-6 w-6" />
+                    </div>
+                    <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">Existing Scholars</Badge>
                   </div>
-                  <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">University Portal</Badge>
-                </div>
-                <CardTitle className="text-xl font-extrabold">QCU Portal</CardTitle>
-                <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
-                  Direct integration with Quezon City University (QCU) student system, academic verification, and grades lookup.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pb-6 pt-0">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  onClick={handleOpenQcuPortal}
-                  rightIcon={<ExternalLink className="h-4 w-4" />}
-                  className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer"
-                >
-                  Access QCU Portal →
-                </Button>
-              </CardContent>
-            </Card>
+                  <CardTitle className="text-xl font-extrabold">Renewal Application</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
+                    One-click semestral renewal for existing QCSP scholars. Submit latest GWA transcript and enrollment COR.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-6 pb-6 pt-0">
+                  <Link to="/renewal">
+                    <Button variant="primary" size="lg" leftIcon={<RotateCw className="h-4 w-4" />} className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer">
+                      Submit Renewal Application
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Card 4: QCSP Alumni Information Sheet (Visible for confirmed graduates) */}
+            {(!user || user.status === 'Graduated' || user.role === 'student') && (
+              <Card hoverEffect className="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-soft flex flex-col justify-between p-2 rounded-3xl">
+                <CardHeader className="space-y-3 p-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="h-12 w-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shrink-0">
+                      <Users className="h-6 w-6" />
+                    </div>
+                    <Badge variant="primary" className="bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800 font-bold px-3 py-1 text-xs">Graduates & Alumni</Badge>
+                  </div>
+                  <CardTitle className="text-xl font-extrabold">QCSP Alumni Info Sheet</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm leading-relaxed font-medium">
+                    Official graduate tracer sheet for QCSP alumni to record current employment, career updates, and testimonials.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="px-6 pb-6 pt-0">
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    onClick={() => setIsAlumniModalOpen(true)}
+                    leftIcon={<UserCheck className="h-4 w-4" />}
+                    className="w-full font-extrabold bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 py-3 text-sm cursor-pointer"
+                  >
+                    Fill Out Alumni Info Sheet
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </section>
       </main>

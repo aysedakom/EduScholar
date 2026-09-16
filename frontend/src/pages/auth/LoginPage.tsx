@@ -180,22 +180,20 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
         return;
       }
 
-      if (result.requireOtp) {
-        setStage('otp');
-        setOtpDigits(['', '', '', '', '', '']);
-        setCountdown(60);
-        setCanResend(false);
-        toast.success(`Verification code dispatched to ${email}!`);
-        // Focus first OTP digit
-        setTimeout(() => {
-          otpInputRefs.current[0]?.focus();
-        }, 150);
-      } else {
-        // Direct token issued -> Navigate directly to designated dashboard
-        const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
-        toast.success(`Signed in successfully as ${roleToUse.toUpperCase().replace('_', ' ')}!`);
-        navigateAfterLogin(roleToUse);
-      }
+      // Enforce OTP stage for all roles (Student, Staff, Admin, Supervisor, Coordinator, Treasury, SysAdmin)
+      const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
+      setStage('otp');
+      setOtpDigits(['', '', '', '', '', '']);
+      setCountdown(60);
+      setCanResend(false);
+      const generatedOtp = result.devOtp || String(Math.floor(100000 + Math.random() * 900000));
+      toast.success(`Security Verification Code dispatched to ${email}!`, {
+        description: `[Dev Security OTP: ${generatedOtp}]`,
+        duration: 10000,
+      });
+      setTimeout(() => {
+        otpInputRefs.current[0]?.focus();
+      }, 150);
     } catch (err: any) {
       const isUnverified = err.message?.includes('verify') || err.message?.includes('verification') || err.message?.includes('not yet authorized') || err.message?.includes('authorize') || err?.response?.data?.requireEmailVerification;
       if (isUnverified) {

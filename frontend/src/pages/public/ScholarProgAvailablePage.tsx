@@ -503,7 +503,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
                         <span className="bg-blue-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{t('nav.primary')}</span>
                       </div>
                       <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">
-                        E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet, QCU Portal
+                        E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet
                       </p>
                     </Link>
 
