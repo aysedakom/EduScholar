@@ -145,8 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await authApi.login(email, password);
 
-      // If direct authenticated token and user returned, initialize session immediately
-      if (res.data?.token && res.data?.user) {
+      // Only initialize session directly if requireOtp is false
+      if (!res.data?.requireOtp && res.data?.token && res.data?.user) {
         const respUser = res.data.user;
         const fullUser: User = {
           ...respUser,

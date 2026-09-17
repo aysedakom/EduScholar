@@ -281,7 +281,7 @@ const resendVerification = async (req, res) => {
   }
 };
 
-// @desc   Initiate Login (Validates credentials, checks email verification, issues JWT session)
+// @desc   Initiate Login (Validates credentials, checks email verification, generates & dispatches OTP)
 // @route  POST /api/auth/login
 const login = async (req, res) => {
   try {
@@ -312,15 +312,29 @@ const login = async (req, res) => {
       user.status = 'active';
     }
 
-    // Issue JWT token directly for seamless authenticated session
-    const token = generateToken(user);
+    // Generate fresh OTP code in database for 2FA / Login Verification
+    const otpRecord = await otpModel.createOtp({
+      email: user.email,
+      purpose: 'login',
+      expiresInMinutes: 10,
+    });
+
+    // Dispatch email asynchronously so HTTP response returns immediately without lag
+    emailService.sendOtpEmail({
+      to: user.email,
+      name: user.name,
+      otpCode: otpRecord.otp_code,
+      purpose: 'login',
+      expiresInMinutes: 10,
+    }).catch((err) => console.warn('[authController] Login OTP email dispatch warning:', err.message));
 
     return res.json({
       success: true,
-      message: 'Login successful',
-      token,
+      message: 'Credentials verified. Verification code dispatched to your email.',
+      requireOtp: true,
+      email: user.email,
+      devOtp: otpRecord.otp_code,
       user: formatUserResponse(user),
-      requireOtp: false,
     });
   } catch (error) {
     console.error('[authController] login error:', error);
@@ -401,6 +415,7 @@ const resendOtp = async (req, res) => {
     res.json({
       success: true,
       message: 'A fresh verification code has been dispatched to your email.',
+      devOtp: otp.otp_code,
     });
   } catch (error) {
     console.error('[authController] resendOtp error:', error);

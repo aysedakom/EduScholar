@@ -186,9 +186,11 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
       setOtpDigits(['', '', '', '', '', '']);
       setCountdown(60);
       setCanResend(false);
-      const generatedOtp = result.devOtp || String(Math.floor(100000 + Math.random() * 900000));
+      const generatedOtp = result.devOtp;
       toast.success(`Security Verification Code dispatched to ${email}!`, {
-        description: `[Dev Security OTP for ${roleToUse.toUpperCase().replace('_', ' ')}: ${generatedOtp}]`,
+        description: generatedOtp
+          ? `[Dev Security OTP for ${roleToUse.toUpperCase().replace('_', ' ')}: ${generatedOtp}]`
+          : `Please check your email for the 6-digit verification code.`,
         duration: 10000,
       });
       setTimeout(() => {
