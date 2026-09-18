@@ -408,6 +408,13 @@ const resubmitDocument = async (req, res) => {
       success: true,
       message: `Document "${docName}" successfully resubmitted! Your application status has been returned to "Under Review".`,
       applicationId: appId,
+    });
+  } catch (error) {
+    console.error('[applicationController] resubmitDocument error:', error);
+    res.status(500).json({ message: 'Server error resubmitting document' });
+  }
+};
+
 // @desc   Dispatch official school verification notice and token link to partner school registrar (Stage 3)
 // @route  POST /api/applications/:id/send-school-verification
 const sendSchoolVerificationNotice = async (req, res) => {
