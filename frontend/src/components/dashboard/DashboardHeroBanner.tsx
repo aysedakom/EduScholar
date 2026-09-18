@@ -98,7 +98,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
           subtitle:
             'Track your scholarship applications, review educational grant disbursements, and discover financial aid programs.',
           tabs: [
-            { id: 'all', label: 'All Services', link: '/dashboard' },
             { id: 'applications', label: 'Scholarship Applications', link: '/applications' },
             { id: 'distribution', label: 'School Aid Distribution', link: '/student/school-aid-distribution' },
             { id: 'registry', label: 'Student Registry', link: '/student/registry' },
