@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, CloudSun } from 'lucide-react';
+import { CloudSun } from 'lucide-react';
 import type { UserRole } from '../../types';
 
 export interface TabOption {
@@ -34,7 +34,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
     switch (role) {
       case 'treasury':
         return {
-          badge: 'CITY TREASURY OFFICE • FISCAL COMMAND CENTER',
           welcome: `Welcome, ${displayName}!`,
           subtitle:
             'Authorize funding tranches, review incoming Admin Grant Drawdown Requests, and reconcile beneficiary payouts.',
@@ -49,7 +48,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
 
       case 'supervisor':
         return {
-          badge: 'SCHOLAR SUPERVISION PORTAL • DASHBOARD',
           welcome: `Welcome, ${displayName}!`,
           subtitle:
             'Perform student performance evaluations, monitor assigned scholars, and verify university enrollment status.',
@@ -64,7 +62,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
 
       case 'school_coordinator':
         return {
-          badge: 'INSTITUTIONAL REGISTRAR PORTAL • ACADEMIC DASHBOARD',
           welcome: `Welcome, ${displayName}!`,
           subtitle:
             'Batch verify enrolled scholars, certify university masterlists, monitor academic records, and track retention.',
@@ -81,7 +78,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
       case 'admin':
       case 'system_admin':
         return {
-          badge: 'QCYDO + HRMD PORTAL • ADMINISTRATOR COMMAND CENTER',
           welcome: `Welcome, ${displayName}!`,
           subtitle:
             'Monitor active scholarship review queues, financial disbursement batches, partner school compliance, and budget metrics.',
@@ -98,10 +94,9 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
       case 'student':
       default:
         return {
-          badge: 'DRRM CITIZEN PORTAL • DASHBOARD',
           welcome: `Welcome, ${displayName}!`,
           subtitle:
-            'Access your digital resident card, track relief distributions, and check local shelter status and requirements.',
+            'Track your scholarship applications, review educational grant disbursements, and discover financial aid programs.',
           tabs: [
             { id: 'all', label: 'All Services', link: '/dashboard' },
             { id: 'applications', label: 'Scholarship Applications', link: '/applications' },
@@ -145,17 +140,9 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
       <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-indigo-500/15 blur-3xl" />
 
       {/* Banner Top Row */}
-      <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Top Left Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold tracking-wider text-white backdrop-blur-md shadow-sm w-fit">
-          <div className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20">
-            <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-          </div>
-          <span className="uppercase">{config.badge}</span>
-        </div>
-
+      <div className="relative z-10 flex items-center justify-end">
         {/* Top Right Weather & Location Card */}
-        <div className="inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-white backdrop-blur-md shadow-sm w-fit self-start sm:self-auto">
+        <div className="inline-flex items-center gap-3 rounded-2xl border border-white/20 bg-white/10 px-4 py-2 text-white backdrop-blur-md shadow-sm w-fit">
           <CloudSun className="h-5 w-5 text-amber-300 shrink-0 animate-pulse" />
           <div className="text-left">
             <div className="text-[10px] font-extrabold tracking-widest text-blue-200 uppercase">
