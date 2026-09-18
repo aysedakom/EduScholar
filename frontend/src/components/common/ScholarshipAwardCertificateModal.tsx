@@ -11,7 +11,6 @@ import {
   Check,
   Loader2,
   ArrowLeft,
-  X,
   BadgeCheck
 } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -19,8 +18,9 @@ import { toast } from 'sonner';
 import api from '../../services/api';
 
 export interface ScholarshipAwardCertificateModalProps {
-  isOpen: boolean;
+  isOpen?: boolean;
   onClose: () => void;
+  backLabel?: string;
   applicationId?: number | string;
   applicantName: string;
   applicantEmail?: string;
@@ -35,8 +35,9 @@ export interface ScholarshipAwardCertificateModalProps {
 }
 
 export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertificateModalProps> = ({
-  isOpen,
+  isOpen = true,
   onClose,
+  backLabel = 'Back to Applications',
   applicationId,
   applicantName,
   applicantEmail,
@@ -180,7 +181,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 left-0 lg:left-64 z-40 flex flex-col bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300 overflow-hidden">
+    <div className="w-full space-y-6 animate-in fade-in duration-200">
       {/* Print-Specific Styles */}
       <style>{`
         @media print {
@@ -209,17 +210,18 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
       `}</style>
 
       {/* Top Header / Control Toolbar */}
-      <header className="h-16 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-3 shadow-xs sticky top-0 z-20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-6 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800">
         {/* Left: Back button & Title */}
         <div className="flex items-center gap-3 min-w-0">
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onClose}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
-            title="Return (or press Esc)"
+            leftIcon={<ArrowLeft className="h-4 w-4" />}
+            className="font-bold text-xs border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span className="hidden sm:inline">Back</span>
-          </button>
+            {backLabel}
+          </Button>
 
           <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
@@ -240,7 +242,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
         </div>
 
         {/* Right: Zoom controls & Actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2 flex-wrap shrink-0">
           {/* Zoom controls */}
           <div className="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
             <button
@@ -274,7 +276,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             size="sm"
             onClick={handlePrint}
             leftIcon={<Printer className="h-4 w-4" />}
-            className="hidden sm:inline-flex"
+            className="font-bold text-xs"
           >
             Print
           </Button>
@@ -284,7 +286,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             size="sm"
             onClick={handleDownload}
             leftIcon={<Download className="h-4 w-4" />}
-            className="hidden sm:inline-flex"
+            className="font-bold text-xs"
           >
             Download
           </Button>
@@ -294,7 +296,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             size="sm"
             onClick={handleSendEmail}
             disabled={isSendingEmail || emailSent}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
             leftIcon={
               isSendingEmail ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -305,26 +307,13 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
               )
             }
           >
-            <span className="hidden sm:inline">
-              {isSendingEmail ? 'Sending...' : emailSent ? 'Sent to Email' : 'Email to Student'}
-            </span>
-            <span className="sm:hidden">
-              {isSendingEmail ? '...' : emailSent ? 'Sent' : 'Email'}
-            </span>
+            {isSendingEmail ? 'Sending...' : emailSent ? 'Sent to Email' : 'Email to Student'}
           </Button>
-
-          <button
-            onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-            title="Close (Esc)"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
-      </header>
+      </div>
 
-      {/* Main Full-Page Document Area (No cards, no outer borders, no caging containers) */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 sm:p-12 lg:p-16 bg-white dark:bg-slate-900 flex justify-center">
+      {/* Main Document Area */}
+      <div className="bg-white dark:bg-slate-900 p-6 sm:p-12 lg:p-16 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800 overflow-x-auto">
         <div
           id="official-scholar-certificate-canvas"
           style={{
@@ -332,7 +321,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             transformOrigin: 'top center',
             transition: 'transform 0.2s ease-out',
           }}
-          className="w-full max-w-4xl space-y-8 font-serif relative text-slate-900 dark:text-slate-100"
+          className="w-full max-w-4xl mx-auto space-y-8 font-serif relative text-slate-900 dark:text-slate-100"
         >
           {/* Authentic Watermark */}
           <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] pointer-events-none text-7xl sm:text-9xl font-black rotate-[-25deg] uppercase select-none text-slate-900 dark:text-white">
@@ -463,7 +452,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             </span>
           </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 };

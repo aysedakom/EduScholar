@@ -150,6 +150,25 @@ export const StudentProfilesSearchPage: React.FC = () => {
 
   const uniqueSchools = Array.from(new Set(students.map((s) => s.school)));
 
+  // When user clicks View Certificate, change the whole page content to the certificate
+  if (selectedCertStudent) {
+    return (
+      <ScholarshipAwardCertificateModal
+        isOpen={true}
+        onClose={() => setSelectedCertStudent(null)}
+        backLabel="Back to Student Registry"
+        applicantName={selectedCertStudent.name}
+        applicantEmail={selectedCertStudent.email}
+        studentId={selectedCertStudent.studentId}
+        programTitle={selectedCertStudent.scholarshipTitle}
+        awardAmount={selectedCertStudent.disbursementAmount || 10000}
+        school={selectedCertStudent.school}
+        course={selectedCertStudent.department}
+        gpa={selectedCertStudent.gpa}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
@@ -567,21 +586,6 @@ export const StudentProfilesSearchPage: React.FC = () => {
         />
       )}
 
-      {/* Official Certificate of Scholarship Award Modal */}
-      {selectedCertStudent && (
-        <ScholarshipAwardCertificateModal
-          isOpen={!!selectedCertStudent}
-          onClose={() => setSelectedCertStudent(null)}
-          applicantName={selectedCertStudent.name}
-          applicantEmail={selectedCertStudent.email}
-          studentId={selectedCertStudent.studentId}
-          programTitle={selectedCertStudent.scholarshipTitle}
-          awardAmount={selectedCertStudent.disbursementAmount || 10000}
-          school={selectedCertStudent.school}
-          course={selectedCertStudent.department}
-          gpa={selectedCertStudent.gpa}
-        />
-      )}
     </div>
   );
 };

@@ -224,6 +224,26 @@ export const ApplicationsPage: React.FC = () => {
   const isStaffOrCoordinator = user?.role === 'school_coordinator' || user?.role === 'admin' || user?.role === 'system_admin' || user?.role === 'supervisor';
   const partnerSchoolRoute = user?.role === 'school_coordinator' ? '/school/partner-schools' : '/admin/partner-schools';
 
+  // When user clicks View Certificate, change the whole page content to the certificate
+  if (certificateApp) {
+    return (
+      <ScholarshipAwardCertificateModal
+        isOpen={true}
+        onClose={() => setCertificateApp(null)}
+        backLabel="Back to Applications"
+        applicationId={certificateApp.id}
+        applicantName={user?.name || 'Pia Marie T. Faner'}
+        applicantEmail={user?.email || 'piamariefaner2004@gmail.com'}
+        studentId={user?.student_id || '23010366'}
+        programTitle={certificateApp.scholarshipTitle}
+        awardAmount={certificateApp.amount}
+        school={user?.department || 'Bestlink College of the Philippines (BCP)'}
+        course={user?.major || 'B.S. Information Technology'}
+        gpa={user?.gpa || 1.50}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-soft border border-slate-200 dark:border-slate-800">
@@ -550,22 +570,6 @@ export const ApplicationsPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Official Certificate of Scholarship Award Modal */}
-      {certificateApp && (
-        <ScholarshipAwardCertificateModal
-          isOpen={!!certificateApp}
-          onClose={() => setCertificateApp(null)}
-          applicationId={certificateApp.id}
-          applicantName={user?.name || 'Pia Marie T. Faner'}
-          applicantEmail={user?.email || 'piamariefaner2004@gmail.com'}
-          studentId={user?.student_id || '23010366'}
-          programTitle={certificateApp.scholarshipTitle}
-          awardAmount={certificateApp.amount}
-          school={user?.department || 'Bestlink College of the Philippines (BCP)'}
-          course={user?.major || 'B.S. Information Technology'}
-          gpa={user?.gpa || 1.50}
-        />
-      )}
 
       {/* Official Examination Schedule & Testing Permit Modal (Phase 5) */}
       {examPermitApp && (

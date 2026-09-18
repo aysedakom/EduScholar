@@ -166,6 +166,25 @@ export const DocumentVaultPage: React.FC = () => {
   const totalMB = 50.0;
   const usedPercent = Math.round((usedMB / totalMB) * 100);
 
+  // When user clicks View Certificate, change the whole page content to the certificate
+  if (showAwardCertModal) {
+    return (
+      <ScholarshipAwardCertificateModal
+        isOpen={true}
+        onClose={() => setShowAwardCertModal(false)}
+        backLabel="Back to Document Vault"
+        applicantName={user?.name || 'Pia Marie T. Faner'}
+        applicantEmail={user?.email || 'piamariefaner2004@gmail.com'}
+        studentId={user?.student_id || '23010366'}
+        programTitle="Quezon City Scholarship Program (QCSP)"
+        awardAmount={20000}
+        school={user?.department || 'Bestlink College of the Philippines (BCP)'}
+        course={user?.major || 'B.S. Information Technology'}
+        gpa={user?.gpa || 1.50}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
@@ -488,21 +507,6 @@ export const DocumentVaultPage: React.FC = () => {
         </Modal>
       )}
 
-      {/* Official Certificate of Scholarship Award Modal */}
-      {showAwardCertModal && (
-        <ScholarshipAwardCertificateModal
-          isOpen={showAwardCertModal}
-          onClose={() => setShowAwardCertModal(false)}
-          applicantName={user?.name || 'Pia Marie T. Faner'}
-          applicantEmail={user?.email || 'piamariefaner2004@gmail.com'}
-          studentId={user?.student_id || '23010366'}
-          programTitle="Quezon City Scholarship Program (QCSP)"
-          awardAmount={20000}
-          school={user?.department || 'Bestlink College of the Philippines (BCP)'}
-          course={user?.major || 'B.S. Information Technology'}
-          gpa={user?.gpa || 1.50}
-        />
-      )}
     </div>
   );
 };
