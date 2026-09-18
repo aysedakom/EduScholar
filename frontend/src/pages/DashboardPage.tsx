@@ -195,7 +195,19 @@ export function DashboardPage() {
         {/* School Coordinator Hero Banner */}
         <DashboardHeroBanner role="school_coordinator" userName={user?.name} />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <Link to="/school/endorsements" className="block group">
+            <Card hoverEffect className="h-full border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+                <div className="h-14 w-14 rounded-2xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center">
+                  <UserCheck className="h-7 w-7" />
+                </div>
+                <h3 className="font-heading font-bold text-lg text-slate-900 dark:text-white">Review Endorsements</h3>
+                <p className="text-xs text-slate-500">Review student credentials, verify COR & TOR, and submit endorsement to QCYDO</p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to="/school/batch-verification" className="block group">
             <Card hoverEffect className="h-full border-blue-100 dark:border-slate-800 bg-white dark:bg-slate-900">
               <CardContent className="p-6 flex flex-col items-center text-center gap-3">

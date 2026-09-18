@@ -70,6 +70,7 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
             'Batch verify enrolled scholars, certify university masterlists, monitor academic records, and track retention.',
           tabs: [
             { id: 'all', label: 'Registrar Hub', link: '/school/dashboard' },
+            { id: 'endorsements', label: 'Review Endorsements', link: '/school/endorsements' },
             { id: 'batch', label: 'Batch Verification', link: '/school/batch-verification' },
             { id: 'academic', label: 'Academic Monitoring', link: '/school/academic-monitoring' },
             { id: 'reports', label: 'Education Reports', link: '/admin/education-reports' },

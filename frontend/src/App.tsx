@@ -195,6 +195,7 @@ export function App() {
                 <Route path="/supervisor/enrollment-verification" element={<EnrollmentVerificationPage />} />
                 <Route path="/supervisor/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/supervisor/assigned-students" element={<MyAssignedStudentsPage />} />
+                <Route path="/supervisor/endorsements" element={<BatchVerificationPage />} />
               </Route>
 
               {/* School Coordinator Routes */}
@@ -202,6 +203,8 @@ export function App() {
                 <Route path="/school/portal" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/batch-verification" element={<BatchVerificationPage />} />
+                <Route path="/school/endorsements" element={<BatchVerificationPage />} />
+                <Route path="/school/endorsement" element={<BatchVerificationPage />} />
                 <Route path="/school/academic" element={<AcademicMonitoringPage />} />
                 <Route path="/school/academic-monitoring" element={<AcademicMonitoringPage />} />
                 <Route path="/school/reports" element={<ReportsModulePage />} />

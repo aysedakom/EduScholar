@@ -24,6 +24,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useSearchParams } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
@@ -161,11 +162,15 @@ const DEFAULT_SCHOLAR_ROWS: BatchRow[] = [
 ];
 
 export const BatchVerificationPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const initialSearch = searchParams.get('search') || searchParams.get('q') || '';
+  const initialFilter = searchParams.get('filter') || 'all';
+
   const [fileName, setFileName] = useState<string | null>('QCU_BCP_Registrar_Enrollment_Master_2026.xlsx');
   const [rows, setRows] = useState<BatchRow[]>(DEFAULT_SCHOLAR_ROWS);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedFilter, setSelectedFilter] = useState<string>(initialFilter);
   const [inspectRow, setInspectRow] = useState<BatchRow | null>(null);
   const [activeDocTab, setActiveDocTab] = useState<'cor' | 'tor' | 'profile'>('cor');
   const [coordinatorRemarks, setCoordinatorRemarks] = useState('');
