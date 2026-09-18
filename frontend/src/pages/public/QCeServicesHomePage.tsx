@@ -15,7 +15,6 @@ import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { toast } from 'sonner';
 import { PublicFooter } from '../../components/layout/PublicFooter';
-import scholarHatBg from '../../assets/ScholarHat.webp';
 
 export const QCeServicesHomePage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -373,8 +372,14 @@ export const QCeServicesHomePage: React.FC = () => {
                   {/* Right Image Area with CSS Mask Image for flawless seamless fade without lines */}
                   <div className="md:col-span-5 h-64 sm:h-72 md:h-full min-h-[240px] md:min-h-[290px] relative overflow-hidden flex items-center justify-center">
                     <img
-                      src={scholarHatBg}
+                      src="/ScholarHat.webp"
                       alt="Scholarship Graduation Hat"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src.includes('ScholarHat.webp')) {
+                          target.src = '/ScholarHat.png';
+                        }
+                      }}
                       className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110 animate-float-slow"
                       style={{
                         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
