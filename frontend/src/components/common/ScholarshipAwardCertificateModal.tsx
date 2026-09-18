@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Download,
   Printer,
@@ -6,14 +6,14 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCw,
-  ShieldCheck,
-  CheckCircle2,
   Award,
   Sparkles,
   Check,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  X,
+  BadgeCheck
 } from 'lucide-react';
-import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { toast } from 'sonner';
 import api from '../../services/api';
@@ -54,11 +54,23 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
+  // Close on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const certNo = certificateNumber || `QCSP-AWARD-2026-${applicationId ? String(applicationId).padStart(5, '0') : '88491'}`;
   const dateStr = issueDate || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  const formattedAmount = Number(awardAmount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' });
 
   const getGrantBreakdown = (title: string, amt: number | string) => {
     const t = (title || '').toLowerCase();
@@ -86,32 +98,53 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   };
 
   const handleDownload = () => {
-    toast.info('Generating high-resolution certificate package...');
+    toast.info('Generating official certificate package...');
     const element = document.createElement('a');
     const certificateHtml = `
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8" />
   <title>Official Certificate of Scholarship Award - ${applicantName}</title>
   <style>
-    body { font-family: 'Times New Roman', serif; background: #fffdfa; padding: 40px; color: #1e293b; text-align: center; }
-    .cert { border: 6px double #b45309; padding: 36px; max-width: 800px; margin: 0 auto; background: #ffffff; }
-    h1 { font-size: 24px; color: #451a03; text-transform: uppercase; margin: 16px 0; }
-    .recipient { font-size: 26px; color: #1e3a8a; font-weight: bold; text-decoration: underline; margin: 16px 0; }
+    body { font-family: 'Times New Roman', Georgia, serif; background: #fffdfa; padding: 40px; color: #1e293b; text-align: center; }
+    .cert { border: 8px double #92400e; padding: 40px; max-width: 860px; margin: 0 auto; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h1 { font-size: 24px; color: #451a03; text-transform: uppercase; margin: 18px 0 8px; letter-spacing: 1px; }
+    .recipient { font-size: 32px; color: #172554; font-weight: bold; text-decoration: underline; margin: 20px 0; text-transform: uppercase; }
+    .details { margin: 24px auto; max-width: 700px; text-align: left; background: #fef3c7; padding: 16px; border-radius: 8px; font-family: sans-serif; font-size: 13px; line-height: 1.6; }
+    .signatures { margin-top: 40px; display: flex; justify-content: space-around; }
+    .sig-line { width: 220px; border-top: 1px solid #475569; padding-top: 6px; font-family: sans-serif; font-size: 12px; }
   </style>
 </head>
 <body>
   <div class="cert">
-    <p>Republic of the Philippines • City Government of Quezon City</p>
-    <p>Quezon City Youth Development Office (QCYDO)</p>
+    <p style="font-family: sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #64748b; font-weight: bold; margin: 0;">Republic of the Philippines • City Government of Quezon City</p>
+    <p style="font-family: sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #451a03; font-weight: 900; margin: 4px 0;">Quezon City Youth Development Office (QCYDO)</p>
+    <p style="font-family: sans-serif; font-size: 11px; color: #64748b; margin: 0 0 16px;">Unified Scholarship and Financial Assistance Screening Board</p>
     <h1>Certificate of Scholarship Award & Government Scholar Qualification</h1>
-    <p>Control Number: <strong>${certNo}</strong></p>
-    <p>This is to certify that</p>
+    <p style="font-family: monospace; font-size: 12px; color: #78350f; font-weight: bold;">Official Award Control No: ${certNo}</p>
+    <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-top: 24px;">THIS IS TO OFFICIALLY CERTIFY THAT</p>
     <div class="recipient">${applicantName}</div>
-    <p>Student ID: ${studentId} • ${school}</p>
-    <p>has been officially conferred the title of Official Government Scholar for <strong>${programTitle}</strong> with grant entitlement of <strong>${formattedAmount}</strong>.</p>
-    <br><br>
-    <p>Hon. Ma. Josefina "Joy" Belmonte<br>City Mayor, Quezon City</p>
+    <p style="font-family: monospace; font-size: 13px; font-weight: bold; color: #334155;">Student ID Number: ${studentId}</p>
+    <p style="max-width: 680px; margin: 20px auto; font-size: 14px; line-height: 1.7; text-align: justify;">having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong>OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.</p>
+    <div class="details">
+      <strong>Scholarship Track:</strong> ${programTitle}<br/>
+      <strong>Educational Grant & Aid:</strong> ${getGrantBreakdown(programTitle, awardAmount)}<br/>
+      <strong>School Institution:</strong> ${school}<br/>
+      <strong>Degree / Course:</strong> ${course}<br/>
+      <strong>Academic Standing:</strong> ${Number(gpa).toFixed(2)} GWA (Honors Tier)<br/>
+      <strong>Date Conferred:</strong> ${dateStr}
+    </div>
+    <div class="signatures">
+      <div class="sig-line">
+        <strong>HON. ROBERTO V. CRUZ</strong><br/>
+        Executive Director, QCYDO
+      </div>
+      <div class="sig-line">
+        <strong>HON. MA. JOSEFINA "JOY" BELMONTE</strong><br/>
+        City Mayor, Quezon City
+      </div>
+    </div>
   </div>
 </body>
 </html>
@@ -147,232 +180,290 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Official Certificate of Scholarship Award & Scholar Qualification"
-      description={`Authenticated Government Grant Qualification Document • Issued to ${applicantName}`}
-      maxWidth="5xl"
-      footer={
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span>
-              Certificate No: <strong className="text-slate-900 dark:text-white font-mono">{certNo}</strong> • Verified QCSP Credential
-            </span>
-          </div>
+    <div className="fixed inset-y-0 right-0 left-0 lg:left-64 z-40 flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300 overflow-hidden">
+      {/* Print-Specific Styles */}
+      <style>{`
+        @media print {
+          body * {
+            visibility: hidden !important;
+          }
+          #official-scholar-certificate-canvas,
+          #official-scholar-certificate-canvas * {
+            visibility: visible !important;
+          }
+          #official-scholar-certificate-canvas {
+            position: fixed !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100vw !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 32px !important;
+            box-shadow: none !important;
+            border: 10px double #92400e !important;
+            background: #fffdf9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `}</style>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Close
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrint}
-              leftIcon={<Printer className="h-4 w-4" />}
-            >
-              Print Certificate
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownload}
-              leftIcon={<Download className="h-4 w-4" />}
-            >
-              Download File
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleSendEmail}
-              disabled={isSendingEmail || emailSent}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold"
-              leftIcon={
-                isSendingEmail ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : emailSent ? (
-                  <Check className="h-4 w-4 text-emerald-300" />
-                ) : (
-                  <Mail className="h-4 w-4" />
-                )
-              }
-            >
-              {isSendingEmail ? 'Dispatching...' : emailSent ? 'Forwarded to Email' : 'Email to Student'}
-            </Button>
+      {/* Top Header / Control Toolbar */}
+      <header className="h-16 shrink-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-4 sm:px-6 flex items-center justify-between gap-3 shadow-xs sticky top-0 z-20">
+        {/* Left: Back button & Title */}
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={onClose}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700 shrink-0"
+            title="Return (or press Esc)"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold border border-emerald-300/40 shrink-0">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+              Conferred Scholar
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-xs sm:text-sm font-bold text-foreground truncate">
+                Official Award Certificate
+              </h1>
+              <p className="text-[10px] sm:text-[11px] font-mono text-muted-foreground truncate">
+                Control No: {certNo}
+              </p>
+            </div>
           </div>
         </div>
-      }
-    >
-      <div className="space-y-4">
-        {/* Top Floating Controls Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold shadow-xs">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
-              Conferred Government Scholar
-            </span>
-            {applicantEmail && (
-              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-mono truncate max-w-[200px] sm:max-w-none">
-                Recipient: {applicantEmail}
-              </span>
-            )}
-          </div>
 
-          {/* Zoom & Action Controls */}
-          <div className="flex items-center gap-1">
+        {/* Right: Zoom controls & Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Zoom controls */}
+          <div className="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
             <button
-              onClick={() => setZoomLevel((z) => Math.max(z - 15, 60))}
-              className="p-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 shadow-xs cursor-pointer"
+              onClick={() => setZoomLevel((z) => Math.max(z - 10, 60))}
+              className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
               title="Zoom Out"
             >
               <ZoomOut className="h-3.5 w-3.5" />
             </button>
-            <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 px-1.5">
+            <span className="font-mono font-bold px-1 text-slate-700 dark:text-slate-300 min-w-[3rem] text-center">
               {zoomLevel}%
             </span>
             <button
-              onClick={() => setZoomLevel((z) => Math.min(z + 15, 160))}
-              className="p-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 shadow-xs cursor-pointer"
+              onClick={() => setZoomLevel((z) => Math.min(z + 10, 150))}
+              className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
               title="Zoom In"
             >
               <ZoomIn className="h-3.5 w-3.5" />
             </button>
             <button
               onClick={() => setRotation((r) => (r + 90) % 360)}
-              className="p-1.5 rounded-lg bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 shadow-xs ml-1 cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
               title="Rotate 90°"
             >
               <RotateCw className="h-3.5 w-3.5" />
             </button>
           </div>
-        </div>
 
-        {/* Dynamic High-Definition Certificate Canvas */}
-        <div className="bg-slate-950 dark:bg-black rounded-3xl border border-slate-800 p-4 sm:p-8 overflow-auto max-h-[560px] flex items-center justify-center shadow-2xl">
-          <div
-            style={{
-              transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-              transformOrigin: 'center center',
-              transition: 'transform 0.2s ease-out',
-            }}
-            className="w-full max-w-3xl bg-[#fffdf9] text-slate-900 rounded-2xl shadow-2xl p-8 sm:p-10 space-y-6 border-8 border-double border-amber-800/60 font-serif relative"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrint}
+            leftIcon={<Printer className="h-4 w-4" />}
+            className="hidden sm:inline-flex"
           >
-            {/* Watermark */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none text-9xl font-black rotate-[-25deg] uppercase select-none text-amber-950">
-              QC SCHOLAR
-            </div>
+            Print
+          </Button>
 
-            {/* Header / Republic & City Logo */}
-            <div className="text-center space-y-1 border-b-2 border-amber-900/30 pb-4">
-              <div className="flex items-center justify-center gap-3 mb-2">
-                <div className="h-12 w-12 rounded-full bg-blue-700 text-white flex items-center justify-center font-black text-sm shadow-md font-sans border-2 border-amber-400">
-                  QC
-                </div>
-                <div className="h-12 w-12 rounded-full bg-amber-600 text-white flex items-center justify-center font-black text-sm shadow-md font-sans border-2 border-amber-300">
-                  <Award className="h-6 w-6" />
-                </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownload}
+            leftIcon={<Download className="h-4 w-4" />}
+            className="hidden sm:inline-flex"
+          >
+            Download
+          </Button>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSendEmail}
+            disabled={isSendingEmail || emailSent}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold"
+            leftIcon={
+              isSendingEmail ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : emailSent ? (
+                <Check className="h-4 w-4 text-emerald-300" />
+              ) : (
+                <Mail className="h-4 w-4" />
+              )
+            }
+          >
+            <span className="hidden sm:inline">
+              {isSendingEmail ? 'Sending...' : emailSent ? 'Sent to Email' : 'Email to Student'}
+            </span>
+            <span className="sm:hidden">
+              {isSendingEmail ? '...' : emailSent ? 'Sent' : 'Email'}
+            </span>
+          </Button>
+
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Close (Esc)"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Full-Page Canvas Area (One-Page Presentation) */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 lg:p-12 flex justify-center items-start bg-slate-100/80 dark:bg-slate-950">
+        <div
+          id="official-scholar-certificate-canvas"
+          style={{
+            transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
+            transformOrigin: 'top center',
+            transition: 'transform 0.2s ease-out',
+          }}
+          className="w-full max-w-4xl bg-[#fffdf9] text-slate-900 rounded-3xl shadow-2xl p-6 sm:p-12 lg:p-16 space-y-6 sm:space-y-8 border-[10px] sm:border-[14px] border-double border-amber-800/60 dark:border-amber-700/70 font-serif relative transition-all"
+        >
+          {/* Authentic Watermark */}
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none text-7xl sm:text-9xl font-black rotate-[-25deg] uppercase select-none text-amber-950">
+            QC SCHOLAR
+          </div>
+
+          {/* Official Republic & City Seals Header */}
+          <div className="text-center space-y-2 border-b-2 border-amber-900/30 pb-5">
+            <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-md font-sans border-2 border-amber-400">
+                QC
               </div>
-
-              <p className="text-[11px] uppercase tracking-widest text-slate-600 font-sans font-bold">
-                Republic of the Philippines • City Government of Quezon City
-              </p>
-              <p className="text-[12px] uppercase tracking-wider text-amber-950 font-sans font-black">
-                QUEZON CITY YOUTH DEVELOPMENT OFFICE (QCYDO)
-              </p>
-              <p className="text-[10px] text-slate-500 font-sans font-medium">
-                Unified Scholarship and Financial Assistance Screening Board
-              </p>
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-amber-600 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-md font-sans border-2 border-amber-300">
+                <Award className="h-7 w-7 sm:h-8 sm:w-8" />
+              </div>
             </div>
 
-            {/* Certificate Title */}
-            <div className="text-center space-y-1">
-              <span className="inline-block px-6 py-1.5 bg-amber-100/80 border border-amber-800/50 rounded-lg font-sans font-black text-xs sm:text-sm uppercase tracking-widest text-amber-950 shadow-xs">
-                CERTIFICATE OF SCHOLARSHIP AWARD & QUALIFICATION
-              </span>
-              <p className="text-[11px] font-sans text-amber-900 font-mono font-bold mt-1">
-                Official Award Control No: <span className="underline">{certNo}</span>
-              </p>
-            </div>
-
-            {/* Conferred Text & Student Name */}
-            <div className="text-center space-y-2">
-              <p className="text-xs text-slate-500 font-sans uppercase font-bold tracking-wider">
-                This is to officially certify that
-              </p>
-              <h2 className="text-2xl sm:text-3xl font-serif font-black text-blue-950 uppercase tracking-tight underline decoration-amber-600 decoration-2">
-                {applicantName}
-              </h2>
-              <p className="text-xs font-mono font-bold text-slate-600">
-                Student ID Number: <span className="text-blue-900">{studentId}</span>
-              </p>
-            </div>
-
-            {/* Body Citation */}
-            <p className="text-xs sm:text-[13px] leading-relaxed text-slate-800 text-justify font-serif max-w-2xl mx-auto">
-              having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong className="font-sans font-black text-amber-950">OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.
+            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-slate-600 font-sans font-bold">
+              Republic of the Philippines • City Government of Quezon City
             </p>
+            <p className="text-[12px] sm:text-[14px] uppercase tracking-wider text-amber-950 font-sans font-black">
+              QUEZON CITY YOUTH DEVELOPMENT OFFICE (QCYDO)
+            </p>
+            <p className="text-[10px] sm:text-[11px] text-slate-500 font-sans font-medium">
+              Unified Scholarship and Financial Assistance Screening Board
+            </p>
+          </div>
 
-            {/* Program Details Table */}
-            <div className="p-4 bg-amber-50/60 rounded-xl border border-amber-900/20 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-sans">
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">Scholarship Track</span>
-                <span className="font-bold text-slate-900 truncate block">{programTitle}</span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">Educational Grant & Aid</span>
-                <span className="font-mono font-extrabold text-emerald-800 text-xs sm:text-xs block leading-tight">
-                  {getGrantBreakdown(programTitle, awardAmount)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">School Institution</span>
-                <span className="font-semibold text-slate-800 truncate block">{school}</span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">Degree / Course</span>
-                <span className="font-semibold text-slate-800 truncate block">{course}</span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">Academic Standing</span>
-                <span className="font-bold text-blue-900 block">{Number(gpa).toFixed(2)} GWA (Honors Tier)</span>
-              </div>
-              <div>
-                <span className="text-[9px] uppercase font-bold text-amber-900 block">Date Conferred</span>
-                <span className="font-medium text-slate-700 block">{dateStr}</span>
-              </div>
+          {/* Certificate Title */}
+          <div className="text-center space-y-1">
+            <span className="inline-block px-4 sm:px-8 py-2 bg-amber-100/90 border border-amber-800/50 rounded-xl font-sans font-black text-xs sm:text-base uppercase tracking-widest text-amber-950 shadow-xs">
+              CERTIFICATE OF SCHOLARSHIP AWARD & QUALIFICATION
+            </span>
+            <p className="text-xs sm:text-sm font-sans text-amber-900 font-mono font-bold mt-2">
+              Official Award Control No: <span className="underline">{certNo}</span>
+            </p>
+          </div>
+
+          {/* Conferred Citation */}
+          <div className="text-center space-y-2 pt-2">
+            <p className="text-xs sm:text-sm text-slate-500 font-sans uppercase font-bold tracking-widest">
+              THIS IS TO OFFICIALLY CERTIFY THAT
+            </p>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black text-blue-950 uppercase tracking-tight underline decoration-amber-600 decoration-2 sm:decoration-4 py-1">
+              {applicantName}
+            </h2>
+            <p className="text-xs sm:text-sm font-mono font-bold text-slate-600">
+              Student ID Number: <span className="text-blue-900 font-black">{studentId}</span>
+            </p>
+          </div>
+
+          {/* Body Narrative */}
+          <p className="text-xs sm:text-sm lg:text-[15px] leading-relaxed text-slate-800 text-justify font-serif max-w-2xl mx-auto px-2">
+            having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong className="font-sans font-black text-amber-950">OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.
+          </p>
+
+          {/* Program Details Table */}
+          <div className="p-4 sm:p-6 bg-amber-50/70 rounded-2xl border border-amber-900/20 grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-sans">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Scholarship Track</span>
+              <span className="font-bold text-slate-900 text-xs sm:text-sm block leading-snug">{programTitle}</span>
             </div>
-
-            {/* Official Signatures Section */}
-            <div className="pt-6 grid grid-cols-2 gap-6 items-end border-t border-amber-900/30 text-center font-sans text-xs">
-              <div className="space-y-1">
-                <div className="h-10 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center">
-                  <span className="text-[11px] font-cursive italic text-slate-700 font-bold">Hon. Roberto V. Cruz</span>
-                </div>
-                <p className="font-black text-slate-900 text-xs uppercase">HON. ROBERTO V. CRUZ</p>
-                <p className="text-[10px] text-slate-500 font-bold">Executive Director, QCYDO</p>
-              </div>
-
-              <div className="space-y-1">
-                <div className="h-10 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center">
-                  <span className="text-[11px] font-cursive italic text-blue-900 font-black">Hon. Ma. Josefina "Joy" Belmonte</span>
-                </div>
-                <p className="font-black text-slate-900 text-xs uppercase">HON. MA. JOSEFINA "JOY" BELMONTE</p>
-                <p className="text-[10px] text-slate-500 font-bold">City Mayor, Quezon City</p>
-              </div>
-            </div>
-
-            {/* Security Strip & Validation Barcode */}
-            <div className="pt-2 flex items-center justify-between text-[10px] font-sans text-slate-500 border-t border-dashed border-amber-900/20">
-              <span className="flex items-center gap-1 text-emerald-700 font-bold">
-                <CheckCircle2 className="h-3.5 w-3.5" />
-                Mayor's Office Dry Seal Affixed & Cryptographically Verified
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Educational Grant & Aid</span>
+              <span className="font-mono font-black text-emerald-800 text-xs sm:text-sm block leading-snug">
+                {getGrantBreakdown(programTitle, awardAmount)}
               </span>
-              <span className="font-mono text-slate-600">SHA256:QCSP-AWARD-{studentId}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">School Institution</span>
+              <span className="font-semibold text-slate-800 text-xs sm:text-sm block leading-snug">{school}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Degree / Course</span>
+              <span className="font-semibold text-slate-800 text-xs sm:text-sm block leading-snug">{course}</span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Academic Standing</span>
+              <span className="font-bold text-blue-900 text-xs sm:text-sm block leading-snug">
+                {Number(gpa).toFixed(2)} GWA (Honors Tier)
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Date Conferred</span>
+              <span className="font-medium text-slate-700 text-xs sm:text-sm block leading-snug">{dateStr}</span>
             </div>
           </div>
+
+          {/* Official Signatures Section */}
+          <div className="pt-8 sm:pt-10 grid grid-cols-2 gap-8 items-end border-t border-amber-900/30 text-center font-sans text-xs">
+            <div className="space-y-1.5">
+              <div className="h-12 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center pb-1">
+                <span className="text-xs sm:text-sm font-cursive italic text-slate-800 font-bold">
+                  Hon. Roberto V. Cruz
+                </span>
+              </div>
+              <p className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
+                HON. ROBERTO V. CRUZ
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-bold">
+                Executive Director, QCYDO
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="h-12 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center pb-1">
+                <span className="text-xs sm:text-sm font-cursive italic text-blue-900 font-black">
+                  Hon. Ma. Josefina "Joy" Belmonte
+                </span>
+              </div>
+              <p className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
+                HON. MA. JOSEFINA "JOY" BELMONTE
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-slate-500 font-bold">
+                City Mayor, Quezon City
+              </p>
+            </div>
+          </div>
+
+          {/* Security Strip & Validation Barcode */}
+          <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-sans text-slate-500 border-t border-dashed border-amber-900/20">
+            <span className="flex items-center gap-1.5 text-emerald-700 font-bold">
+              <BadgeCheck className="h-4 w-4" />
+              Mayor's Office Dry Seal Affixed & Cryptographically Verified
+            </span>
+            <span className="font-mono text-slate-600 font-bold">
+              SHA256:QCSP-AWARD-{studentId} • {certNo}
+            </span>
+          </div>
         </div>
-      </div>
-    </Modal>
+      </main>
+    </div>
   );
 };
