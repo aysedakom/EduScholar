@@ -154,6 +154,8 @@ export function App() {
               <Route path="/bursaries" element={<BursariesPage />} />
               <Route path="/reports" element={<ReportsModulePage />} />
               <Route path="/applications" element={<ApplicationsPage />} />
+              <Route path="/applications/certificate" element={<ApplicationsPage />} />
+              <Route path="/certificate" element={<ApplicationsPage />} />
               <Route path="/documents" element={<DocumentVaultPage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/support" element={<SupportPage />} />

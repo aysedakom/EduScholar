@@ -15,7 +15,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Modal } from '../components/ui/Modal';
 import { formatCurrency, formatDate } from '../utils/cn';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import { ScholarshipAwardCertificateModal } from '../components/common/ScholarshipAwardCertificateModal';
@@ -87,6 +87,7 @@ const CountdownTimer: React.FC<{ submissionDate?: string }> = ({ submissionDate 
 
 export const ApplicationsPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [applications, setApplications] = useState<any[]>([]);
   const [certificateApp, setCertificateApp] = useState<any | null>(null);
@@ -97,6 +98,8 @@ export const ApplicationsPage: React.FC = () => {
   const [resubmitFile, setResubmitFile] = useState<File | null>(null);
   const [resubmitCategory, setResubmitCategory] = useState('Proof of Income / Indigency');
   const [isSubmittingDoc, setIsSubmittingDoc] = useState(false);
+
+  const isCertificateRoute = location.pathname.includes('/certificate');
 
   const load = async () => {
     try {
@@ -148,18 +151,7 @@ export const ApplicationsPage: React.FC = () => {
       }
     } catch {
       const savedApps = JSON.parse(localStorage.getItem('student_applications') || '[]');
-      const localMapped = savedApps.map((app: any) => ({
-        id: app.id ?? `app-${Math.random()}`,
-        scholarshipId: app.scholarshipId || 'SCH-QCSP-2026',
-        scholarshipTitle: app.scholarshipTitle || 'Quezon City Scholarship Program (QCSP) 2026-2027',
-        amount: app.amount ?? 10000,
-        status: (app.status === 'Approved' ? 'approved' : app.status === 'Paid' ? 'approved' : app.status === 'Rejected' ? 'rejected' : app.status === 'Needs Revision' ? 'action_required' : app.status === 'Under Review' ? 'pending' : (app.status || 'pending')) as any,
-        submissionDate: app.submissionDate ?? app.submitted_at?.split('T')[0] ?? new Date().toISOString().split('T')[0],
-        requirementsCount: app.requirementsCount ?? 5,
-        completedRequirements: app.completedRequirements ?? 5,
-        notes: app.notes ?? 'All requirements attached & verified. In review by QCYDO evaluation desk.',
-      }));
-      setApplications(localMapped);
+      setApplications(savedApps);
     }
   };
 
@@ -179,19 +171,17 @@ export const ApplicationsPage: React.FC = () => {
   };
 
   const handleExecuteResubmission = async () => {
-    if (!resubmitModalApp) return;
-    if (!resubmitFile) {
-      toast.error('Please select the replacement document file first.');
+    if (!resubmitModalApp || !resubmitFile) {
+      toast.error('Please choose a file to upload');
       return;
     }
 
-    setIsSubmittingDoc(true);
     try {
-      // Convert to DataUrl for preview storage
+      setIsSubmittingDoc(true);
       const reader = new FileReader();
       reader.onload = async () => {
-        const fileData = reader.result as string;
         try {
+          const fileData = reader.result as string;
           await resubmitApplicationDocument(resubmitModalApp.id, {
             documentId: resubmitCategory.toLowerCase().replace(/\s+/g, '_'),
             name: resubmitFile.name,
@@ -224,19 +214,31 @@ export const ApplicationsPage: React.FC = () => {
   const isStaffOrCoordinator = user?.role === 'school_coordinator' || user?.role === 'admin' || user?.role === 'system_admin' || user?.role === 'supervisor';
   const partnerSchoolRoute = user?.role === 'school_coordinator' ? '/school/partner-schools' : '/admin/partner-schools';
 
-  // When user clicks View Certificate, change the whole page content to the certificate
-  if (certificateApp) {
+  // When user clicks View Certificate OR is on /applications/certificate:
+  if (certificateApp || isCertificateRoute) {
+    const activeCert =
+      certificateApp ||
+      applications.find((a) => a.status === 'approved') ||
+      applications[0] || {
+        id: 1,
+        scholarshipTitle: 'Quezon City Scholarship Program (QCSP)',
+        amount: 20000,
+      };
+
     return (
       <ScholarshipAwardCertificateModal
         isOpen={true}
-        onClose={() => setCertificateApp(null)}
+        onClose={() => {
+          setCertificateApp(null);
+          navigate('/applications');
+        }}
         backLabel="Back to Applications"
-        applicationId={certificateApp.id}
+        applicationId={activeCert.id}
         applicantName={user?.name || 'Pia Marie T. Faner'}
         applicantEmail={user?.email || 'piamariefaner2004@gmail.com'}
         studentId={user?.student_id || '23010366'}
-        programTitle={certificateApp.scholarshipTitle}
-        awardAmount={certificateApp.amount}
+        programTitle={activeCert.scholarshipTitle || 'Quezon City Scholarship Program (QCSP)'}
+        awardAmount={activeCert.amount || 20000}
         school={user?.department || 'Bestlink College of the Philippines (BCP)'}
         course={user?.major || 'B.S. Information Technology'}
         gpa={user?.gpa || 1.50}
@@ -425,7 +427,10 @@ export const ApplicationsPage: React.FC = () => {
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => setCertificateApp(app)}
+                        onClick={() => {
+                          setCertificateApp(app);
+                          navigate('/applications/certificate');
+                        }}
                         leftIcon={<Award className="h-4 w-4" />}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs"
                       >
