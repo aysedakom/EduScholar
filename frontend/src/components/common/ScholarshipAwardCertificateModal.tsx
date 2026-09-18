@@ -1,21 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Download,
-  Printer,
-  Mail,
   ZoomIn,
   ZoomOut,
   RotateCw,
   Award,
   Sparkles,
-  Check,
-  Loader2,
   ArrowLeft,
   BadgeCheck
 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { toast } from 'sonner';
-import api from '../../services/api';
 
 export interface ScholarshipAwardCertificateModalProps {
   isOpen?: boolean;
@@ -40,7 +33,6 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   backLabel = 'Back to Applications',
   applicationId,
   applicantName,
-  applicantEmail,
   studentId,
   programTitle,
   awardAmount = 20000,
@@ -52,8 +44,6 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
 }) => {
   const [zoomLevel, setZoomLevel] = useState(100);
   const [rotation, setRotation] = useState(0);
-  const [isSendingEmail, setIsSendingEmail] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -91,93 +81,6 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
       return '₱15,000.00 / Sem (₱10,000 Tuition + ₱5,000 Stipend)';
     }
     return `${Number(amt).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })} / Sem`;
-  };
-
-  const handlePrint = () => {
-    toast.info('Sending Certificate of Award to print queue...');
-    window.print();
-  };
-
-  const handleDownload = () => {
-    toast.info('Generating official certificate package...');
-    const element = document.createElement('a');
-    const certificateHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Official Certificate of Scholarship Award - ${applicantName}</title>
-  <style>
-    body { font-family: 'Times New Roman', Georgia, serif; background: #fffdfa; padding: 40px; color: #1e293b; text-align: center; }
-    .cert { border: 8px double #92400e; padding: 40px; max-width: 860px; margin: 0 auto; background: #ffffff; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-    h1 { font-size: 24px; color: #451a03; text-transform: uppercase; margin: 18px 0 8px; letter-spacing: 1px; }
-    .recipient { font-size: 32px; color: #172554; font-weight: bold; text-decoration: underline; margin: 20px 0; text-transform: uppercase; }
-    .details { margin: 24px auto; max-width: 700px; text-align: left; background: #fef3c7; padding: 16px; border-radius: 8px; font-family: sans-serif; font-size: 13px; line-height: 1.6; }
-    .signatures { margin-top: 40px; display: flex; justify-content: space-around; }
-    .sig-line { width: 220px; border-top: 1px solid #475569; padding-top: 6px; font-family: sans-serif; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <div class="cert">
-    <p style="font-family: sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; color: #64748b; font-weight: bold; margin: 0;">Republic of the Philippines • City Government of Quezon City</p>
-    <p style="font-family: sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #451a03; font-weight: 900; margin: 4px 0;">Quezon City Youth Development Office (QCYDO)</p>
-    <p style="font-family: sans-serif; font-size: 11px; color: #64748b; margin: 0 0 16px;">Unified Scholarship and Financial Assistance Screening Board</p>
-    <h1>Certificate of Scholarship Award & Government Scholar Qualification</h1>
-    <p style="font-family: monospace; font-size: 12px; color: #78350f; font-weight: bold;">Official Award Control No: ${certNo}</p>
-    <p style="font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #64748b; margin-top: 24px;">THIS IS TO OFFICIALLY CERTIFY THAT</p>
-    <div class="recipient">${applicantName}</div>
-    <p style="font-family: monospace; font-size: 13px; font-weight: bold; color: #334155;">Student ID Number: ${studentId}</p>
-    <p style="max-width: 680px; margin: 20px auto; font-size: 14px; line-height: 1.7; text-align: justify;">having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong>OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.</p>
-    <div class="details">
-      <strong>Scholarship Track:</strong> ${programTitle}<br/>
-      <strong>Educational Grant & Aid:</strong> ${getGrantBreakdown(programTitle, awardAmount)}<br/>
-      <strong>School Institution:</strong> ${school}<br/>
-      <strong>Degree / Course:</strong> ${course}<br/>
-      <strong>Academic Standing:</strong> ${Number(gpa).toFixed(2)} GWA (Honors Tier)<br/>
-      <strong>Date Conferred:</strong> ${dateStr}
-    </div>
-    <div class="signatures">
-      <div class="sig-line">
-        <strong>HON. ROBERTO V. CRUZ</strong><br/>
-        Executive Director, QCYDO
-      </div>
-      <div class="sig-line">
-        <strong>HON. MA. JOSEFINA "JOY" BELMONTE</strong><br/>
-        City Mayor, Quezon City
-      </div>
-    </div>
-  </div>
-</body>
-</html>
-    `;
-    const file = new Blob([certificateHtml], { type: 'text/html' });
-    element.href = URL.createObjectURL(file);
-    element.download = `Official_Scholar_Award_Certificate_${certNo}.html`;
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-    toast.success('Certificate downloaded successfully!');
-  };
-
-  const handleSendEmail = async () => {
-    if (!applicationId) {
-      toast.info(`Simulated: Official Award Certificate dispatched to ${applicantEmail || 'student email'}`);
-      setEmailSent(true);
-      return;
-    }
-
-    try {
-      setIsSendingEmail(true);
-      const res = await api.post(`/applications/${applicationId}/send-certificate`);
-      toast.success(res.data?.message || `Certificate forwarded to ${applicantEmail || 'student email'}!`);
-      setEmailSent(true);
-    } catch (err: any) {
-      console.warn('Send certificate error:', err);
-      toast.info(`Official Award Certificate delivered to ${applicantEmail || 'student email'}`);
-      setEmailSent(true);
-    } finally {
-      setIsSendingEmail(false);
-    }
   };
 
   return (
@@ -241,10 +144,9 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
           </div>
         </div>
 
-        {/* Right: Zoom controls & Actions */}
+        {/* Right: Zoom controls */}
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          {/* Zoom controls */}
-          <div className="hidden lg:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
             <button
               onClick={() => setZoomLevel((z) => Math.max(z - 10, 60))}
               className="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors"
@@ -270,45 +172,6 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
               <RotateCw className="h-3.5 w-3.5" />
             </button>
           </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            leftIcon={<Printer className="h-4 w-4" />}
-            className="font-bold text-xs"
-          >
-            Print
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDownload}
-            leftIcon={<Download className="h-4 w-4" />}
-            className="font-bold text-xs"
-          >
-            Download
-          </Button>
-
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={handleSendEmail}
-            disabled={isSendingEmail || emailSent}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs"
-            leftIcon={
-              isSendingEmail ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : emailSent ? (
-                <Check className="h-4 w-4 text-emerald-300" />
-              ) : (
-                <Mail className="h-4 w-4" />
-              )
-            }
-          >
-            {isSendingEmail ? 'Sending...' : emailSent ? 'Sent to Email' : 'Email to Student'}
-          </Button>
         </div>
       </div>
 
