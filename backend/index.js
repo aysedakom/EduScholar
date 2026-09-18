@@ -138,7 +138,6 @@ if (fs.existsSync(frontendDist)) {
 initSocketServer(server);
 
 server.listen(port, host, () => {
-  3
   console.log(`[EduScholar Server] HTTP listening on port ${port} (0.0.0.0:${port})`);
   console.log(`[EduScholar Realtime] WebSocket listening on ws://0.0.0.0:${port}/ws`);
   console.log(`[EduScholar Docs] Swagger OpenAPI available at http://0.0.0.0:${port}/api-docs`);
