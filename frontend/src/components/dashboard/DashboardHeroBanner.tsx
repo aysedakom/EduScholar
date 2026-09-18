@@ -99,7 +99,6 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
             'Track your scholarship applications, review educational grant disbursements, and discover financial aid programs.',
           tabs: [
             { id: 'applications', label: 'Scholarship Applications', link: '/dashboard' },
-            { id: 'distribution', label: 'School Aid Distribution', link: '/student/school-aid-distribution' },
             { id: 'registry', label: 'Student Registry', link: '/student/registry' },
             { id: 'documents', label: 'Document Vault', link: '/documents' },
           ],
@@ -113,6 +112,23 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
     setInternalActiveTab(tab.id);
     if (onTabChange) {
       onTabChange(tab.id);
+    }
+    if (tab.id === 'applications') {
+      if (window.location.pathname === '/dashboard') {
+        const el = document.getElementById('application-milestones');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      } else {
+        navigate('/dashboard');
+        setTimeout(() => {
+          const el = document.getElementById('application-milestones');
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        }, 150);
+      }
+      return;
     }
     if (tab.link && tab.link !== window.location.pathname) {
       navigate(tab.link);

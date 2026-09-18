@@ -161,6 +161,10 @@ export function App() {
               <Route path="/support" element={<SupportPage />} />
               <Route path="/messages" element={<MessagesPage />} />
               <Route path="/calendar" element={<CalendarPage />} />
+              <Route path="/student/registry" element={<StudentRegistryPage />} />
+              <Route path="/student-registry" element={<StudentRegistryPage />} />
+              <Route path="/student/profile" element={<StudentRegistryPage />} />
+              <Route path="/profile" element={<StudentRegistryPage />} />
 
               {/* Student Interactive Features Routes */}
               <Route path="/quiz" element={<ScholarshipQuizPage />} />

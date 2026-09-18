@@ -305,7 +305,7 @@ export const ApplicationProgressTracker: React.FC = () => {
   const progressPercent = appData.progressPercent;
 
   return (
-    <div className="space-y-6">
+    <div id="application-milestones" className="space-y-6 scroll-mt-6">
       {/* 6 Progress Milestones Card */}
       <Card className="border border-slate-200 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900 overflow-hidden rounded-3xl">
         {/* Header */}
