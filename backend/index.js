@@ -93,9 +93,22 @@ const fs = require('fs');
 const frontendDist = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(frontendDist)) {
   console.log('[EduScholar Server] Serving frontend production bundle from frontend/dist');
-  app.use(express.static(frontendDist));
+  app.use(
+    express.static(frontendDist, {
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+      },
+    })
+  );
   app.use((req, res, next) => {
     if (req.method === 'GET' && !req.path.startsWith('/api') && !req.path.startsWith('/api-docs') && !req.path.startsWith('/ws')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
       return res.sendFile(path.join(frontendDist, 'index.html'));
     }
     next();

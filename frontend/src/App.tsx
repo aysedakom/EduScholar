@@ -177,6 +177,9 @@ export function App() {
                 <Route path="/admin/review-queue" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/review" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/queue" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/applications" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/review-applications" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/endorsements" element={<BatchVerificationPage />} />
                 <Route path="/admin/scholarships" element={<ScholarshipsPage />} />
                 <Route path="/admin/school-aid-distribution" element={<SchoolAidDistributionPage />} />
                 <Route path="/school-aid-distribution" element={<SchoolAidDistributionPage />} />
@@ -196,15 +199,20 @@ export function App() {
                 <Route path="/supervisor/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/supervisor/assigned-students" element={<MyAssignedStudentsPage />} />
                 <Route path="/supervisor/endorsements" element={<BatchVerificationPage />} />
+                <Route path="/supervisor/endorsements/*" element={<BatchVerificationPage />} />
+                <Route path="/supervisor/batch-verification" element={<BatchVerificationPage />} />
               </Route>
 
               {/* School Coordinator Routes */}
-              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'system_admin', 'admin']} />}>
+              <Route element={<ProtectedRoute allowedRoles={['school_coordinator', 'system_admin', 'admin', 'supervisor']} />}>
                 <Route path="/school/portal" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/enrollment" element={<EnrollmentVerificationPage />} />
                 <Route path="/school/batch-verification" element={<BatchVerificationPage />} />
+                <Route path="/school/batch-verification/*" element={<BatchVerificationPage />} />
                 <Route path="/school/endorsements" element={<BatchVerificationPage />} />
+                <Route path="/school/endorsements/*" element={<BatchVerificationPage />} />
                 <Route path="/school/endorsement" element={<BatchVerificationPage />} />
+                <Route path="/school/endorsement/*" element={<BatchVerificationPage />} />
                 <Route path="/school/academic" element={<AcademicMonitoringPage />} />
                 <Route path="/school/academic-monitoring" element={<AcademicMonitoringPage />} />
                 <Route path="/school/reports" element={<ReportsModulePage />} />

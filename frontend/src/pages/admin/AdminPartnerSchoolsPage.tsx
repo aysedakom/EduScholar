@@ -726,7 +726,13 @@ export const AdminPartnerSchoolsPage: React.FC = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => navigate(isCoordinator ? '/school/endorsements' : '/admin/applications')}
+                                onClick={() =>
+                                  navigate(
+                                    isCoordinator
+                                      ? `/school/endorsements?search=${encodeURIComponent(applicantName || app.reference_id || '')}`
+                                      : '/admin/applications'
+                                  )
+                                }
                                 className="font-bold text-xs border-blue-300 text-blue-700 hover:bg-blue-50"
                                 rightIcon={<ArrowRight className="h-3.5 w-3.5" />}
                               >
