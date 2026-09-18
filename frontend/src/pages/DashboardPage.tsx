@@ -1,5 +1,4 @@
 import {
-  ArrowLeft,
   DollarSign,
   GraduationCap,
   Building2,
@@ -21,8 +20,8 @@ import { Link } from 'react-router-dom';
 import { ApplicationProgressTracker } from '../components/student/ApplicationProgressTracker';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { DashboardHeroBanner } from '../components/dashboard/DashboardHeroBanner';
 
 export function DashboardPage() {
   const { user } = useAuth();
@@ -34,30 +33,8 @@ export function DashboardPage() {
   if (role === 'treasury') {
     return (
       <div className="mx-auto max-w-7xl space-y-6 animate-in fade-in duration-300">
-        {/* Treasury Header Banner */}
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl shadow-soft">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs text-muted-foreground font-semibold">City Treasury Office • Fiscal Management</span>
-              <Badge variant="primary" size="sm">
-                FY 2026-2027
-              </Badge>
-            </div>
-            <h1 className="mt-1 font-heading text-2xl font-extrabold md:text-3xl text-slate-900 dark:text-white">
-              City Treasury Command Center
-            </h1>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Authorize funding tranches, review incoming Admin Grant Drawdown Requests, and reconcile beneficiary payouts.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link to="/treasury/budget">
-              <Button variant="primary" size="sm" className="font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-xs">
-                Review Budget Tranches
-              </Button>
-            </Link>
-          </div>
-        </div>
+        {/* Treasury Hero Banner */}
+        <DashboardHeroBanner role="treasury" userName={user?.name} />
 
         {/* Treasury Core Actions Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -165,17 +142,8 @@ export function DashboardPage() {
   if (role === 'supervisor') {
     return (
       <div className="mx-auto max-w-7xl space-y-6 animate-in fade-in duration-300">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl shadow-soft">
-          <div>
-            <span className="text-xs text-muted-foreground font-semibold">Scholarship Supervision Directorate</span>
-            <h1 className="mt-1 font-heading text-2xl font-extrabold md:text-3xl text-slate-900 dark:text-white">
-              Supervisor Command Center
-            </h1>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Perform student performance evaluations, monitor assigned scholars, and verify enrollment status.
-            </p>
-          </div>
-        </div>
+        {/* Supervisor Hero Banner */}
+        <DashboardHeroBanner role="supervisor" userName={user?.name} />
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           <Link to="/supervisor/evaluations" className="block group">
@@ -224,17 +192,8 @@ export function DashboardPage() {
   if (role === 'school_coordinator') {
     return (
       <div className="mx-auto max-w-7xl space-y-6 animate-in fade-in duration-300">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl shadow-soft">
-          <div>
-            <span className="text-xs text-muted-foreground font-semibold">Institutional Registrar & Coordinator Portal</span>
-            <h1 className="mt-1 font-heading text-2xl font-extrabold md:text-3xl text-slate-900 dark:text-white">
-              School Coordinator Command Center
-            </h1>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Batch verify enrolled scholars, certify university masterlists, and monitor academic records.
-            </p>
-          </div>
-        </div>
+        {/* School Coordinator Hero Banner */}
+        <DashboardHeroBanner role="school_coordinator" userName={user?.name} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <Link to="/school/batch-verification" className="block group">
@@ -271,18 +230,8 @@ export function DashboardPage() {
   if (role === 'admin' || role === 'system_admin') {
     return (
       <div className="mx-auto max-w-7xl space-y-6 animate-in fade-in duration-300">
-        {/* Admin Header Banner */}
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-3xl shadow-soft">
-          <div>
-            <span className="text-xs text-muted-foreground font-semibold">QCYDO + HRMD Operations</span>
-            <h1 className="mt-1 font-heading text-2xl font-extrabold md:text-3xl text-slate-900 dark:text-white">
-              Administrator Command Center
-            </h1>
-            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Monitor active scholarship review queues, financial disbursement batches, and budget utilization metrics.
-            </p>
-          </div>
-        </div>
+        {/* Admin / System Admin Hero Banner */}
+        <DashboardHeroBanner role={role as any} userName={user?.name} />
 
         {/* Admin Navigation Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -379,23 +328,8 @@ export function DashboardPage() {
   // =========================================================================
   return (
     <div className="mx-auto max-w-7xl space-y-6 animate-fade-in-up">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Link to="/e-scholar" className="text-xs font-extrabold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1 transition-colors">
-              <ArrowLeft className="h-3.5 w-3.5" /> E-SCHOLAR Hub
-            </Link>
-            <span className="text-slate-400 text-xs">/</span>
-            <span className="text-xs font-bold text-slate-600 dark:text-slate-300">Student Dashboard</span>
-          </div>
-          <h1 className="mt-1 font-heading text-2xl font-extrabold md:text-3xl text-slate-900 dark:text-white">
-            Good day, {user?.name?.split(' ')[0] ?? 'Student'}! 👋
-          </h1>
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            Here's your scholarship and financial aid overview.
-          </p>
-        </div>
-      </div>
+      {/* Student Hero Banner */}
+      <DashboardHeroBanner role="student" userName={user?.name} />
 
       {/* Student Portal Exclusive: Application Progress Status Tracker */}
       <ApplicationProgressTracker />

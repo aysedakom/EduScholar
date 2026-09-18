@@ -4,38 +4,16 @@ import { Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
+import { useAuth } from '../../context/AuthContext';
+import { DashboardHeroBanner } from '../../components/dashboard/DashboardHeroBanner';
 
 export const SupervisorDashboardPage: React.FC = () => {
+  const { user } = useAuth();
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-soft">
-        <div>
-          <div className="flex items-center gap-2">
-            <Badge variant="primary">Supervisor Portal</Badge>
-            <span className="text-xs text-muted-foreground font-semibold">QC Public Library & Tech Labs</span>
-          </div>
-          <h1 className="mt-2 font-heading font-extrabold text-2xl md:text-3xl text-foreground">
-            Supervisor Command Center
-          </h1>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Manage assigned scholars, verify enrollment credentials, and submit performance and academic evaluations.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/supervisor/evaluations">
-            <Button variant="primary" size="sm" leftIcon={<Star className="h-4 w-4" />} className="font-bold">
-              Submit Evaluations (3)
-            </Button>
-          </Link>
-          <Link to="/supervisor/assigned-students">
-            <Button variant="outline" size="sm" leftIcon={<Users className="h-4 w-4" />}>
-              Assigned Scholars (14)
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <DashboardHeroBanner role="supervisor" userName={user?.name} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
