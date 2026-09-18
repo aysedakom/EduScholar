@@ -281,6 +281,45 @@ const resendVerification = async (req, res) => {
   }
 };
 
+// Lockout Policy: 3 failed attempts = 2-minute lockout (120,000 ms)
+const MAX_LOGIN_ATTEMPTS = 3;
+const LOCKOUT_DURATION_MS = 2 * 60 * 1000; // 2 minutes (120 seconds)
+const loginAttempts = new Map(); // key: normalizedEmail -> { count: number, lockedUntil: number | null }
+
+const checkAccountLockout = (email) => {
+  const normalized = (email || '').toLowerCase().trim();
+  const record = loginAttempts.get(normalized);
+  if (record && record.lockedUntil) {
+    const now = Date.now();
+    if (now < record.lockedUntil) {
+      const remainingSecs = Math.ceil((record.lockedUntil - now) / 1000);
+      return { isLocked: true, remainingSecs, lockedUntil: record.lockedUntil };
+    } else {
+      // Lockout expired: reset
+      loginAttempts.delete(normalized);
+    }
+  }
+  return { isLocked: false, remainingSecs: 0, lockedUntil: null };
+};
+
+const recordFailedAttempt = (email) => {
+  const normalized = (email || '').toLowerCase().trim();
+  const record = loginAttempts.get(normalized) || { count: 0, lockedUntil: null };
+  record.count += 1;
+  if (record.count >= MAX_LOGIN_ATTEMPTS) {
+    record.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
+    loginAttempts.set(normalized, record);
+    return { isLocked: true, remainingSecs: 120, lockedUntil: record.lockedUntil, remainingAttempts: 0 };
+  }
+  loginAttempts.set(normalized, record);
+  return { isLocked: false, remainingSecs: 0, lockedUntil: null, remainingAttempts: MAX_LOGIN_ATTEMPTS - record.count };
+};
+
+const clearFailedAttempts = (email) => {
+  const normalized = (email || '').toLowerCase().trim();
+  loginAttempts.delete(normalized);
+};
+
 // @desc   Initiate Login (Validates credentials, checks email verification, generates & dispatches OTP)
 // @route  POST /api/auth/login
 const login = async (req, res) => {
@@ -292,9 +331,33 @@ const login = async (req, res) => {
     }
 
     const normalizedEmail = (email || '').toLowerCase().trim();
+
+    // Check account lockout policy (3 attempts = 2 minutes lock)
+    const lockStatus = checkAccountLockout(normalizedEmail);
+    if (lockStatus.isLocked) {
+      return res.status(423).json({
+        message: `Too many failed login attempts. This account is temporarily locked for 2 minutes for security. Please wait ${lockStatus.remainingSecs} second${lockStatus.remainingSecs !== 1 ? 's' : ''} before trying again.`,
+        isLocked: true,
+        lockedUntil: lockStatus.lockedUntil,
+        remainingSeconds: lockStatus.remainingSecs,
+      });
+    }
+
     const user = await userModel.findByEmail(normalizedEmail);
     if (!user) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      const failStatus = recordFailedAttempt(normalizedEmail);
+      if (failStatus.isLocked) {
+        return res.status(423).json({
+          message: 'Too many failed login attempts (3 consecutive attempts). Your account has been temporarily locked for 2 minutes. Please try again later.',
+          isLocked: true,
+          lockedUntil: failStatus.lockedUntil,
+          remainingSeconds: failStatus.remainingSecs,
+        });
+      }
+      return res.status(401).json({
+        message: `Invalid email or password. You have ${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute temporary account lockout.`,
+        remainingAttempts: failStatus.remainingAttempts,
+      });
     }
 
     // Compare bcrypt hash or direct password
@@ -302,7 +365,19 @@ const login = async (req, res) => {
     const isPlainMatch = !isMatch && user.password === password;
     
     if (!isMatch && !isPlainMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      const failStatus = recordFailedAttempt(normalizedEmail);
+      if (failStatus.isLocked) {
+        return res.status(423).json({
+          message: 'Too many failed login attempts (3 consecutive attempts). Your account has been temporarily locked for 2 minutes. Please try again later.',
+          isLocked: true,
+          lockedUntil: failStatus.lockedUntil,
+          remainingSeconds: failStatus.remainingSecs,
+        });
+      }
+      return res.status(401).json({
+        message: `Invalid email or password. You have ${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute temporary account lockout.`,
+        remainingAttempts: failStatus.remainingAttempts,
+      });
     }
 
     // Auto-activate verified status if user is a designated role or active
@@ -312,30 +387,31 @@ const login = async (req, res) => {
       user.status = 'active';
     }
 
-    // Generate fresh OTP code in database for 2FA / Login Verification (Applies to all roles including Admin)
-
-    // Generate fresh OTP code in database for 2FA / Login Verification
+    // Generate fresh OTP code in database for 2FA / Login Verification (Applies to all roles)
     const otpRecord = await otpModel.createOtp({
       email: user.email,
       purpose: 'login',
       expiresInMinutes: 10,
     });
 
-    // Dispatch email asynchronously so HTTP response returns immediately without lag
-    emailService.sendOtpEmail({
-      to: user.email,
-      name: user.name,
-      otpCode: otpRecord.otp_code,
-      purpose: 'login',
-      expiresInMinutes: 10,
-    }).catch((err) => console.warn('[authController] Login OTP email dispatch warning:', err.message));
+    // Await email dispatch to Brevo API to guarantee transmission before response returns
+    try {
+      await emailService.sendOtpEmail({
+        to: user.email,
+        name: user.name,
+        otpCode: otpRecord.otp_code,
+        purpose: 'login',
+        expiresInMinutes: 10,
+      });
+    } catch (dispatchErr) {
+      console.warn('[authController] Login OTP email dispatch warning:', dispatchErr.message);
+    }
 
     return res.json({
       success: true,
       message: 'Credentials verified. Verification code dispatched to your email.',
       requireOtp: true,
       email: user.email,
-      devOtp: otpRecord.otp_code,
       user: formatUserResponse(user),
     });
   } catch (error) {
@@ -354,7 +430,20 @@ const verifyOtp = async (req, res) => {
       return res.status(400).json({ message: 'Email and verification code are required' });
     }
 
-    const user = await userModel.findByEmail(email);
+    const normalizedEmail = (email || '').toLowerCase().trim();
+
+    // Check account lockout policy
+    const lockStatus = checkAccountLockout(normalizedEmail);
+    if (lockStatus.isLocked) {
+      return res.status(423).json({
+        message: `Too many failed attempts. This account is temporarily locked for 2 minutes for security. Please wait ${lockStatus.remainingSecs} second${lockStatus.remainingSecs !== 1 ? 's' : ''} before trying again.`,
+        isLocked: true,
+        lockedUntil: lockStatus.lockedUntil,
+        remainingSeconds: lockStatus.remainingSecs,
+      });
+    }
+
+    const user = await userModel.findByEmail(normalizedEmail);
     if (!user) {
       return res.status(404).json({ message: 'User account not found' });
     }
@@ -367,8 +456,23 @@ const verifyOtp = async (req, res) => {
     });
 
     if (!verification.valid) {
-      return res.status(400).json({ message: verification.message });
+      const failStatus = recordFailedAttempt(user.email);
+      if (failStatus.isLocked) {
+        return res.status(423).json({
+          message: 'Too many invalid verification code attempts (3 consecutive attempts). Your account has been temporarily locked for 2 minutes. Please try again later.',
+          isLocked: true,
+          lockedUntil: failStatus.lockedUntil,
+          remainingSeconds: failStatus.remainingSecs,
+        });
+      }
+      return res.status(400).json({
+        message: `${verification.message} (${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute lockout)`,
+        remainingAttempts: failStatus.remainingAttempts,
+      });
     }
+
+    // Successful OTP verification: reset any failed attempts
+    clearFailedAttempts(user.email);
 
     // Issue JWT token and return user profile
     const token = generateToken(user);
@@ -393,7 +497,20 @@ const resendOtp = async (req, res) => {
       return res.status(400).json({ message: 'Email is required to resend verification code' });
     }
 
-    const user = await userModel.findByEmail(email);
+    const normalizedEmail = (email || '').toLowerCase().trim();
+
+    // Check account lockout policy
+    const lockStatus = checkAccountLockout(normalizedEmail);
+    if (lockStatus.isLocked) {
+      return res.status(423).json({
+        message: `Too many failed attempts. This account is temporarily locked for 2 minutes for security. Please wait ${lockStatus.remainingSecs} second${lockStatus.remainingSecs !== 1 ? 's' : ''} before trying again.`,
+        isLocked: true,
+        lockedUntil: lockStatus.lockedUntil,
+        remainingSeconds: lockStatus.remainingSecs,
+      });
+    }
+
+    const user = await userModel.findByEmail(normalizedEmail);
     if (!user) {
       return res.status(404).json({ message: 'No account associated with this email address' });
     }
@@ -405,19 +522,22 @@ const resendOtp = async (req, res) => {
       expiresInMinutes: 10,
     });
 
-    // Send email asynchronously
-    emailService.sendOtpEmail({
-      to: user.email,
-      name: user.name,
-      otpCode: otp.otp_code,
-      purpose,
-      expiresInMinutes: 10,
-    }).catch((err) => console.warn('[authController] Email dispatch warning:', err.message));
+    // Await email dispatch to Brevo API to ensure transmission
+    try {
+      await emailService.sendOtpEmail({
+        to: user.email,
+        name: user.name,
+        otpCode: otp.otp_code,
+        purpose,
+        expiresInMinutes: 10,
+      });
+    } catch (dispatchErr) {
+      console.warn('[authController] Resend OTP email dispatch warning:', dispatchErr.message);
+    }
 
     res.json({
       success: true,
       message: 'A fresh verification code has been dispatched to your email.',
-      devOtp: otp.otp_code,
     });
   } catch (error) {
     console.error('[authController] resendOtp error:', error);

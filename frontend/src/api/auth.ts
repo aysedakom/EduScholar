@@ -14,7 +14,6 @@ export interface LoginRequestResponse {
   mustResetPassword?: boolean;
   reason?: string;
   email?: string;
-  devOtp?: string;
   message: string;
   token?: string;
   user?: User;
@@ -50,7 +49,7 @@ export const verifyOtp = (email: string, otp: string) => {
 };
 
 export const resendOtp = (email: string, purpose: string = 'login') => {
-  return api.post<{ success: boolean; message: string; devOtp?: string }>('/auth/resend-otp', { email, purpose });
+  return api.post<{ success: boolean; message: string }>('/auth/resend-otp', { email, purpose });
 };
 
 export const verifyEmail = (token: string, email?: string) => {

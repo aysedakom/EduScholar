@@ -73,14 +73,41 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
 
   // 6-digit OTP state
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
-  const [availableOtp, setAvailableOtp] = useState<string>('');
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [countdown, setCountdown] = useState<number>(60);
   const [canResend, setCanResend] = useState<boolean>(false);
   const [isResending, setIsResending] = useState<boolean>(false);
 
+  // Lockout Policy State: 3 Failed Attempts = 2-Minute Lock (120 seconds)
+  const [lockoutRemaining, setLockoutRemaining] = useState<number>(() => {
+    const cleanEmail = (emailParam || '').toLowerCase().trim();
+    if (!cleanEmail) return 0;
+    const stored = localStorage.getItem(`eduscholar_lockout_${cleanEmail}`);
+    if (stored) {
+      const remaining = Math.ceil((Number(stored) - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    }
+    return 0;
+  });
+
   const { loginRequest, verifyOtp, resendOtp, updateLegacyPassword, resetPassword, login } = useAuth();
   const navigate = useNavigate();
+
+  // Active Lockout countdown timer
+  useEffect(() => {
+    if (lockoutRemaining <= 0) return;
+    const timer = setInterval(() => {
+      setLockoutRemaining((prev) => {
+        if (prev <= 1) {
+          const cleanEmail = email.toLowerCase().trim();
+          if (cleanEmail) localStorage.removeItem(`eduscholar_lockout_${cleanEmail}`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockoutRemaining, email]);
 
   // Handle prefilled email and role deduction
   useEffect(() => {
@@ -120,6 +147,25 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   const handleEmailChange = (newEmail: string) => {
     setEmail(newEmail);
     const emailLower = newEmail.toLowerCase().trim();
+
+    // Check stored lockout for this email
+    if (emailLower) {
+      const stored = localStorage.getItem(`eduscholar_lockout_${emailLower}`);
+      if (stored) {
+        const rem = Math.ceil((Number(stored) - Date.now()) / 1000);
+        if (rem > 0) {
+          setLockoutRemaining(rem);
+        } else {
+          localStorage.removeItem(`eduscholar_lockout_${emailLower}`);
+          setLockoutRemaining(0);
+        }
+      } else {
+        setLockoutRemaining(0);
+      }
+    } else {
+      setLockoutRemaining(0);
+    }
+
     if (emailLower.includes('sysadmin') || emailLower.startsWith('sysadmin@')) {
       setSelectedRole('system_admin');
     } else if (emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) {
@@ -158,6 +204,10 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   // Stage 1: Validate credentials & request OTP or intercept legacy password format
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutRemaining > 0) {
+      setError(`Account is temporarily locked. Please wait ${lockoutRemaining}s before trying again.`);
+      return;
+    }
     if (!email || !password) {
       setError('Please enter your email address and password.');
       return;
@@ -167,6 +217,11 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
 
     try {
       const result = await loginRequest(email, password);
+
+      // Clear any prior lockout on successful credentials validation
+      const cleanEmail = email.toLowerCase().trim();
+      localStorage.removeItem(`eduscholar_lockout_${cleanEmail}`);
+      setLockoutRemaining(0);
 
       // Check if user has an old format password that needs to be redone
       if (result.requirePasswordReset || result.mustResetPassword) {
@@ -182,23 +237,32 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
       }
 
       // Enforce OTP stage for all accounts (Student, Admin, System Admin, Supervisor, School Coordinator, Treasury)
-      const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
-      setAvailableOtp(result.devOtp || '');
       setStage('otp');
       setOtpDigits(['', '', '', '', '', '']);
       setCountdown(60);
       setCanResend(false);
-      const generatedOtp = result.devOtp;
       toast.success(`Security Verification Code dispatched to ${email}!`, {
-        description: generatedOtp
-          ? `[Dev Security OTP for ${roleToUse.toUpperCase().replace('_', ' ')}: ${generatedOtp}]`
-          : `Please check your email for the 6-digit verification code.`,
-        duration: 10000,
+        description: `Please check your email inbox (and spam folder) for the 6-digit verification code.`,
+        duration: 7000,
       });
       setTimeout(() => {
         otpInputRefs.current[0]?.focus();
       }, 150);
     } catch (err: any) {
+      if (err?.response?.status === 423 || err?.message?.includes('locked') || err?.response?.data?.isLocked) {
+        const remSecs = err?.response?.data?.remainingSeconds || 120;
+        const lockedUntil = Date.now() + remSecs * 1000;
+        const clean = email.toLowerCase().trim();
+        if (clean) localStorage.setItem(`eduscholar_lockout_${clean}`, String(lockedUntil));
+        setLockoutRemaining(remSecs);
+        setError(err?.response?.data?.message || 'Too many failed login attempts (3 attempts reached). Your account is temporarily locked for 2 minutes.');
+        toast.error('Account Temporarily Locked', {
+          description: '3 failed attempts reached. Please wait 2 minutes before attempting again.',
+          duration: 7000,
+        });
+        return;
+      }
+
       const isUnverified = err.message?.includes('verify') || err.message?.includes('verification') || err.message?.includes('not yet authorized') || err.message?.includes('authorize') || err?.response?.data?.requireEmailVerification;
       if (isUnverified) {
         setError('Your account is not verified yet. Please click the verification button in the email we sent you before signing in.');
@@ -377,6 +441,10 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   // Submit OTP Verification
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutRemaining > 0) {
+      setError(`Account is temporarily locked. Please wait ${lockoutRemaining}s before trying again.`);
+      return;
+    }
     const fullOtp = otpDigits.join('');
     if (fullOtp.length !== 6) {
       setError('Please enter all 6 digits of the verification code.');
@@ -389,9 +457,27 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
     try {
       const roleToUse = getRoleFromEmail(email);
       await verifyOtp(email, fullOtp, roleToUse);
+
+      const cleanEmail = email.toLowerCase().trim();
+      localStorage.removeItem(`eduscholar_lockout_${cleanEmail}`);
+      setLockoutRemaining(0);
+
       toast.success(`Verification successful! Welcome back.`);
       navigateAfterLogin(roleToUse);
     } catch (err: any) {
+      if (err?.response?.status === 423 || err?.message?.includes('locked') || err?.response?.data?.isLocked) {
+        const remSecs = err?.response?.data?.remainingSeconds || 120;
+        const lockedUntil = Date.now() + remSecs * 1000;
+        const clean = email.toLowerCase().trim();
+        if (clean) localStorage.setItem(`eduscholar_lockout_${clean}`, String(lockedUntil));
+        setLockoutRemaining(remSecs);
+        setError(err?.response?.data?.message || 'Too many invalid verification code attempts (3 attempts reached). Account temporarily locked for 2 minutes.');
+        toast.error('Account Temporarily Locked', {
+          description: '3 failed attempts reached. Please wait 2 minutes.',
+          duration: 7000,
+        });
+        return;
+      }
       setError(err.message || 'Invalid or expired verification code.');
     } finally {
       setIsLoading(false);
@@ -399,20 +485,23 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
   };
 
   const handleResendCode = async () => {
-    if (!canResend || isResending) return;
+    if (!canResend || isResending || lockoutRemaining > 0) return;
     setIsResending(true);
     setError('');
     try {
       const res = await resendOtp(email, 'login');
       if (res.success) {
-        if (res.devOtp) {
-          setAvailableOtp(res.devOtp);
-        }
         setCountdown(60);
         setCanResend(false);
         setOtpDigits(['', '', '', '', '', '']);
         otpInputRefs.current[0]?.focus();
       }
+    } catch (err: any) {
+      if (err?.response?.status === 423 || err?.response?.data?.isLocked) {
+        const remSecs = err?.response?.data?.remainingSeconds || 120;
+        setLockoutRemaining(remSecs);
+      }
+      setError(err.message || 'Failed to resend verification code.');
     } finally {
       setIsResending(false);
     }
@@ -473,7 +562,23 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                 </p>
               </div>
 
-              {error && (
+              {/* Account Lockout Banner */}
+              {lockoutRemaining > 0 && (
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3 shadow-xs animate-pulse">
+                  <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1 text-left">
+                    <p className="font-bold text-xs">Account Temporarily Locked</p>
+                    <p className="text-[11px] text-rose-700 leading-relaxed">
+                      3 consecutive failed login attempts detected. For security, account login is locked. Please wait:
+                    </p>
+                    <p className="font-mono font-extrabold text-sm text-rose-700">
+                      {Math.floor(lockoutRemaining / 60)}:{String(lockoutRemaining % 60).padStart(2, '0')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {error && !lockoutRemaining && (
                 <div className="p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 space-y-1.5">
                   <p>{error}</p>
                   {(error.includes('verified') || error.includes('authorized') || error.includes('verification')) && (
@@ -501,12 +606,13 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                     name="login_email"
                     type="email"
                     value={email}
+                    disabled={lockoutRemaining > 0}
                     onChange={(e) => handleEmailChange(e.target.value)}
                     placeholder="Enter your email address"
                     autoComplete="off"
                     data-lpignore="true"
                     leftIcon={<Mail className="h-4 w-4 text-slate-400" />}
-                    className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11"
+                    className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 disabled:opacity-60 disabled:cursor-not-allowed"
                     required
                   />
                 </div>
@@ -519,11 +625,12 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                     </label>
                     <button
                       type="button"
+                      disabled={lockoutRemaining > 0}
                       onClick={() => {
                         setStage('forgot-password');
                         setError('');
                       }}
-                      className="text-[11px] font-bold text-blue-600 hover:text-blue-750 hover:underline cursor-pointer"
+                      className="text-[11px] font-bold text-blue-600 hover:text-blue-750 hover:underline cursor-pointer disabled:opacity-50"
                     >
                       Forgot password?
                     </button>
@@ -534,19 +641,21 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                       name="login_password"
                       type={show ? 'text' : 'password'}
                       value={password}
+                      disabled={lockoutRemaining > 0}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter your password"
                       autoComplete="new-password"
                       data-lpignore="true"
                       data-form-type="other"
                       leftIcon={<Lock className="h-4 w-4 text-slate-400" />}
-                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11"
+                      className="bg-[#EEF2F6] border-none shadow-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 text-slate-800 rounded-xl h-11 pr-11 disabled:opacity-60 disabled:cursor-not-allowed"
                       required
                     />
                     <button
                       type="button"
+                      disabled={lockoutRemaining > 0}
                       onClick={() => setShow(!show)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 transition-all cursor-pointer disabled:opacity-50"
                       title={show ? 'Hide Password' : 'Show Password'}
                     >
                       {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -569,9 +678,10 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                   <Button
                     type="submit"
                     isLoading={isLoading}
-                    className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                    disabled={lockoutRemaining > 0}
+                    className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <span>Sign In to Account</span>
+                    <span>{lockoutRemaining > 0 ? `Locked (${Math.floor(lockoutRemaining / 60)}:${String(lockoutRemaining % 60).padStart(2, '0')})` : 'Sign In to Account'}</span>
                     <ArrowRight className="h-4 w-4" />
                   </Button>
                 </div>
@@ -691,7 +801,23 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                 </p>
               </div>
 
-              {error && (
+              {/* Account Lockout Banner */}
+              {lockoutRemaining > 0 && (
+                <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 flex items-start gap-3 shadow-xs animate-pulse">
+                  <ShieldAlert className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1 text-left">
+                    <p className="font-bold text-xs">Account Temporarily Locked</p>
+                    <p className="text-[11px] text-rose-700 leading-relaxed">
+                      3 consecutive failed attempts detected. Verification is temporarily suspended. Please wait:
+                    </p>
+                    <p className="font-mono font-extrabold text-sm text-rose-700">
+                      {Math.floor(lockoutRemaining / 60)}:{String(lockoutRemaining % 60).padStart(2, '0')}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {error && !lockoutRemaining && (
                 <div className="p-3 rounded-xl border border-rose-200 bg-rose-50 text-xs font-semibold text-rose-700 text-center">
                   {error}
                 </div>
@@ -713,34 +839,16 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                       pattern="[0-9]*"
                       maxLength={idx === 0 ? 6 : 1}
                       value={digit}
+                      disabled={lockoutRemaining > 0}
                       onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(idx, e)}
                       onPaste={idx === 0 ? handleOtpPaste : undefined}
-                      className="h-12 w-11 sm:w-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition-all"
+                      className="h-12 w-11 sm:w-12 text-center text-xl font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-900 focus:bg-white focus:border-blue-600 focus:ring-4 focus:ring-blue-500/15 outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       autoComplete="one-time-code"
                       autoFocus={idx === 0}
                     />
                   ))}
                 </div>
-
-                {/* 1-Click Quick Auto-Fill helper if OTP available from session */}
-                {availableOtp && (
-                  <div className="flex justify-center pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const chars = availableOtp.split('').slice(0, 6);
-                        setOtpDigits(chars);
-                        toast.success('Security code auto-filled from session!');
-                        otpInputRefs.current[5]?.focus();
-                      }}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-800 cursor-pointer shadow-xs"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>Auto-Fill Code ({availableOtp})</span>
-                    </button>
-                  </div>
-                )}
 
                 {/* Resend OTP & Change Email info */}
                 <div className="flex flex-col items-center gap-2 text-xs">
@@ -751,8 +859,8 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                       <button
                         type="button"
                         onClick={handleResendCode}
-                        disabled={isResending}
-                        className="inline-flex items-center gap-1.5 font-bold text-blue-600 hover:text-blue-750 hover:underline cursor-pointer"
+                        disabled={isResending || lockoutRemaining > 0}
+                        className="inline-flex items-center gap-1.5 font-bold text-blue-600 hover:text-blue-750 hover:underline cursor-pointer disabled:opacity-50"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isResending ? 'animate-spin' : ''}`} />
                         <span>Resend verification code</span>
@@ -787,10 +895,11 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                 <Button
                   type="submit"
                   isLoading={isLoading}
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+                  disabled={lockoutRemaining > 0}
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold border-none shadow-xs transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ShieldCheck className="h-4 w-4" />
-                  <span>Verify & Sign In</span>
+                  <span>{lockoutRemaining > 0 ? `Locked (${Math.floor(lockoutRemaining / 60)}:${String(lockoutRemaining % 60).padStart(2, '0')})` : 'Verify & Sign In'}</span>
                 </Button>
               </form>
             </>

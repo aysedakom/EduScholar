@@ -2,25 +2,48 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Lock, ShieldAlert, LogOut, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
+import * as authApi from '../../api/auth';
 import { Button } from '../ui/Button';
 
-const INACTIVITY_TIMEOUT_MS = 2 * 60 * 1000; // 2 Minutes (120,000 ms)
+const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 Minutes (300,000 ms)
 
 export const SessionLockModal: React.FC = () => {
   const { user, logout } = useAuth();
-  const [isLocked, setIsLocked] = useState(false);
+  
+  // Persistent session lock: check both explicit lock flag and last active timestamp across refreshes
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    if (localStorage.getItem('eduscholar_session_locked') === 'true') return true;
+    const lastActive = Number(localStorage.getItem('eduscholar_last_active') || 0);
+    if (lastActive > 0 && Date.now() - lastActive >= INACTIVITY_TIMEOUT_MS) {
+      localStorage.setItem('eduscholar_session_locked', 'true');
+      return true;
+    }
+    return false;
+  });
+
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const resetTimer = () => {
+    // If already locked in storage, maintain lock
+    if (localStorage.getItem('eduscholar_session_locked') === 'true') {
+      if (!isLocked) setIsLocked(true);
+      return;
+    }
     if (isLocked) return;
+
+    // Track active timestamp in localStorage
+    localStorage.setItem('eduscholar_last_active', Date.now().toString());
+
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(() => {
       if (user) {
+        localStorage.setItem('eduscholar_session_locked', 'true');
         setIsLocked(true);
-        toast.warning('Session locked due to 2 minutes of inactivity.', { duration: 5000 });
+        toast.warning('Session locked due to 5 minutes of inactivity.', { duration: 6000 });
       }
     }, INACTIVITY_TIMEOUT_MS);
   };
@@ -28,7 +51,15 @@ export const SessionLockModal: React.FC = () => {
   useEffect(() => {
     if (!user) {
       setIsLocked(false);
+      localStorage.removeItem('eduscholar_session_locked');
+      localStorage.removeItem('eduscholar_last_active');
       if (timerRef.current) clearTimeout(timerRef.current);
+      return;
+    }
+
+    // If already locked from storage, do not listen to background activities
+    if (isLocked || localStorage.getItem('eduscholar_session_locked') === 'true') {
+      if (!isLocked) setIsLocked(true);
       return;
     }
 
@@ -46,7 +77,7 @@ export const SessionLockModal: React.FC = () => {
 
   if (!user || !isLocked) return null;
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
       setError('Please enter your password to unlock your session.');
@@ -55,14 +86,33 @@ export const SessionLockModal: React.FC = () => {
     setIsSubmitting(true);
     setError('');
 
-    // Re-authentication check
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Validate credentials against backend authentication
+      await authApi.login(user.email, password);
+
+      // Successfully unlocked
+      localStorage.removeItem('eduscholar_session_locked');
+      localStorage.setItem('eduscholar_last_active', Date.now().toString());
       setIsLocked(false);
       setPassword('');
+      setError('');
       toast.success('Session unlocked successfully! Welcome back.');
       resetTimer();
-    }, 600);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Incorrect password. Please verify and try again.';
+      setError(msg);
+      if (err?.response?.status === 423 || err?.response?.data?.isLocked) {
+        toast.error('Account Temporarily Locked', {
+          description: '3 failed attempts reached. Logging out for security...',
+        });
+        setTimeout(() => {
+          localStorage.removeItem('eduscholar_session_locked');
+          logout();
+        }, 1500);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -78,7 +128,7 @@ export const SessionLockModal: React.FC = () => {
             Session Inactivity Lock
           </h2>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Hi <span className="font-bold text-foreground">{user.name}</span>, your session was locked after 2 minutes of inactivity for security.
+            Hi <span className="font-bold text-foreground">{user.name}</span>, your session was locked after 5 minutes of inactivity for security.
           </p>
         </div>
 
@@ -121,6 +171,8 @@ export const SessionLockModal: React.FC = () => {
           <button
             type="button"
             onClick={() => {
+              localStorage.removeItem('eduscholar_session_locked');
+              localStorage.removeItem('eduscholar_last_active');
               setIsLocked(false);
               logout();
             }}

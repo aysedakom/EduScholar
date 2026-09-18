@@ -11,7 +11,6 @@ interface LoginRequestResult {
   mustResetPassword?: boolean;
   reason?: string;
   email: string;
-  devOtp?: string;
   message?: string;
   token?: string;
   user?: any;
@@ -25,7 +24,7 @@ interface AuthContextType {
   apiError: string | null;
   loginRequest: (email: string, password: string) => Promise<LoginRequestResult>;
   verifyOtp: (email: string, otp: string, targetRole?: UserRole) => Promise<boolean>;
-  resendOtp: (email: string, purpose?: string) => Promise<{ success: boolean; devOtp?: string }>;
+  resendOtp: (email: string, purpose?: string) => Promise<{ success: boolean }>;
   verifyEmailToken: (token: string, email?: string) => Promise<boolean>;
   verifyEmailCode: (email: string, code: string) => Promise<boolean>;
   resendVerification: (email: string) => Promise<{ success: boolean; devVerifyUrl?: string }>;
@@ -159,6 +158,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user_profile', JSON.stringify(fullUser));
         localStorage.setItem('user_role', respUser.role);
+        localStorage.removeItem('eduscholar_session_locked');
+        localStorage.setItem('eduscholar_last_active', Date.now().toString());
         setApiError(null);
       }
 
@@ -168,7 +169,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         mustResetPassword: res.data.mustResetPassword || res.data.requirePasswordReset,
         reason: res.data.reason,
         email: res.data.email || email,
-        devOtp: res.data.devOtp,
         message: res.data.message,
         token: res.data.token,
         user: res.data.user,
@@ -196,6 +196,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user_profile', JSON.stringify(fullUser));
       localStorage.setItem('user_role', respUser.role);
+      localStorage.removeItem('eduscholar_session_locked');
+      localStorage.setItem('eduscholar_last_active', Date.now().toString());
       setApiError(null);
       return true;
     } catch (err: any) {
@@ -205,11 +207,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const resendOtp = async (email: string, purpose: string = 'login'): Promise<{ success: boolean; devOtp?: string }> => {
+  const resendOtp = async (email: string, purpose: string = 'login'): Promise<{ success: boolean }> => {
     try {
       const res = await authApi.resendOtp(email, purpose);
       toast.success(res.data.message || 'A fresh verification code has been dispatched to your email.');
-      return { success: true, devOtp: res.data.devOtp };
+      return { success: true };
     } catch (err: any) {
       const message = err?.response?.data?.message || err?.message || 'Failed to resend code.';
       toast.error(message);
@@ -432,6 +434,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('token');
     localStorage.removeItem('user_profile');
     localStorage.removeItem('user_role');
+    localStorage.removeItem('eduscholar_session_locked');
+    localStorage.removeItem('eduscholar_last_active');
     toast.info('Signed out successfully.');
     window.location.href = '/login';
   };
