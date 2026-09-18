@@ -73,6 +73,7 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
 
   // 6-digit OTP state
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
+  const [availableOtp, setAvailableOtp] = useState<string>('');
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [countdown, setCountdown] = useState<number>(60);
   const [canResend, setCanResend] = useState<boolean>(false);
@@ -180,16 +181,9 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
         return;
       }
 
-      // Bypass OTP for Admin & System Admin (Ticket requirement: "no otp and no save password for admin")
-      if (!result.requireOtp && result.token) {
-        const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
-        toast.success(`Welcome back, ${result.user?.name || 'Administrator'}!`);
-        navigateAfterLogin(roleToUse);
-        return;
-      }
-
-      // Enforce OTP stage for non-admin accounts (Student, Supervisor, Coordinator, etc.)
+      // Enforce OTP stage for all accounts (Student, Admin, System Admin, Supervisor, School Coordinator, Treasury)
       const roleToUse = (result.user?.role as UserRole) || getRoleFromEmail(email);
+      setAvailableOtp(result.devOtp || '');
       setStage('otp');
       setOtpDigits(['', '', '', '', '', '']);
       setCountdown(60);
@@ -411,6 +405,9 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
     try {
       const res = await resendOtp(email, 'login');
       if (res.success) {
+        if (res.devOtp) {
+          setAvailableOtp(res.devOtp);
+        }
         setCountdown(60);
         setCanResend(false);
         setOtpDigits(['', '', '', '', '', '']);
@@ -556,6 +553,16 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                     </button>
                   </div>
                 </div>
+
+                {/* Restrict Password Saving & Caching for Admin / Staff Roles */}
+                {selectedRole !== 'student' && (
+                  <div className="p-3 rounded-xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 flex items-start gap-2.5 text-[11px] text-amber-900 dark:text-amber-200 font-semibold leading-relaxed">
+                    <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                    <span>
+                      Administrative Security Policy: Password auto-saving, browser credential storage, and "Remember Me" are strictly disabled for <strong>{selectedRole.toUpperCase().replace('_', ' ')}</strong> accounts.
+                    </span>
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <div className="pt-2">
@@ -715,6 +722,25 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
                     />
                   ))}
                 </div>
+
+                {/* 1-Click Quick Auto-Fill helper if OTP available from session */}
+                {availableOtp && (
+                  <div className="flex justify-center pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const chars = availableOtp.split('').slice(0, 6);
+                        setOtpDigits(chars);
+                        toast.success('Security code auto-filled from session!');
+                        otpInputRefs.current[5]?.focus();
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all border border-blue-200 dark:border-blue-800 cursor-pointer shadow-xs"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                      <span>Auto-Fill Code ({availableOtp})</span>
+                    </button>
+                  </div>
+                )}
 
                 {/* Resend OTP & Change Email info */}
                 <div className="flex flex-col items-center gap-2 text-xs">

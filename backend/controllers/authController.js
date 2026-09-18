@@ -312,18 +312,7 @@ const login = async (req, res) => {
       user.status = 'active';
     }
 
-    // Admin & System Admin bypass OTP (Ticket requirement: "no otp and no save password for admin")
-    const isAdmin = user.role === 'admin' || user.role === 'system_admin';
-    if (isAdmin) {
-      const token = generateToken(user);
-      return res.json({
-        success: true,
-        message: 'Admin access verified. Welcome back!',
-        requireOtp: false,
-        token,
-        user: formatUserResponse(user),
-      });
-    }
+    // Generate fresh OTP code in database for 2FA / Login Verification (Applies to all roles including Admin)
 
     // Generate fresh OTP code in database for 2FA / Login Verification
     const otpRecord = await otpModel.createOtp({
