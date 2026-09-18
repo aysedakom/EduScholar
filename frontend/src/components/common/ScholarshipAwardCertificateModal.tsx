@@ -180,7 +180,7 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 left-0 lg:left-64 z-40 flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300 overflow-hidden">
+    <div className="fixed inset-y-0 right-0 left-0 lg:left-64 z-40 flex flex-col bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl animate-in slide-in-from-right duration-300 overflow-hidden">
       {/* Print-Specific Styles */}
       <style>{`
         @media print {
@@ -200,8 +200,8 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             margin: 0 !important;
             padding: 32px !important;
             box-shadow: none !important;
-            border: 10px double #92400e !important;
-            background: #fffdf9 !important;
+            border: none !important;
+            background: #ffffff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -323,8 +323,8 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
         </div>
       </header>
 
-      {/* Main Full-Page Canvas Area (One-Page Presentation) */}
-      <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-8 lg:p-12 flex justify-center items-start bg-slate-100/80 dark:bg-slate-950">
+      {/* Main Full-Page Document Area (No cards, no outer borders, no caging containers) */}
+      <main className="flex-1 overflow-y-auto overflow-x-hidden p-6 sm:p-12 lg:p-16 bg-white dark:bg-slate-900 flex justify-center">
         <div
           id="official-scholar-certificate-canvas"
           style={{
@@ -332,133 +332,133 @@ export const ScholarshipAwardCertificateModal: React.FC<ScholarshipAwardCertific
             transformOrigin: 'top center',
             transition: 'transform 0.2s ease-out',
           }}
-          className="w-full max-w-4xl bg-[#fffdf9] text-slate-900 rounded-3xl shadow-2xl p-6 sm:p-12 lg:p-16 space-y-6 sm:space-y-8 border-[10px] sm:border-[14px] border-double border-amber-800/60 dark:border-amber-700/70 font-serif relative transition-all"
+          className="w-full max-w-4xl space-y-8 font-serif relative text-slate-900 dark:text-slate-100"
         >
           {/* Authentic Watermark */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none text-7xl sm:text-9xl font-black rotate-[-25deg] uppercase select-none text-amber-950">
+          <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] dark:opacity-[0.05] pointer-events-none text-7xl sm:text-9xl font-black rotate-[-25deg] uppercase select-none text-slate-900 dark:text-white">
             QC SCHOLAR
           </div>
 
           {/* Official Republic & City Seals Header */}
-          <div className="text-center space-y-2 border-b-2 border-amber-900/30 pb-5">
+          <div className="text-center space-y-2 border-b border-slate-200 dark:border-slate-800 pb-6">
             <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
-              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-md font-sans border-2 border-amber-400">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-blue-700 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-sm font-sans">
                 QC
               </div>
-              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-amber-600 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-md font-sans border-2 border-amber-300">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-full bg-amber-600 text-white flex items-center justify-center font-black text-sm sm:text-base shadow-sm font-sans">
                 <Award className="h-7 w-7 sm:h-8 sm:w-8" />
               </div>
             </div>
 
-            <p className="text-[10px] sm:text-[11px] uppercase tracking-widest text-slate-600 font-sans font-bold">
+            <p className="text-[11px] sm:text-xs uppercase tracking-widest text-slate-500 dark:text-slate-400 font-sans font-bold">
               Republic of the Philippines • City Government of Quezon City
             </p>
-            <p className="text-[12px] sm:text-[14px] uppercase tracking-wider text-amber-950 font-sans font-black">
+            <p className="text-sm sm:text-base uppercase tracking-wider text-slate-900 dark:text-slate-100 font-sans font-black">
               QUEZON CITY YOUTH DEVELOPMENT OFFICE (QCYDO)
             </p>
-            <p className="text-[10px] sm:text-[11px] text-slate-500 font-sans font-medium">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-sans font-medium">
               Unified Scholarship and Financial Assistance Screening Board
             </p>
           </div>
 
           {/* Certificate Title */}
-          <div className="text-center space-y-1">
-            <span className="inline-block px-4 sm:px-8 py-2 bg-amber-100/90 border border-amber-800/50 rounded-xl font-sans font-black text-xs sm:text-base uppercase tracking-widest text-amber-950 shadow-xs">
+          <div className="text-center space-y-1.5">
+            <h2 className="text-lg sm:text-2xl lg:text-3xl font-sans font-black uppercase tracking-widest text-amber-900 dark:text-amber-400">
               CERTIFICATE OF SCHOLARSHIP AWARD & QUALIFICATION
-            </span>
-            <p className="text-xs sm:text-sm font-sans text-amber-900 font-mono font-bold mt-2">
-              Official Award Control No: <span className="underline">{certNo}</span>
+            </h2>
+            <p className="text-xs sm:text-sm font-mono font-bold text-slate-500 dark:text-slate-400">
+              Official Award Control No: <span className="underline text-slate-800 dark:text-slate-200">{certNo}</span>
             </p>
           </div>
 
           {/* Conferred Citation */}
-          <div className="text-center space-y-2 pt-2">
-            <p className="text-xs sm:text-sm text-slate-500 font-sans uppercase font-bold tracking-widest">
+          <div className="text-center space-y-3 pt-2">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-sans uppercase font-bold tracking-widest">
               THIS IS TO OFFICIALLY CERTIFY THAT
             </p>
-            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-serif font-black text-blue-950 uppercase tracking-tight underline decoration-amber-600 decoration-2 sm:decoration-4 py-1">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-blue-900 dark:text-blue-400 uppercase tracking-tight py-1">
               {applicantName}
-            </h2>
-            <p className="text-xs sm:text-sm font-mono font-bold text-slate-600">
-              Student ID Number: <span className="text-blue-900 font-black">{studentId}</span>
+            </h1>
+            <p className="text-xs sm:text-sm font-mono font-bold text-slate-600 dark:text-slate-400">
+              Student ID Number: <span className="text-slate-900 dark:text-slate-100 font-black">{studentId}</span>
             </p>
           </div>
 
           {/* Body Narrative */}
-          <p className="text-xs sm:text-sm lg:text-[15px] leading-relaxed text-slate-800 text-justify font-serif max-w-2xl mx-auto px-2">
-            having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong className="font-sans font-black text-amber-950">OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.
+          <p className="text-sm sm:text-base lg:text-lg leading-relaxed text-slate-800 dark:text-slate-200 text-justify font-serif max-w-3xl mx-auto px-2">
+            having satisfactorily fulfilled all documentary prerequisites, biometric verification, academic evaluation, and background clearance pursuant to the Quezon City Scholarship Code, is hereby officially conferred the title of <strong className="font-sans font-black text-slate-900 dark:text-white">OFFICIAL GOVERNMENT SCHOLAR</strong> of the City Government of Quezon City for the <strong>Academic Year 2026–2027</strong> in Active Good Standing.
           </p>
 
-          {/* Program Details Table */}
-          <div className="p-4 sm:p-6 bg-amber-50/70 rounded-2xl border border-amber-900/20 grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-sans">
+          {/* Program Details - Clean Open Flow (No boxed card/container) */}
+          <div className="py-6 border-y border-slate-200 dark:border-slate-800 grid grid-cols-2 sm:grid-cols-3 gap-6 text-xs sm:text-sm font-sans">
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Scholarship Track</span>
-              <span className="font-bold text-slate-900 text-xs sm:text-sm block leading-snug">{programTitle}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Scholarship Track</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-xs sm:text-sm block leading-snug">{programTitle}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Educational Grant & Aid</span>
-              <span className="font-mono font-black text-emerald-800 text-xs sm:text-sm block leading-snug">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Educational Grant & Aid</span>
+              <span className="font-mono font-black text-emerald-700 dark:text-emerald-400 text-xs sm:text-sm block leading-snug">
                 {getGrantBreakdown(programTitle, awardAmount)}
               </span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">School Institution</span>
-              <span className="font-semibold text-slate-800 text-xs sm:text-sm block leading-snug">{school}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">School Institution</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm block leading-snug">{school}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Degree / Course</span>
-              <span className="font-semibold text-slate-800 text-xs sm:text-sm block leading-snug">{course}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Degree / Course</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs sm:text-sm block leading-snug">{course}</span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Academic Standing</span>
-              <span className="font-bold text-blue-900 text-xs sm:text-sm block leading-snug">
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Academic Standing</span>
+              <span className="font-bold text-blue-700 dark:text-blue-400 text-xs sm:text-sm block leading-snug">
                 {Number(gpa).toFixed(2)} GWA (Honors Tier)
               </span>
             </div>
             <div>
-              <span className="text-[10px] uppercase font-bold text-amber-900 block mb-0.5">Date Conferred</span>
-              <span className="font-medium text-slate-700 text-xs sm:text-sm block leading-snug">{dateStr}</span>
+              <span className="text-[10px] sm:text-xs uppercase font-bold text-slate-500 dark:text-slate-400 block mb-1">Date Conferred</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300 text-xs sm:text-sm block leading-snug">{dateStr}</span>
             </div>
           </div>
 
           {/* Official Signatures Section */}
-          <div className="pt-8 sm:pt-10 grid grid-cols-2 gap-8 items-end border-t border-amber-900/30 text-center font-sans text-xs">
-            <div className="space-y-1.5">
-              <div className="h-12 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center pb-1">
-                <span className="text-xs sm:text-sm font-cursive italic text-slate-800 font-bold">
+          <div className="pt-8 sm:pt-12 grid grid-cols-2 gap-8 items-end text-center font-sans text-xs sm:text-sm">
+            <div className="space-y-2">
+              <div className="h-12 border-b border-slate-400 dark:border-slate-600 w-4/5 mx-auto flex items-end justify-center pb-1">
+                <span className="text-sm sm:text-base font-cursive italic text-slate-800 dark:text-slate-200 font-bold">
                   Hon. Roberto V. Cruz
                 </span>
               </div>
-              <p className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
+              <p className="font-black text-slate-900 dark:text-slate-100 text-xs sm:text-sm uppercase tracking-wide">
                 HON. ROBERTO V. CRUZ
               </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-bold">
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold">
                 Executive Director, QCYDO
               </p>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="h-12 border-b border-slate-500 w-4/5 mx-auto flex items-end justify-center pb-1">
-                <span className="text-xs sm:text-sm font-cursive italic text-blue-900 font-black">
+            <div className="space-y-2">
+              <div className="h-12 border-b border-slate-400 dark:border-slate-600 w-4/5 mx-auto flex items-end justify-center pb-1">
+                <span className="text-sm sm:text-base font-cursive italic text-blue-900 dark:text-blue-300 font-black">
                   Hon. Ma. Josefina "Joy" Belmonte
                 </span>
               </div>
-              <p className="font-black text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
+              <p className="font-black text-slate-900 dark:text-slate-100 text-xs sm:text-sm uppercase tracking-wide">
                 HON. MA. JOSEFINA "JOY" BELMONTE
               </p>
-              <p className="text-[10px] sm:text-[11px] text-slate-500 font-bold">
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 font-bold">
                 City Mayor, Quezon City
               </p>
             </div>
           </div>
 
           {/* Security Strip & Validation Barcode */}
-          <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] font-sans text-slate-500 border-t border-dashed border-amber-900/20">
-            <span className="flex items-center gap-1.5 text-emerald-700 font-bold">
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[10px] sm:text-xs font-sans text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
+            <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold">
               <BadgeCheck className="h-4 w-4" />
               Mayor's Office Dry Seal Affixed & Cryptographically Verified
             </span>
-            <span className="font-mono text-slate-600 font-bold">
+            <span className="font-mono text-slate-600 dark:text-slate-400 font-bold">
               SHA256:QCSP-AWARD-{studentId} • {certNo}
             </span>
           </div>
