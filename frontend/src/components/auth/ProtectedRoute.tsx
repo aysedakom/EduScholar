@@ -8,11 +8,16 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
-  const { isAuthenticated, role, user } = useAuth();
+  const { isAuthenticated, role, user, isSessionLocked } = useAuth();
   const location = useLocation();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Prevent accessing or mounting any protected route/dashboard while session is locked
+  if (isSessionLocked) {
+    return null;
   }
 
   // Redirect new student applicants who have not completed basic form to onboarding

@@ -37,6 +37,9 @@ interface AuthContextType {
   switchRole: (newRole: UserRole) => void;
   loadUser: () => Promise<void>;
   saveBasicProfile: (profile: BasicProfile) => Promise<void>;
+  isSessionLocked: boolean;
+  lockSession: () => void;
+  unlockSession: (password: string) => Promise<boolean>;
   resetAllSystemData: () => Promise<void>;
 }
 
@@ -65,11 +68,96 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const [apiError, setApiError] = useState<string | null>(null);
 
+  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000; // 5 Minutes (300,000 ms)
+
+  const [isSessionLocked, setIsSessionLocked] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const existingToken = localStorage.getItem('token');
+    if (!existingToken) return false;
+    if (localStorage.getItem('eduscholar_session_locked') === 'true') return true;
+    const lastActive = Number(localStorage.getItem('eduscholar_last_active') || 0);
+    if (lastActive > 0 && Date.now() - lastActive >= INACTIVITY_TIMEOUT_MS) {
+      localStorage.setItem('eduscholar_session_locked', 'true');
+      return true;
+    }
+    return false;
+  });
+
+  const lockSession = useCallback(() => {
+    localStorage.setItem('eduscholar_session_locked', 'true');
+    setIsSessionLocked(true);
+  }, []);
+
+  const unlockSession = useCallback(async (pwd: string): Promise<boolean> => {
+    let email = user?.email;
+    if (!email) {
+      const saved = localStorage.getItem('user_profile');
+      if (saved) {
+        try {
+          email = JSON.parse(saved)?.email;
+        } catch {
+          // ignore
+        }
+      }
+    }
+    if (!email) {
+      throw new Error('Account email could not be located. Please sign in again.');
+    }
+
+    const res = await authApi.login(email, pwd);
+    if (res.data?.token) {
+      setToken(res.data.token);
+      localStorage.setItem('token', res.data.token);
+    }
+    localStorage.removeItem('eduscholar_session_locked');
+    localStorage.setItem('eduscholar_last_active', Date.now().toString());
+    setIsSessionLocked(false);
+    return true;
+  }, [user]);
+
+  useEffect(() => {
+    const existingToken = localStorage.getItem('token');
+    if (!existingToken || isSessionLocked) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const scheduleInactivityTimeout = () => {
+      if (localStorage.getItem('eduscholar_session_locked') === 'true') {
+        setIsSessionLocked(true);
+        return;
+      }
+      localStorage.setItem('eduscholar_last_active', Date.now().toString());
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        localStorage.setItem('eduscholar_session_locked', 'true');
+        setIsSessionLocked(true);
+        toast.warning('Session locked due to 5 minutes of inactivity.', { duration: 6000 });
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+
+    const handleUserActivity = () => {
+      if (localStorage.getItem('eduscholar_session_locked') === 'true') {
+        setIsSessionLocked(true);
+        return;
+      }
+      scheduleInactivityTimeout();
+    };
+
+    const activityEvents = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    activityEvents.forEach((evt) => window.addEventListener(evt, handleUserActivity, { passive: true }));
+    scheduleInactivityTimeout();
+
+    return () => {
+      activityEvents.forEach((evt) => window.removeEventListener(evt, handleUserActivity));
+      if (timer) clearTimeout(timer);
+    };
+  }, [token, user, isSessionLocked]);
+
   useEffect(() => {
     if (user) {
       localStorage.setItem('user_profile', JSON.stringify(user));
       localStorage.setItem('user_role', user.role);
-    } else {
+    } else if (!localStorage.getItem('token')) {
       localStorage.removeItem('user_profile');
       localStorage.removeItem('user_role');
     }
@@ -160,6 +248,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('user_role', respUser.role);
         localStorage.removeItem('eduscholar_session_locked');
         localStorage.setItem('eduscholar_last_active', Date.now().toString());
+        setIsSessionLocked(false);
         setApiError(null);
       }
 
@@ -198,6 +287,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('user_role', respUser.role);
       localStorage.removeItem('eduscholar_session_locked');
       localStorage.setItem('eduscholar_last_active', Date.now().toString());
+      setIsSessionLocked(false);
       setApiError(null);
       return true;
     } catch (err: any) {
@@ -431,6 +521,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     setToken(null);
+    setIsSessionLocked(false);
     localStorage.removeItem('token');
     localStorage.removeItem('user_profile');
     localStorage.removeItem('user_role');
@@ -489,6 +580,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchRole,
         loadUser,
         saveBasicProfile,
+        isSessionLocked,
+        lockSession,
+        unlockSession,
         resetAllSystemData,
       }}
     >

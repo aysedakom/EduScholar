@@ -96,8 +96,8 @@ export function App() {
       <LanguageProvider>
         <AuthProvider>
           <WebSocketProvider>
-            <SessionLockModal />
             <BrowserRouter>
+              <SessionLockModal />
               <ResponsiveToaster />
               <CookieConsentBanner />
               <Routes>
