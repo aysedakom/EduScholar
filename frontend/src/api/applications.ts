@@ -51,3 +51,15 @@ export const resubmitApplicationDocument = (
   return api.post<{ success: boolean; message: string; newStatus: string }>(`/applications/${id}/resubmit-document`, payload);
 };
 
+export const sendSchoolVerificationNotice = (id: string | number) => {
+  return api.post<{
+    success: boolean;
+    message: string;
+    schoolEmail: string;
+    schoolName: string;
+    token: string;
+    verifyUrl: string;
+    messageId: string;
+  }>(`/applications/${id}/send-school-verification`);
+};
+

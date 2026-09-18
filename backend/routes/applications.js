@@ -38,5 +38,6 @@ router.post('/', authMiddleware, applicationController.createApplication);
 router.patch('/:id/status', authMiddleware, applicationController.updateStatus);
 router.post('/:id/send-certificate', authMiddleware, applicationController.sendAwardCertificate);
 router.post('/:id/resubmit-document', authMiddleware, applicationController.resubmitDocument);
+router.post('/:id/send-school-verification', authMiddleware, applicationController.sendSchoolVerificationNotice);
 
 module.exports = router;

@@ -408,13 +408,98 @@ const resubmitDocument = async (req, res) => {
       success: true,
       message: `Document "${docName}" successfully resubmitted! Your application status has been returned to "Under Review".`,
       applicationId: appId,
-      newStatus: 'Under Review',
+// @desc   Dispatch official school verification notice and token link to partner school registrar (Stage 3)
+// @route  POST /api/applications/:id/send-school-verification
+const sendSchoolVerificationNotice = async (req, res) => {
+  try {
+    const applicationId = req.params.id;
+    const { pool } = require('../config/db');
+    const appRes = await pool.query(
+      `SELECT a.*, u.name as user_name, u.email as user_email, u.student_id as user_student_id, u.department as user_dept, u.major as user_major
+       FROM applications a
+       LEFT JOIN users u ON a.user_id = u.id
+       WHERE a.id = $1`,
+      [applicationId]
+    );
+
+    if (!appRes.rows || appRes.rows.length === 0) {
+      return res.status(404).json({ message: 'Application not found' });
+    }
+
+    const application = appRes.rows[0];
+    const formData = typeof application.form_data === 'string'
+      ? JSON.parse(application.form_data)
+      : (application.form_data || {});
+
+    const studentName = application.user_name || application.applicant_name ||
+      (formData.firstName ? `${formData.firstName} ${formData.lastName || ''}`.trim() : 'Applicant');
+    const studentId = application.user_student_id || application.student_id || formData.studentId || `2024-QC-${application.id}`;
+    const course = application.user_major || formData.course || formData.major || formData.program || 'Undergraduate Degree';
+    const referenceNumber = application.application_code || application.reference_id || `APP-QC-2026-${application.id}`;
+
+    // Determine partner school email & name
+    const rawSchool = (formData.school || application.school || application.user_dept || formData.department || '').toLowerCase();
+    let schoolEmail = 'bcp.edu67@gmail.com';
+    let schoolName = 'Bestlink College of the Philippines (BCP)';
+    if (rawSchool.includes('qcu') || rawSchool.includes('quezon city university')) {
+      schoolEmail = 'qcu.edu67@gmail.com';
+      schoolName = 'Quezon City University (QCU)';
+    } else if (rawSchool.includes('st') || rawSchool.includes('claire') || rawSchool.includes('calocan')) {
+      schoolEmail = 'stclaire.edu67@gmail.com';
+      schoolName = 'St. Claire College of Caloocan';
+    }
+
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(16).toString('hex');
+    const verifyUrl = `https://eduscholar.up.railway.app/verify-school/${token}`;
+
+    const { sendSchoolVerificationRequest } = require('../services/brevoService');
+    const dispatchResult = await sendSchoolVerificationRequest({
+      schoolEmail,
+      schoolName,
+      studentName,
+      studentId,
+      course,
+      referenceNumber,
+      token,
+      deadlineHours: 72,
+    });
+
+    try {
+      await pool.query(
+        `UPDATE applications 
+         SET status = CASE WHEN status = 'submitted' THEN 'Awaiting School Response' ELSE status END,
+             remarks = COALESCE(remarks, '') || ' • Notice sent to ' || $1 || ' (' || NOW()::date || ')'
+         WHERE id = $2`,
+        [schoolEmail, applicationId]
+      );
+    } catch (e) {
+      // ignore
+    }
+
+    res.json({
+      success: true,
+      message: `Official verification request successfully dispatched to ${schoolName} Registrar (${schoolEmail})`,
+      schoolEmail,
+      schoolName,
+      token,
+      verifyUrl,
+      messageId: dispatchResult.messageId || 'sent',
     });
   } catch (error) {
-    console.error('[applicationController] resubmitDocument error:', error);
-    res.status(500).json({ message: 'Failed to resubmit document: ' + error.message });
+    console.error('[applicationController] sendSchoolVerificationNotice error:', error);
+    res.status(500).json({ message: 'Failed to dispatch school verification notice: ' + error.message });
   }
 };
 
-module.exports = { getMyApplications, getApplicationById, createApplication, updateStatus, sendAwardCertificate, resubmitDocument };
+module.exports = {
+  getMyApplications,
+  getApplicationById,
+  createApplication,
+  updateStatus,
+  sendAwardCertificate,
+  resubmitDocument,
+  sendSchoolVerificationNotice,
+};
+
 
