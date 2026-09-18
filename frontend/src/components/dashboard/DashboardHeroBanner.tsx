@@ -23,7 +23,7 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
   onTabChange,
 }) => {
   const navigate = useNavigate();
-  const [internalActiveTab, setInternalActiveTab] = useState('all');
+  const [internalActiveTab, setInternalActiveTab] = useState(role === 'student' ? 'applications' : 'all');
   const activeTab = externalActiveTab || internalActiveTab;
 
   // Display name formatted cleanly
@@ -98,7 +98,7 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
           subtitle:
             'Track your scholarship applications, review educational grant disbursements, and discover financial aid programs.',
           tabs: [
-            { id: 'applications', label: 'Scholarship Applications', link: '/applications' },
+            { id: 'applications', label: 'Scholarship Applications', link: '/dashboard' },
             { id: 'distribution', label: 'School Aid Distribution', link: '/student/school-aid-distribution' },
             { id: 'registry', label: 'Student Registry', link: '/student/registry' },
             { id: 'documents', label: 'Document Vault', link: '/documents' },
