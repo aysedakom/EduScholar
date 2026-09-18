@@ -22,6 +22,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { LanguageSwitcher } from '../../components/ui/LanguageSwitcher';
+import api from '../../services/api';
 
 export const LandingPage: React.FC = () => {
   const { user, logout } = useAuth();
@@ -31,6 +32,33 @@ export const LandingPage: React.FC = () => {
   const [eservicesOpen, setEservicesOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Live dynamic statistics fetched from database
+  const [liveStats, setLiveStats] = useState({
+    totalScholars: '50,000+',
+    maxGrant: '₱160,000',
+    digitalProcessing: '100%',
+    activeProgramsCount: 12,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchLiveStats = async () => {
+      try {
+        const res = await api.get('/scholarships/public-stats');
+        if (isMounted && res.data?.success) {
+          setLiveStats({
+            totalScholars: res.data.totalScholars || '50,000+',
+            maxGrant: res.data.maxGrant || '₱160,000',
+            digitalProcessing: res.data.digitalProcessing || '100%',
+            activeProgramsCount: res.data.activeProgramsCount || 12,
+          });
+        }
+      } catch (_) {}
+    };
+    fetchLiveStats();
+    return () => { isMounted = false; };
+  }, []);
 
   // Automatically direct logged-in administrators and staff to their command center dashboard
   useEffect(() => {
@@ -113,7 +141,7 @@ export const LandingPage: React.FC = () => {
             </button>
 
             <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-xs shrink-0" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-xs shrink-0" />
               <div className="min-w-0">
                 <span className="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-none block truncate">GovServe</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate block">Campus Aid Hub Portal</span>
@@ -321,15 +349,15 @@ export const LandingPage: React.FC = () => {
       <section className="py-10 bg-white dark:bg-slate-900 border-y border-slate-200/90 dark:border-slate-800 transition-colors duration-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
           <div className="hover-lift p-3 rounded-2xl transition-all">
-            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">50,000+</p>
+            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-slate-900 dark:text-white">{liveStats.totalScholars}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Scholars Empowered Since 2019</p>
           </div>
           <div className="hover-lift p-3 rounded-2xl transition-all">
-            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-emerald-600 dark:text-emerald-400">₱160,000</p>
+            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-emerald-600 dark:text-emerald-400">{liveStats.maxGrant}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Max Annual Grant per Scholar</p>
           </div>
           <div className="hover-lift p-3 rounded-2xl transition-all">
-            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-purple-600 dark:text-purple-400">100%</p>
+            <p className="font-heading font-extrabold text-3xl sm:text-4xl text-purple-600 dark:text-purple-400">{liveStats.digitalProcessing}</p>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">Digital Processing</p>
           </div>
         </div>
@@ -390,7 +418,7 @@ export const LandingPage: React.FC = () => {
                   <BookOpen className="h-6 w-6" />
                 </div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300">
-                  4 Levels • 12 Tracks
+                  4 Levels • {liveStats.activeProgramsCount} Tracks
                 </span>
               </div>
               <div>
@@ -719,7 +747,7 @@ export const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <img src="/logo-system.png" alt="GovServe" className="h-8 w-8 object-contain" />
+              <img src="/logo-system.webp" alt="GovServe" className="h-8 w-8 object-contain" />
               <span className="font-heading font-extrabold text-white text-base">GovServe</span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">

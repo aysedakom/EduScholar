@@ -12,7 +12,7 @@ export function AuthBrandPanel() {
         {/* Very large watermark logo centered behind the concentric rings */}
         <div
           className="absolute h-[640px] w-[640px] bg-center bg-no-repeat bg-contain opacity-25 pointer-events-none z-0"
-          style={{ backgroundImage: 'url(/logo-system.png)' }}
+          style={{ backgroundImage: 'url(/logo-system.webp)' }}
         />
 
         {/* Concentric rings seal */}

@@ -129,7 +129,7 @@ export const DashboardHeroBanner: React.FC<DashboardHeroBannerProps> = ({
       {/* Background Seal Watermark Graphic */}
       <div className="pointer-events-none absolute right-[-40px] top-1/2 -translate-y-1/2 h-[150%] w-auto opacity-15 mix-blend-screen select-none hidden md:block">
         <img
-          src="/lgu_qc_seal.png"
+          src="/lgu_qc_seal.webp"
           alt="Quezon City Seal"
           className="h-full w-auto object-contain filter drop-shadow-md"
           onError={(e) => {

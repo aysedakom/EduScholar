@@ -213,7 +213,7 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-900 px-4 gap-3">
         <div className="flex items-center gap-3 min-w-0 truncate">
           <img
-            src="/logo-system.png"
+            src="/logo-system.webp"
             alt="GovServe Logo"
             className="h-10 w-10 min-w-[40px] min-h-[40px] object-contain bg-blue-600/25 p-0.5 rounded-full border border-blue-500/40 shadow-md shrink-0 transition-transform hover:scale-105"
           />

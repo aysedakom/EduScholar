@@ -96,7 +96,7 @@ export const SchoolVerificationPage: React.FC = () => {
       <header className="w-full border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-900/40 p-1 rounded-xl border border-blue-800" />
+            <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-900/40 p-1 rounded-xl border border-blue-800" />
             <div>
               <span className="font-heading font-extrabold text-lg leading-none block text-white">EduScholar</span>
               <span className="text-[10px] text-blue-400 font-semibold">Partner School Verification Portal</span>

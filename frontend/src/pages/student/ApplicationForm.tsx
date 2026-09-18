@@ -849,7 +849,7 @@ export const ApplicationForm: React.FC = () => {
         <header className={`w-full shadow-md border-b relative z-30 transition-colors ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900" />
               <div>
                 <span className="font-heading font-extrabold text-lg leading-none block">GovServe</span>
                 <span className="text-[10px] text-slate-500 font-semibold">Campus Aid Hub Portal</span>
@@ -949,7 +949,7 @@ export const ApplicationForm: React.FC = () => {
         <header className={`w-full shadow-md border-b relative z-30 transition-colors ${isDark ? 'bg-slate-900 border-slate-800 text-white' : 'bg-white border-slate-200 text-slate-900'}`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900" />
               <div>
                 <span className="font-heading font-extrabold text-lg leading-none block">GovServe</span>
                 <span className="text-[10px] text-slate-500 font-semibold">Scholarship Portal</span>
@@ -1034,7 +1034,7 @@ export const ApplicationForm: React.FC = () => {
           <div className="flex items-center gap-4 sm:gap-6">
             <Link to="/" className="flex items-center gap-3">
               <img
-                src="/logo-system.png"
+                src="/logo-system.webp"
                 alt="GovServe Logo"
                 className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-blue-900 shadow-xs"
               />
@@ -2404,7 +2404,7 @@ export const ApplicationForm: React.FC = () => {
       <footer className={`w-full text-xs py-8 border-t mt-auto ${isDark ? 'bg-slate-900 border-slate-800 text-slate-400' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/logo-system.png" alt="GovServe Logo" className="h-7 w-7 object-contain bg-blue-600/20 p-1 rounded-lg" />
+            <img src="/logo-system.webp" alt="GovServe Logo" className="h-7 w-7 object-contain bg-blue-600/20 p-1 rounded-lg" />
             <span className="font-extrabold text-white">GovServe • Quezon City Youth Development Office</span>
           </div>
           <p>© 2026 Local Government Unit of Quezon City. All Rights Reserved.</p>

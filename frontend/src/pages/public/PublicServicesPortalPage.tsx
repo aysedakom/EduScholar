@@ -75,7 +75,7 @@ export const PublicServicesPortalPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs" />
               <div>
                 <span className="font-heading font-extrabold text-lg text-slate-900 dark:text-white leading-none block">GovServe</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Campus Aid Hub Portal</span>
@@ -148,7 +148,7 @@ export const PublicServicesPortalPage: React.FC = () => {
         id="e-scholar-hero-section"
         className="w-full relative overflow-hidden bg-center bg-no-repeat shadow-lg border-b border-slate-700/40 text-white py-14 sm:py-20 transition-all duration-300"
         style={{
-          backgroundImage: theme === 'dark' ? "url('/Darkmode.jpg')" : "url('/Lightmode.jpg')",
+          backgroundImage: theme === 'dark' ? "url('/Darkmode.webp')" : "url('/Lightmode.webp')",
           backgroundSize: '100% 100%',
         }}
       >
@@ -305,7 +305,7 @@ export const PublicServicesPortalPage: React.FC = () => {
       <footer className="bg-slate-900 text-slate-300 py-12 px-4 sm:px-6 border-t border-slate-800 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <img src="/logo-system.png" alt="GovServe" className="h-8 w-8 object-contain" />
+            <img src="/logo-system.webp" alt="GovServe" className="h-8 w-8 object-contain" />
             <div>
               <span className="font-heading font-extrabold text-white text-sm block">GovServe – QC Campus Aid Hub</span>
               <span className="text-slate-500 text-[11px]">Quezon City Youth Development Office (QCYDO)</span>

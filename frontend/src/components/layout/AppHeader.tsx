@@ -118,7 +118,7 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
 
         {/* Mobile Brand Name */}
         <Link to="/dashboard" className="flex lg:hidden items-center gap-2 min-w-0">
-          <img src="/logo-system.png" alt="GovServe Logo" className="h-7 w-7 object-contain shrink-0" />
+          <img src="/logo-system.webp" alt="GovServe Logo" className="h-7 w-7 object-contain shrink-0" />
           <span className="font-heading font-black text-sm text-slate-900 dark:text-white truncate">GovServe</span>
         </Link>
 

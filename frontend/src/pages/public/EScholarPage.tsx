@@ -192,7 +192,7 @@ export const EScholarPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-6">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-system.png" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs" />
               <div>
                 <span className="font-heading font-extrabold text-lg text-slate-900 dark:text-white leading-none block">GovServe</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Campus Aid Hub Portal</span>
@@ -354,7 +354,7 @@ export const EScholarPage: React.FC = () => {
       <div
         className="w-full relative overflow-hidden bg-center bg-no-repeat shadow-lg border-b border-slate-700/40 text-white py-12 sm:py-16 lg:py-20 transition-all duration-300"
         style={{
-          backgroundImage: theme === 'dark' ? "url('/Darkmode.jpg')" : "url('/Lightmode.jpg')",
+          backgroundImage: theme === 'dark' ? "url('/Darkmode.webp')" : "url('/Lightmode.webp')",
           backgroundSize: '100% 100%'
         }}
       >
@@ -528,7 +528,7 @@ export const EScholarPage: React.FC = () => {
       {showPopup && (
         <div
           onClick={() => setShowPopup(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-fade-in-backdrop cursor-pointer"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/85 backdrop-blur-lg animate-fade-in-backdrop cursor-pointer"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -545,7 +545,7 @@ export const EScholarPage: React.FC = () => {
 
             {/* Pop-out Animated Announcement Image */}
             <img
-              src="/pop-up.jpg"
+              src="/pop-up.webp"
               alt="QCSP Scholarship Announcement"
               className="max-w-full max-h-[88vh] w-auto h-auto object-contain rounded-3xl shadow-[0_25px_60px_-15px_rgba(37,99,235,0.5)] border-2 border-white/20 transition-transform duration-300 hover:scale-[1.03] cursor-pointer"
             />
@@ -561,7 +561,7 @@ export const EScholarPage: React.FC = () => {
 
       {/* Active Application Warning Modal */}
       {blockedModalOpen && activeApp && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-lg animate-in fade-in duration-150">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in zoom-in-95 duration-150">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">

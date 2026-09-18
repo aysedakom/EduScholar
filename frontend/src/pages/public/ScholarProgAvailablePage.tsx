@@ -456,7 +456,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
           <div className="flex items-center gap-4 sm:gap-6">
             <Link to="/" className="flex items-center gap-3">
               <img
-                src="/logo-system.png"
+                src="/logo-system.webp"
                 alt="GovServe Logo"
                 className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs"
               />
@@ -608,7 +608,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
       <div
         className="w-full relative overflow-hidden bg-center bg-no-repeat shadow-lg border-b border-slate-700/40 text-white py-12 sm:py-16 lg:py-20 transition-all duration-300"
         style={{
-          backgroundImage: theme === 'dark' ? "url('/Darkmode.jpg')" : "url('/Lightmode.jpg')",
+          backgroundImage: theme === 'dark' ? "url('/Darkmode.webp')" : "url('/Lightmode.webp')",
           backgroundSize: '100% 100%'
         }}
       >
@@ -892,7 +892,7 @@ export const ScholarProgAvailablePage: React.FC = () => {
       <footer className="bg-slate-900 text-slate-300 py-10 px-4 sm:px-6 border-t border-slate-800 text-xs mt-12">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src="/logo-system.png" alt="GovServe" className="h-7 w-7 object-contain" />
+            <img src="/logo-system.webp" alt="GovServe" className="h-7 w-7 object-contain" />
             <span className="font-heading font-extrabold text-white text-sm">GovServe — Campus Aid Hub</span>
           </div>
           <p className="text-slate-400 text-center sm:text-right">

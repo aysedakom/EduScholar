@@ -19,7 +19,7 @@ export const QCCampusAidHubPage: React.FC = () => {
             {/* Logo */}
             <Link to="/" className="flex items-center gap-3 group">
               <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 p-2 shadow-md group-hover:scale-105 transition-transform flex items-center justify-center">
-                <img src="/logo-system.png" alt="QC Logo" className="h-7 w-7 object-contain brightness-200" />
+                <img src="/logo-system.webp" alt="QC Logo" className="h-7 w-7 object-contain brightness-200" />
               </div>
               <div>
                 <span className="font-heading font-black text-lg tracking-tight text-slate-900 dark:text-white block leading-tight">

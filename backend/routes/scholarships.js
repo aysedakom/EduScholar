@@ -24,6 +24,7 @@ const authMiddleware = require('../middleware/auth');
  *     responses:
  *       200: { description: List of scholarships }
  */
+router.get('/public-stats', scholarshipController.getPublicStats);
 router.get('/', scholarshipController.getScholarships);
 router.get('/:id', scholarshipController.getScholarship);
 router.post('/', authMiddleware, scholarshipController.createScholarship);
