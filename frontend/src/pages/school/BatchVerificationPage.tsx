@@ -201,7 +201,8 @@ export const BatchVerificationPage: React.FC = () => {
   const [inspectRow, setInspectRow] = useState<BatchRow | null>(null);
   const [activeDocTab, setActiveDocTab] = useState<'cor' | 'tor' | 'profile'>('cor');
   const [coordinatorRemarks, setCoordinatorRemarks] = useState('');
-  const [isEndorsing, setIsEndorsing] = useState(false);
+  const [decisionType, setDecisionType] = useState<'endorse' | 'hold'>('endorse');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [sendingNoticeId, setSendingNoticeId] = useState<string | null>(null);
 
   // Load real applications from backend
@@ -370,63 +371,86 @@ export const BatchVerificationPage: React.FC = () => {
     }, 800);
   };
 
-  // Open modal with prefilled coordinator remarks
-  const handleOpenReviewModal = (row: BatchRow) => {
+  // Open modal with prefilled coordinator remarks and active decision
+  const handleOpenReviewModal = (row: BatchRow, forcedDecision?: 'endorse' | 'hold') => {
     setInspectRow(row);
     setActiveDocTab('cor');
-    setCoordinatorRemarks(
-      `Officially verified and endorsed by School Coordinator John Steaven Balansag. Enrolled in ${row.unitsEnrolled} units with official GWA of ${row.gwa.toFixed(2)} (${row.schoolName}). Certified compliant for QCYDO Scholarship payout.`
-    );
+    const initialDecision = forcedDecision || (row.verified && !row.status.toLowerCase().includes('hold') && !row.status.toLowerCase().includes('deficient') ? 'endorse' : 'hold');
+    setDecisionType(initialDecision);
+
+    if (initialDecision === 'endorse') {
+      setCoordinatorRemarks(
+        row.remarks && !row.remarks.includes('below') && !row.remarks.includes('Deficient') && !row.remarks.includes('Hold')
+          ? row.remarks
+          : `Officially verified and endorsed by School Coordinator John Steaven Balansag. Enrolled in ${row.unitsEnrolled} units with official GWA of ${row.gwa.toFixed(2)} (${row.schoolName}). Certified compliant for QCYDO Scholarship payout.`
+      );
+    } else {
+      setCoordinatorRemarks(
+        row.remarks && (row.remarks.includes('Hold') || row.remarks.includes('hold') || row.remarks.includes('GWA') || row.remarks.includes('Deficient'))
+          ? row.remarks
+          : `Placed on Institutional Academic Hold by Coordinator John Steaven Balansag. Official GWA ${row.gwa.toFixed(2)} requires academic grade re-evaluation before endorsement can proceed.`
+      );
+    }
   };
 
-  // Endorse single student application after coordinator review
-  const handleConfirmEndorsement = async () => {
+  // Submit coordinator decision: either Endorse to Admin or Keep on Academic Hold
+  const handleSaveDecision = async () => {
     if (!inspectRow) return;
-    setIsEndorsing(true);
+    setIsUpdatingStatus(true);
     const id = inspectRow.id;
     const name = inspectRow.name;
     const notes = coordinatorRemarks.trim();
-    const finalRemarks = `Endorsed by School Coordinator John Steaven Balansag on ${new Date().toLocaleDateString('en-US')}`;
 
-    try {
-      await updateApplicationStatus(
-        id,
-        'School Endorsed',
-        notes,
-        finalRemarks
+    if (decisionType === 'endorse') {
+      const finalRemarks = notes || `Endorsed by School Coordinator John Steaven Balansag on ${new Date().toLocaleDateString('en-US')}`;
+      try {
+        await updateApplicationStatus(id, 'School Endorsed', notes, finalRemarks);
+      } catch (err) {
+        console.warn('Backend sync fallback:', err);
+      }
+
+      setRows(prev =>
+        prev.map(r =>
+          r.id === id
+            ? {
+                ...r,
+                endorsedToAdmin: true,
+                endorsedBy: 'John Steaven Balansag',
+                endorsedAt: new Date().toISOString().split('T')[0],
+                remarks: finalRemarks,
+                status: 'Verified Regular',
+              }
+            : r
+        )
       );
-    } catch (err) {
-      console.warn('Backend sync fallback:', err);
+      setInspectRow(null);
+      toast.success(`✓ Successfully endorsed ${name} to QCYDO Scholarship Admin Review Queue!`);
+    } else {
+      const holdRemarks = notes || `Placed on Institutional Academic Hold by Coordinator John Steaven Balansag pending grade/record update.`;
+      try {
+        await updateApplicationStatus(id, 'On Academic Hold', notes, holdRemarks);
+      } catch (err) {
+        console.warn('Backend sync fallback:', err);
+      }
+
+      setRows(prev =>
+        prev.map(r =>
+          r.id === id
+            ? {
+                ...r,
+                endorsedToAdmin: false,
+                verified: false,
+                status: 'GWA Deficient',
+                remarks: holdRemarks,
+              }
+            : r
+        )
+      );
+      setInspectRow(null);
+      toast.warning(`Kept ${name} on Academic Hold. Candidate will remain on hold in the roster until records are updated.`);
     }
 
-    setRows(prev =>
-      prev.map(r =>
-        r.id === id
-          ? {
-              ...r,
-              endorsedToAdmin: true,
-              endorsedBy: 'John Steaven Balansag',
-              endorsedAt: new Date().toISOString().split('T')[0],
-              remarks: finalRemarks,
-            }
-          : r
-      )
-    );
-
-    setInspectRow(prev =>
-      prev && prev.id === id
-        ? {
-            ...prev,
-            endorsedToAdmin: true,
-            endorsedBy: 'John Steaven Balansag',
-            endorsedAt: new Date().toISOString().split('T')[0],
-            remarks: finalRemarks,
-          }
-        : prev
-    );
-
-    setIsEndorsing(false);
-    toast.success(`✓ Successfully endorsed ${name} to QCYDO Scholarship Admin Review Queue!`);
+    setIsUpdatingStatus(false);
   };
 
   const filteredRows = rows.filter(r => {
@@ -602,7 +626,7 @@ export const BatchVerificationPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-200">
               {filteredRows.map((row) => (
                 <tr key={row.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="p-3.5 pl-6 font-mono font-bold text-slate-900 dark:text-white">{row.studentId}</td>
+                  <td className="p-3.5 pl-6 font-mono font-bold text-slate-900 dark:text-white truncate max-w-[120px]" title={row.studentId}>{row.studentId}</td>
                   <td className="p-3.5">
                     <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                       {row.name}
@@ -713,7 +737,8 @@ export const BatchVerificationPage: React.FC = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => toast.warning(`Flagged ${row.name} for GWA deficiency counseling.`)}
+                        onClick={() => handleOpenReviewModal(row, 'hold')}
+                        leftIcon={<AlertTriangle className="h-3 w-3 text-amber-600" />}
                         className="text-xs font-bold text-amber-700 border-amber-300 hover:bg-amber-50"
                       >
                         Flag for Review
@@ -757,16 +782,27 @@ export const BatchVerificationPage: React.FC = () => {
                   <Badge variant="success" className="font-extrabold text-xs py-2 px-3 flex items-center gap-1.5">
                     <CheckCircle2 className="h-4 w-4" /> Endorsed by John Steaven Balansag
                   </Badge>
-                ) : (
+                ) : decisionType === 'endorse' ? (
                   <Button
                     variant="primary"
                     size="sm"
-                    onClick={handleConfirmEndorsement}
-                    isLoading={isEndorsing}
+                    onClick={handleSaveDecision}
+                    isLoading={isUpdatingStatus}
                     leftIcon={<Send className="h-4 w-4" />}
                     className="font-extrabold text-xs bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20"
                   >
                     Confirm & Endorse to QCYDO Admin
+                  </Button>
+                ) : (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveDecision}
+                    isLoading={isUpdatingStatus}
+                    leftIcon={<AlertTriangle className="h-4 w-4" />}
+                    className="font-extrabold text-xs bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-600/20"
+                  >
+                    Confirm & Keep on Academic Hold
                   </Button>
                 )}
               </div>
@@ -1031,14 +1067,74 @@ export const BatchVerificationPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Coordinator Endorsement Certification Box */}
-            <div className="p-3.5 bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-2xl space-y-2">
+            {/* Coordinator Evaluation Decision Selection Bar */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-2xl space-y-2">
+              <label className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 block">
+                Coordinator Evaluation Decision
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDecisionType('endorse');
+                    if (coordinatorRemarks.includes('Hold') || coordinatorRemarks.includes('hold')) {
+                      setCoordinatorRemarks(`Officially verified and endorsed by School Coordinator John Steaven Balansag. Enrolled in ${inspectRow.unitsEnrolled} units with official GWA of ${inspectRow.gwa.toFixed(2)} (${inspectRow.schoolName}). Certified compliant for QCYDO Scholarship payout.`);
+                    }
+                  }}
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                    decisionType === 'endorse'
+                      ? 'bg-blue-50/80 dark:bg-blue-950/60 border-blue-500 text-blue-900 dark:text-blue-200 shadow-xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${decisionType === 'endorse' ? 'border-blue-600 bg-blue-600' : 'border-slate-400'}`}>
+                    {decisionType === 'endorse' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-xs">Endorse to QCYDO Admin</p>
+                    <p className="text-[10px] text-slate-500 font-normal">Candidate meets criteria & is certified for scholarship award.</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDecisionType('hold');
+                    if (!coordinatorRemarks.includes('Hold') && !coordinatorRemarks.includes('hold')) {
+                      setCoordinatorRemarks(`Placed on Institutional Academic Hold by Coordinator John Steaven Balansag. Official GWA ${inspectRow.gwa.toFixed(2)} requires academic grade re-evaluation before endorsement can proceed.`);
+                    }
+                  }}
+                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-left text-xs font-bold transition-all cursor-pointer ${
+                    decisionType === 'hold'
+                      ? 'bg-amber-50/80 dark:bg-amber-950/60 border-amber-500 text-amber-900 dark:text-amber-200 shadow-xs'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-slate-300'
+                  }`}
+                >
+                  <div className={`h-4 w-4 rounded-full border flex items-center justify-center ${decisionType === 'hold' ? 'border-amber-600 bg-amber-600' : 'border-slate-400'}`}>
+                    {decisionType === 'hold' && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div>
+                    <p className="font-extrabold text-xs">Keep on Academic Hold / Flag</p>
+                    <p className="text-[10px] text-slate-500 font-normal">Candidate remains on hold in roster until grades are updated.</p>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Coordinator Endorsement / Hold Statement Box */}
+            <div className={`p-3.5 rounded-2xl border space-y-2 transition-colors ${
+              decisionType === 'endorse'
+                ? 'bg-blue-50/70 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800'
+                : 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] uppercase tracking-wider text-blue-900 dark:text-blue-300 flex items-center gap-1.5">
-                  <ShieldCheck className="h-4 w-4 text-blue-600" />
-                  School Coordinator Official Endorsement Statement
+                <span className={`font-extrabold text-[11px] uppercase tracking-wider flex items-center gap-1.5 ${
+                  decisionType === 'endorse' ? 'text-blue-900 dark:text-blue-300' : 'text-amber-900 dark:text-amber-300'
+                }`}>
+                  {decisionType === 'endorse' ? <ShieldCheck className="h-4 w-4 text-blue-600" /> : <AlertTriangle className="h-4 w-4 text-amber-600" />}
+                  {decisionType === 'endorse' ? 'School Coordinator Official Endorsement Statement' : 'Coordinator Academic Hold Directives & Remarks'}
                 </span>
-                <span className="text-[10px] font-bold text-blue-700 dark:text-blue-400">
+                <span className={`text-[10px] font-bold ${decisionType === 'endorse' ? 'text-blue-700 dark:text-blue-400' : 'text-amber-700 dark:text-amber-400'}`}>
                   Officer: John Steaven Balansag
                 </span>
               </div>
@@ -1046,8 +1142,10 @@ export const BatchVerificationPage: React.FC = () => {
                 rows={2}
                 value={coordinatorRemarks}
                 onChange={(e) => setCoordinatorRemarks(e.target.value)}
-                placeholder="Enter official coordinator verification notes..."
-                className="w-full p-2.5 text-xs bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800 rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-600 resize-none font-medium"
+                placeholder={decisionType === 'endorse' ? "Enter official coordinator verification notes..." : "Enter reason for academic hold / grade re-evaluation required..."}
+                className={`w-full p-2.5 text-xs bg-white dark:bg-slate-900 border rounded-xl text-slate-800 dark:text-slate-200 focus:outline-none resize-none font-medium ${
+                  decisionType === 'endorse' ? 'border-blue-200 dark:border-blue-800 focus:border-blue-600' : 'border-amber-200 dark:border-amber-800 focus:border-amber-600'
+                }`}
               />
             </div>
           </div>
