@@ -218,13 +218,16 @@ export const BatchVerificationPage: React.FC = () => {
             const unitsEnrolled = Number(formData.unitsEnrolled || 21);
             const statusStr = String(app.status || '').toLowerCase();
             
-            // STRICT: Never auto-endorse! Only true if explicitly endorsed by school coordinator
+            // Dynamic status from database: strictly driven by coordinator action
             const isEndorsed = statusStr === 'school endorsed' || statusStr === 'endorsed';
-            const isVerified = gwa <= 2.50;
+            const isOnHold = statusStr.includes('hold') || statusStr.includes('flagged') || (app.remarks && app.remarks.toLowerCase().includes('academic hold'));
             
             let rowStatus: BatchRow['status'] = 'Verified Regular';
-            if (gwa > 2.50) rowStatus = 'GWA Deficient';
-            else if (unitsEnrolled < 15) rowStatus = 'Underload Warning';
+            if (isOnHold) {
+              rowStatus = 'GWA Deficient';
+            } else if (unitsEnrolled < 15) {
+              rowStatus = 'Underload Warning';
+            }
 
             const docs = app.documents_submitted || formData.documentsSubmitted || [];
             const corDoc = docs.find((d: any) => (d.name || d.id || '').toLowerCase().includes('cor') || (d.category || '').toLowerCase().includes('academic')) || docs[0];
@@ -255,11 +258,11 @@ export const BatchVerificationPage: React.FC = () => {
               unitsEnrolled: unitsEnrolled,
               gwa: gwa,
               status: rowStatus,
-              verified: isVerified,
+              verified: !isOnHold,
               endorsedToAdmin: isEndorsed,
-              endorsedBy: isEndorsed ? 'John Steaven Balansag' : undefined,
-              endorsedAt: isEndorsed ? '2026-08-31' : undefined,
-              remarks: app.remarks || (isVerified ? `Enrolled in ${unitsEnrolled} units. Dean's list qualifier.` : 'Failed to meet 2.50 minimum GWA.'),
+              endorsedBy: isEndorsed ? (app.endorsed_by || 'John Steaven Balansag') : undefined,
+              endorsedAt: isEndorsed ? (app.endorsed_at || '2026-08-31') : undefined,
+              remarks: app.remarks || `Enrolled in ${unitsEnrolled} units with official GWA of ${gwa.toFixed(2)}.`,
               corFileName: corDoc?.name || `COR_AY2026_${app.student_id || app.id}.pdf`,
               torFileName: torDoc?.name || `TOR_COG_Official_${app.student_id || app.id}.pdf`,
               schoolName: formData.school || app.school || formData.department || 'Quezon City University (QCU Main)',
@@ -326,10 +329,9 @@ export const BatchVerificationPage: React.FC = () => {
   };
 
   const totalLoaded = rows.length;
-  const verifiedCount = rows.filter(r => r.verified).length;
   const endorsedCount = rows.filter(r => r.endorsedToAdmin).length;
-  const pendingCount = rows.filter(r => !r.endorsedToAdmin && r.verified).length;
-  const flaggedCount = rows.filter(r => !r.verified || r.status === 'GWA Deficient').length;
+  const flaggedCount = rows.filter(r => r.status === 'GWA Deficient' || (r.remarks && r.remarks.toLowerCase().includes('hold'))).length;
+  const pendingCount = rows.filter(r => !r.endorsedToAdmin && !(r.status === 'GWA Deficient' || (r.remarks && r.remarks.toLowerCase().includes('hold')))).length;
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -460,12 +462,15 @@ export const BatchVerificationPage: React.FC = () => {
       r.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.schoolName.toLowerCase().includes(searchQuery.toLowerCase());
 
+    const isRowEndorsed = r.endorsedToAdmin;
+    const isRowOnHold = r.status === 'GWA Deficient' || (r.remarks && r.remarks.toLowerCase().includes('hold'));
+    const isRowPending = !isRowEndorsed && !isRowOnHold;
+
     const matchesFilter =
       selectedFilter === 'all' ||
-      (selectedFilter === 'pending' && !r.endorsedToAdmin && r.verified) ||
-      (selectedFilter === 'endorsed' && r.endorsedToAdmin) ||
-      (selectedFilter === 'flagged' && !r.verified) ||
-      r.status.toLowerCase().includes(selectedFilter.toLowerCase());
+      (selectedFilter === 'pending' && isRowPending) ||
+      (selectedFilter === 'endorsed' && isRowEndorsed) ||
+      (selectedFilter === 'flagged' && isRowOnHold);
 
     return matchesSearch && matchesFilter;
   });
@@ -560,7 +565,7 @@ export const BatchVerificationPage: React.FC = () => {
             <span>Endorsed to QCYDO Admin</span>
             <ShieldCheck className="h-4 w-4 text-purple-600" />
           </div>
-          <div className="text-2xl font-extrabold text-purple-600">{endorsedCount} of {verifiedCount} Endorsed</div>
+          <div className="text-2xl font-extrabold text-purple-600">{endorsedCount} of {totalLoaded} Endorsed</div>
           <p className="text-[11px] text-purple-700 font-semibold">Ready for Final Board Verdict</p>
         </div>
       </div>
@@ -700,15 +705,15 @@ export const BatchVerificationPage: React.FC = () => {
                   <td className="p-3.5">
                     {row.endorsedToAdmin ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                        <Check className="h-3 w-3" /> Pushed to Admin
+                        <Check className="h-3 w-3" /> Endorsed to Admin
                       </span>
-                    ) : row.verified ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                        Ready to Endorse
+                    ) : (row.status === 'GWA Deficient' || (row.remarks && row.remarks.toLowerCase().includes('hold'))) ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <AlertTriangle className="h-3 w-3" /> On Academic Hold
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                        On Academic Hold
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                        Pending Review
                       </span>
                     )}
                   </td>
@@ -723,25 +728,25 @@ export const BatchVerificationPage: React.FC = () => {
                       >
                         ✓ Endorsed (View)
                       </Button>
-                    ) : row.verified ? (
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => handleOpenReviewModal(row)}
-                        leftIcon={<Send className="h-3.5 w-3.5" />}
-                        className="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
-                      >
-                        Review & Endorse
-                      </Button>
-                    ) : (
+                    ) : (row.status === 'GWA Deficient' || (row.remarks && row.remarks.toLowerCase().includes('hold'))) ? (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => handleOpenReviewModal(row, 'hold')}
-                        leftIcon={<AlertTriangle className="h-3 w-3 text-amber-600" />}
+                        leftIcon={<AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
                         className="text-xs font-bold text-amber-700 border-amber-300 hover:bg-amber-50"
                       >
-                        Flag for Review
+                        On Hold (Update)
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleOpenReviewModal(row, 'endorse')}
+                        leftIcon={<Send className="h-3.5 w-3.5" />}
+                        className="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+                      >
+                        Review & Endorse
                       </Button>
                     )}
                   </td>
