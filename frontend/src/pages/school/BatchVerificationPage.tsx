@@ -728,21 +728,11 @@ export const BatchVerificationPage: React.FC = () => {
                       >
                         ✓ Endorsed (View)
                       </Button>
-                    ) : (row.status === 'GWA Deficient' || (row.remarks && row.remarks.toLowerCase().includes('hold'))) ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleOpenReviewModal(row, 'hold')}
-                        leftIcon={<AlertTriangle className="h-3.5 w-3.5 text-amber-600" />}
-                        className="text-xs font-bold text-amber-700 border-amber-300 hover:bg-amber-50"
-                      >
-                        On Hold (Update)
-                      </Button>
                     ) : (
                       <Button
                         variant="primary"
                         size="sm"
-                        onClick={() => handleOpenReviewModal(row, 'endorse')}
+                        onClick={() => handleOpenReviewModal(row)}
                         leftIcon={<Send className="h-3.5 w-3.5" />}
                         className="text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
                       >
