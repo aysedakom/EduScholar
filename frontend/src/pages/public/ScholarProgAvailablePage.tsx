@@ -24,6 +24,7 @@ import {
   clearActiveStudentApplication,
 } from '../../utils/scholarshipPrograms';
 import { getMyApplications } from '../../api/applications';
+import { getScholarships } from '../../api/scholarships';
 import { useWebSocket } from '../../context/WebSocketContext';
 
 interface SubCategoryInfo {
@@ -370,16 +371,37 @@ export const ScholarProgAvailablePage: React.FC = () => {
     }
   }, [user]);
 
+  const [dbScholarships, setDbScholarships] = useState<any[]>([]);
+
+  const fetchScholarshipsFromDb = React.useCallback(async () => {
+    try {
+      const res = await getScholarships();
+      if (Array.isArray(res.data)) {
+        setDbScholarships(res.data);
+      }
+    } catch (err) {
+      console.warn('[ScholarProgAvailablePage] Error fetching scholarships from DB:', err);
+    }
+  }, []);
+
   useEffect(() => {
-    syncApplicationFromDb();
-  }, [syncApplicationFromDb]);
+    fetchScholarshipsFromDb();
+  }, [fetchScholarshipsFromDb]);
+
+  useEffect(() => {
+    const unsub = subscribeToTable('scholarships', () => {
+      fetchScholarshipsFromDb();
+    });
+    return () => unsub();
+  }, [subscribeToTable, fetchScholarshipsFromDb]);
 
   useEffect(() => {
     const unsub = subscribeToTable('applications', () => {
       syncApplicationFromDb();
+      fetchScholarshipsFromDb();
     });
     return () => unsub();
-  }, [subscribeToTable, syncApplicationFromDb]);
+  }, [subscribeToTable, syncApplicationFromDb, fetchScholarshipsFromDb]);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
@@ -719,39 +741,27 @@ export const ScholarProgAvailablePage: React.FC = () => {
 
                               {/* Grant Breakdown & Live Slots Chips */}
                               {(() => {
-                                let slots = 500;
-                                let applied = 0;
+                                const dbMatch = dbScholarships.find((s) => {
+                                  const pCode = String(s.program_code || s.id || '').toLowerCase();
+                                  const pTitle = String(s.title || s.short_title || '').toLowerCase();
+                                  const subIdClean = String(sub.id || '').toLowerCase();
+                                  const subTitleClean = String(sub.title || '').toLowerCase();
 
-                                if (sub.id.includes('excel')) {
-                                  slots = 600;
-                                  applied = 150;
-                                } else if (sub.id.includes('academic') && sub.id.includes('tertiary')) {
-                                  slots = 2000;
-                                  applied = 350;
-                                } else if (sub.id.includes('academic') && sub.id.includes('shs')) {
-                                  slots = 1500;
-                                  applied = 380;
-                                } else if (sub.id.includes('athletic')) {
-                                  slots = 400;
-                                  applied = 90;
-                                } else if (sub.id.includes('youth-leaders')) {
-                                  slots = 400;
-                                  applied = 80;
-                                } else if (sub.id.includes('specialized')) {
-                                  slots = 500;
-                                  applied = 120;
-                                } else if (sub.id.includes('vocational') || sub.id.includes('continuing')) {
-                                  slots = 800;
-                                  applied = 180;
-                                } else if (sub.id.includes('postgrad') || sub.id.includes('thesis')) {
-                                  slots = 300;
-                                  applied = 90;
-                                } else if (sub.id.includes('economic')) {
-                                  slots = 3500;
-                                  applied = 700;
-                                }
+                                  return (
+                                    pCode.includes(subIdClean) ||
+                                    subIdClean.includes(pCode) ||
+                                    pTitle.includes(subTitleClean) ||
+                                    subTitleClean.includes(pTitle)
+                                  );
+                                });
 
-                                const available = Math.max(0, slots - applied);
+                                const slots = dbMatch?.slots ? Number(dbMatch.slots) : 500;
+                                const applied = dbMatch?.applied_count !== undefined
+                                  ? Number(dbMatch.applied_count)
+                                  : (dbMatch?.appliedCount !== undefined ? Number(dbMatch.appliedCount) : 0);
+                                const available = dbMatch?.available_slots !== undefined
+                                  ? Number(dbMatch.available_slots)
+                                  : Math.max(0, slots - applied);
 
                                 return (
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">

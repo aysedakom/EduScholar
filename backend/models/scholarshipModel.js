@@ -8,22 +8,40 @@ const findAll = async (filters = {}) => {
     let i = 1;
 
     if (filters.status && filters.status !== 'All') {
-      clauses.push(`status = $${i++}`);
+      clauses.push(`s.status = $${i++}`);
       values.push(filters.status);
     }
     if (filters.category && filters.category !== 'All') {
-      clauses.push(`(category_id = $${i} OR category_title ILIKE $${i})`);
+      clauses.push(`(s.category_id = $${i} OR s.category_title ILIKE $${i})`);
       values.push(filters.category);
       i++;
     }
     if (filters.search) {
-      clauses.push(`(title ILIKE $${i} OR summary ILIKE $${i} OR short_title ILIKE $${i})`);
+      clauses.push(`(s.title ILIKE $${i} OR s.summary ILIKE $${i} OR s.short_title ILIKE $${i})`);
       values.push(`%${filters.search}%`);
       i++;
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    const result = await pool.query(`SELECT *, GREATEST(0, COALESCE(slots, 500) - COALESCE(applied_count, 0)) AS available_slots FROM scholarships ${where} ORDER BY id ASC`, values);
+    const query = `
+      SELECT 
+        s.*,
+        COALESCE(s.slots, 500) AS slots,
+        COALESCE(app_counts.cnt, s.applied_count, 0)::integer AS applied_count,
+        GREATEST(0, COALESCE(s.slots, 500) - COALESCE(app_counts.cnt, s.applied_count, 0))::integer AS available_slots
+      FROM scholarships s
+      LEFT JOIN (
+        SELECT 
+          program_id, 
+          COUNT(*) as cnt 
+        FROM applications 
+        WHERE status NOT IN ('Draft', 'Rejected', 'Cancelled')
+        GROUP BY program_id
+      ) app_counts ON (s.program_code = app_counts.program_id OR s.id::text = app_counts.program_id)
+      ${where} 
+      ORDER BY s.id ASC
+    `;
+    const result = await pool.query(query, values);
     return result.rows;
   } catch (err) {
     console.error('[scholarshipModel] DB query failed:', err.message);
