@@ -47,11 +47,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [role, setRole] = useState<UserRole>(() => {
-    return (localStorage.getItem('user_role') as UserRole) || 'student';
+    if (typeof window === 'undefined') return 'student';
+    const isTabActive = sessionStorage.getItem('eduscholar_session_active') === 'true';
+    if (!isTabActive) return 'student';
+    return (sessionStorage.getItem('user_role') as UserRole) || (localStorage.getItem('user_role') as UserRole) || 'student';
   });
 
   const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user_profile');
+    if (typeof window === 'undefined') return null;
+    const isTabActive = sessionStorage.getItem('eduscholar_session_active') === 'true';
+    if (!isTabActive) {
+      // Clear persistent storage if tab was closed
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_role');
+      return null;
+    }
+    const savedUser = sessionStorage.getItem('user_profile') || localStorage.getItem('user_profile');
     if (savedUser) {
       try {
         return JSON.parse(savedUser);
@@ -63,7 +75,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('token') || null;
+    if (typeof window === 'undefined') return null;
+    const isTabActive = sessionStorage.getItem('eduscholar_session_active') === 'true';
+    if (!isTabActive) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user_profile');
+      localStorage.removeItem('user_role');
+      return null;
+    }
+    return sessionStorage.getItem('token') || localStorage.getItem('token') || null;
   });
 
   const [apiError, setApiError] = useState<string | null>(null);
@@ -243,6 +263,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(fullUser);
         setRole(respUser.role);
         setToken(res.data.token);
+        sessionStorage.setItem('token', res.data.token);
+        sessionStorage.setItem('user_profile', JSON.stringify(fullUser));
+        sessionStorage.setItem('user_role', respUser.role);
+        sessionStorage.setItem('eduscholar_session_active', 'true');
         localStorage.setItem('token', res.data.token);
         localStorage.setItem('user_profile', JSON.stringify(fullUser));
         localStorage.setItem('user_role', respUser.role);
@@ -282,6 +306,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(fullUser);
       setRole(respUser.role);
       setToken(res.data.token);
+      sessionStorage.setItem('token', res.data.token);
+      sessionStorage.setItem('user_profile', JSON.stringify(fullUser));
+      sessionStorage.setItem('user_role', respUser.role);
+      sessionStorage.setItem('eduscholar_session_active', 'true');
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user_profile', JSON.stringify(fullUser));
       localStorage.setItem('user_role', respUser.role);
@@ -522,6 +550,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setToken(null);
     setIsSessionLocked(false);
+    sessionStorage.clear();
     localStorage.removeItem('token');
     localStorage.removeItem('user_profile');
     localStorage.removeItem('user_role');

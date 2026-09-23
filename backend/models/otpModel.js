@@ -76,7 +76,7 @@ const verifyToken = async ({ email, token }) => {
 /**
  * Stores a fresh OTP code for an email (Used for login 2FA)
  */
-const createOtp = async ({ email, purpose = 'login', expiresInMinutes = 10 }) => {
+const createOtp = async ({ email, purpose = 'login', expiresInMinutes = 1 }) => {
   const normalizedEmail = email.toLowerCase().trim();
   const otpCode = generateNumericOtp();
 
@@ -88,7 +88,7 @@ const createOtp = async ({ email, purpose = 'login', expiresInMinutes = 10 }) =>
     [normalizedEmail, purpose]
   );
 
-  // Insert new OTP record
+  // Insert new OTP record (1 minute expiration)
   const result = await pool.query(
     `INSERT INTO user_otps (email, otp_code, otp_purpose, expires_at, attempts)
      VALUES ($1, $2, $3, NOW() + ($4 || ' minutes')::INTERVAL, 0)

@@ -391,7 +391,7 @@ const login = async (req, res) => {
     const otpRecord = await otpModel.createOtp({
       email: user.email,
       purpose: 'login',
-      expiresInMinutes: 10,
+      expiresInMinutes: 1,
     });
 
     // Await email dispatch to Brevo API to guarantee transmission before response returns
@@ -401,7 +401,7 @@ const login = async (req, res) => {
         name: user.name,
         otpCode: otpRecord.otp_code,
         purpose: 'login',
-        expiresInMinutes: 10,
+        expiresInMinutes: 1,
       });
     } catch (dispatchErr) {
       console.warn('[authController] Login OTP email dispatch warning:', dispatchErr.message);
@@ -519,7 +519,7 @@ const resendOtp = async (req, res) => {
     const otp = await otpModel.createOtp({
       email: user.email,
       purpose,
-      expiresInMinutes: 10,
+      expiresInMinutes: 1,
     });
 
     // Await email dispatch to Brevo API to ensure transmission
@@ -529,7 +529,7 @@ const resendOtp = async (req, res) => {
         name: user.name,
         otpCode: otp.otp_code,
         purpose,
-        expiresInMinutes: 10,
+        expiresInMinutes: 1,
       });
     } catch (dispatchErr) {
       console.warn('[authController] Resend OTP email dispatch warning:', dispatchErr.message);

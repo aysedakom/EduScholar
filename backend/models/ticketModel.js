@@ -59,6 +59,19 @@ const findByUser = async (userId) => {
   }
 };
 
+const countByUser = async (userId) => {
+  try {
+    const res = await pool.query(
+      `SELECT COUNT(*)::integer as count FROM support_tickets WHERE user_id = $1`,
+      [userId]
+    );
+    return res.rows[0]?.count || 0;
+  } catch (err) {
+    console.error('[ticketModel.countByUser] Error:', err.message);
+    return 0;
+  }
+};
+
 const findById = async (id) => {
   try {
     const isNumeric = !isNaN(Number(id)) && /^\d+$/.test(String(id));
@@ -255,4 +268,4 @@ const updateStatus = async (id, { status, adminNotes, resolutionRemarks, adminUs
   }
 };
 
-module.exports = { findAll, findByUser, findById, create, updateStatus };
+module.exports = { findAll, findByUser, countByUser, findById, create, updateStatus };

@@ -531,13 +531,29 @@ export const SupportPage: React.FC = () => {
               <Button variant="outline" size="sm" onClick={() => setShowTicketModal(false)}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" onClick={handleCreateTicket} className="font-bold">
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreateTicket}
+                disabled={user?.role === 'student' && tickets.length >= 2}
+                className="font-bold"
+              >
                 Submit Ticket
               </Button>
             </>
           }
         >
           <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
+            {user?.role === 'student' && tickets.length >= 2 && (
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-1">
+                <p className="font-bold flex items-center gap-1 text-amber-900 dark:text-amber-200">
+                  ⚠️ Ticket Limit Reached (2 / 2 max)
+                </p>
+                <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                  Students are limited to a maximum of 2 support tickets. You currently have 2 tickets registered in your profile. Please resolve your existing tickets before submitting a new one.
+                </p>
+              </div>
+            )}
             <div>
               <label className="block font-bold text-slate-900 dark:text-white mb-1">Inquiry Title / Subject</label>
               <input

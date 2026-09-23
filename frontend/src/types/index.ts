@@ -79,6 +79,7 @@ export interface Scholarship {
   slots: number;
   appliedCount?: number;
   applied_count?: number;
+  available_slots?: number;
   description: string;
   status: string;
   qualifications?: string[];

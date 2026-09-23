@@ -99,6 +99,8 @@ const INITIAL_PROGRAMS: FeedItem[] = ALL_SCHOLARSHIP_PROGRAMS.map((prog) => {
     category: category,
     slots: slots,
     appliedCount: 0,
+    applied_count: 0,
+    available_slots: slots,
     status: 'Open',
     kind: 'scholarship',
     level: prog.level,
@@ -666,18 +668,33 @@ export const ScholarshipsPage: React.FC = () => {
                               </CardHeader>
 
                               <CardContent className="space-y-3 text-xs text-slate-600 dark:text-slate-300 pt-0">
-                                <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-                                  <div>
-                                    <span className="text-[11px] text-slate-400 dark:text-slate-400 block">Grant Amount</span>
-                                    <span className="font-bold text-slate-900 dark:text-white text-sm">{formatCurrency(sch.amount)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[11px] text-slate-400 dark:text-slate-400 block">Deadline</span>
-                                    <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1 mt-0.5">
-                                      <Calendar className="h-3.5 w-3.5 text-slate-400" /> {formatDate(sch.deadline)}
-                                    </span>
-                                  </div>
-                                </div>
+                                {(() => {
+                                  const totalSlots = sch.slots || 500;
+                                  const usedSlots = sch.applied_count || sch.appliedCount || 0;
+                                  const availSlots = sch.available_slots !== undefined ? sch.available_slots : Math.max(0, totalSlots - usedSlots);
+
+                                  return (
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 p-3 bg-slate-50/80 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                                      <div>
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-400 block">Grant Amount</span>
+                                        <span className="font-bold text-slate-900 dark:text-white text-sm">{formatCurrency(sch.amount)}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-400 block">Deadline</span>
+                                        <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1 mt-0.5">
+                                          <Calendar className="h-3.5 w-3.5 text-slate-400" /> {formatDate(sch.deadline)}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <span className="text-[11px] text-slate-400 dark:text-slate-400 block">Live Available Slots</span>
+                                        <span className={`font-bold text-sm flex items-center gap-1 mt-0.5 ${availSlots > 50 ? 'text-emerald-600 dark:text-emerald-400' : availSlots > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                                          <span className="h-2 w-2 rounded-full bg-current animate-pulse shrink-0" />
+                                          {availSlots.toLocaleString()} / {totalSlots.toLocaleString()}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
 
                                 <div>
                                   <span className="font-bold text-slate-700 dark:text-slate-300 block mb-1 text-[11px]">Eligibility Criteria:</span>

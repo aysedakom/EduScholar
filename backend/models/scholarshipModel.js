@@ -23,7 +23,7 @@ const findAll = async (filters = {}) => {
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-    const result = await pool.query(`SELECT * FROM scholarships ${where} ORDER BY id ASC`, values);
+    const result = await pool.query(`SELECT *, GREATEST(0, COALESCE(slots, 500) - COALESCE(applied_count, 0)) AS available_slots FROM scholarships ${where} ORDER BY id ASC`, values);
     return result.rows;
   } catch (err) {
     console.error('[scholarshipModel] DB query failed:', err.message);

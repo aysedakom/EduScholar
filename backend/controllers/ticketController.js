@@ -45,6 +45,16 @@ const getTicketById = async (req, res) => {
 // @access Authenticated
 const createTicket = async (req, res) => {
   try {
+    if (req.user?.role === 'student') {
+      const ticketCount = await ticketModel.countByUser(req.user.id);
+      if (ticketCount >= 2) {
+        return res.status(400).json({
+          success: false,
+          message: 'Ticketing limit reached: Students are restricted to a maximum of 2 support tickets only.',
+        });
+      }
+    }
+
     const ticket = await ticketModel.create(req.body, req.user);
 
     // Broadcast real-time ticket creation event

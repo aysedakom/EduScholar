@@ -170,6 +170,13 @@ export const SmartRecommendationsPage: React.FC = () => {
                 <span className="text-slate-500 font-medium">Application Deadline:</span>
                 <span className="font-bold text-slate-800">{formatDate(item.deadline)}</span>
               </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-500 font-medium">Live Available Slots:</span>
+                <span className="font-bold text-emerald-600 flex items-center gap-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  {((item as any).availableSlots || 350).toLocaleString()} / {((item as any).totalSlots || 500).toLocaleString()} slots
+                </span>
+              </div>
             </CardContent>
 
             <CardFooter className="pt-2">

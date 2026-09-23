@@ -261,9 +261,11 @@ async function sendVerificationLinkEmail({ to, name, verifyUrl, expiresInMinutes
 /**
  * Generates an accessible, responsive HTML email template for Login OTP verification
  */
-function generateOtpEmailHtml({ name, otpCode, purpose = 'login', expiresInMinutes = 10 }) {
+function generateOtpEmailHtml({ name, otpCode, purpose = 'login', expiresInMinutes = 1 }) {
   const purposeTitle = 'Account Login Verification Code';
   const purposeDesc = 'A sign-in attempt was initiated for your EduScholar account. Please enter the unique one-time verification code below to complete your authentication.';
+
+  const expiryText = expiresInMinutes === 1 ? '1 minute' : `${expiresInMinutes} minutes`;
 
   return `
 <!DOCTYPE html>
@@ -302,7 +304,7 @@ function generateOtpEmailHtml({ name, otpCode, purpose = 'login', expiresInMinut
       <div class="otp-box">
         <div class="otp-label">Your One-Time Login Verification Code</div>
         <div class="otp-code">${otpCode}</div>
-        <div class="otp-expiry">⏱ Valid for the next ${expiresInMinutes} minutes</div>
+        <div class="otp-expiry">⏱ Valid for the next ${expiryText}</div>
       </div>
 
       <div class="alert">
@@ -322,10 +324,11 @@ function generateOtpEmailHtml({ name, otpCode, purpose = 'login', expiresInMinut
 /**
  * High-level function to send OTP email (Exclusively for Login 2FA)
  */
-async function sendOtpEmail({ to, name, otpCode, purpose = 'login', expiresInMinutes = 10 }) {
+async function sendOtpEmail({ to, name, otpCode, purpose = 'login', expiresInMinutes = 1 }) {
+  const expiryText = expiresInMinutes === 1 ? '1 minute' : `${expiresInMinutes} minutes`;
   const subject = `[${SENDER_NAME}] ${otpCode} is your login OTP verification code`;
   const htmlContent = generateOtpEmailHtml({ name, otpCode, purpose, expiresInMinutes });
-  const textContent = `Your ${SENDER_NAME} login OTP verification code is: ${otpCode}. It expires in ${expiresInMinutes} minutes. Do not share this code.`;
+  const textContent = `Your ${SENDER_NAME} login OTP verification code is: ${otpCode}. It expires in ${expiryText}. Do not share this code.`;
 
   // 1. Try Brevo REST API if configured
   const apiKey = getBrevoApiKey();

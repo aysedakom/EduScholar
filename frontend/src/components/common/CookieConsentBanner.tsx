@@ -28,17 +28,17 @@ export const CookieConsentBanner: React.FC = () => {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 sm:left-6 sm:right-auto sm:max-w-lg z-50 animate-in slide-in-from-bottom-4 duration-300">
-      <div className="bg-slate-900 text-white p-5 rounded-3xl shadow-2xl border border-slate-800 space-y-4 font-sans text-xs">
+    <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md transition-all duration-300 flex items-end sm:items-center justify-center p-4 sm:p-6 animate-in fade-in">
+      <div className="bg-slate-900 text-white p-5 sm:p-6 rounded-3xl shadow-2xl border border-slate-800 max-w-lg w-full space-y-4 font-sans text-xs animate-in zoom-in-95 duration-200">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-2xl bg-blue-600/20 text-blue-400 shrink-0">
-            <Cookie className="h-5 w-5" />
+          <div className="p-2.5 rounded-2xl bg-blue-600/20 text-blue-400 shrink-0">
+            <Cookie className="h-6 w-6" />
           </div>
-          <div className="space-y-1 pr-4">
+          <div className="space-y-1.5 pr-2">
             <h3 className="font-heading font-extrabold text-sm text-white flex items-center gap-1.5">
               Cookie & Data Privacy Notice
             </h3>
-            <p className="text-slate-300 leading-relaxed">
+            <p className="text-slate-300 leading-relaxed text-xs">
               We use essential cookies and local storage to maintain your login session, security tokens, and language preferences in compliance with Republic Act No. 10173 (Data Privacy Act of 2012).
             </p>
           </div>
@@ -51,9 +51,9 @@ export const CookieConsentBanner: React.FC = () => {
           </button>
         </div>
 
-        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800 text-[11px]">
+        <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800 text-xs">
           <Link to="/privacy" className="text-blue-400 hover:underline font-semibold flex items-center gap-1">
-            <ShieldCheck className="h-3.5 w-3.5" />
+            <ShieldCheck className="h-4 w-4" />
             <span>Read Privacy Policy</span>
           </Link>
 
@@ -61,14 +61,14 @@ export const CookieConsentBanner: React.FC = () => {
             <button
               type="button"
               onClick={handleAcceptEssential}
-              className="h-8 px-3 text-[11px] font-bold rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all cursor-pointer shadow-sm"
+              className="h-9 px-3.5 text-xs font-bold rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all cursor-pointer shadow-sm"
             >
               Essential Only
             </button>
             <button
               type="button"
               onClick={handleAcceptAll}
-              className="h-8 px-3 text-[11px] font-extrabold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all cursor-pointer shadow-md"
+              className="h-9 px-4 text-xs font-extrabold rounded-xl bg-blue-600 hover:bg-blue-500 text-white transition-all cursor-pointer shadow-md"
             >
               Accept All
             </button>
