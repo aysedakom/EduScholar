@@ -717,17 +717,62 @@ export const ScholarProgAvailablePage: React.FC = () => {
                                 </Badge>
                               </div>
 
-                              {/* Grant Breakdown Chips */}
-                              <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                                  <span className="text-[10px] text-slate-400 font-semibold block">Tuition Fee Grant</span>
-                                  <span className="font-extrabold text-blue-600 dark:text-blue-400">{sub.tuitionGrant}</span>
-                                </div>
-                                <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
-                                  <span className="text-[10px] text-slate-400 font-semibold block">Living Stipend</span>
-                                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{sub.stipend}</span>
-                                </div>
-                              </div>
+                              {/* Grant Breakdown & Live Slots Chips */}
+                              {(() => {
+                                let slots = 500;
+                                let applied = 0;
+
+                                if (sub.id.includes('excel')) {
+                                  slots = 600;
+                                  applied = 150;
+                                } else if (sub.id.includes('academic') && sub.id.includes('tertiary')) {
+                                  slots = 2000;
+                                  applied = 350;
+                                } else if (sub.id.includes('academic') && sub.id.includes('shs')) {
+                                  slots = 1500;
+                                  applied = 380;
+                                } else if (sub.id.includes('athletic')) {
+                                  slots = 400;
+                                  applied = 90;
+                                } else if (sub.id.includes('youth-leaders')) {
+                                  slots = 400;
+                                  applied = 80;
+                                } else if (sub.id.includes('specialized')) {
+                                  slots = 500;
+                                  applied = 120;
+                                } else if (sub.id.includes('vocational') || sub.id.includes('continuing')) {
+                                  slots = 800;
+                                  applied = 180;
+                                } else if (sub.id.includes('postgrad') || sub.id.includes('thesis')) {
+                                  slots = 300;
+                                  applied = 90;
+                                } else if (sub.id.includes('economic')) {
+                                  slots = 3500;
+                                  applied = 700;
+                                }
+
+                                const available = Math.max(0, slots - applied);
+
+                                return (
+                                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+                                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                      <span className="text-[10px] text-slate-400 font-semibold block">Tuition Fee Grant</span>
+                                      <span className="font-extrabold text-blue-600 dark:text-blue-400">{sub.tuitionGrant}</span>
+                                    </div>
+                                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                      <span className="text-[10px] text-slate-400 font-semibold block">Living Stipend</span>
+                                      <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{sub.stipend}</span>
+                                    </div>
+                                    <div className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700">
+                                      <span className="text-[10px] text-slate-400 font-semibold block">Live Available Slots</span>
+                                      <span className="font-extrabold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
+                                        <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
+                                        {available.toLocaleString()} / {slots.toLocaleString()} slots
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
 
                               {/* Qualifications Box */}
                               <div className="space-y-1.5 pt-1">
