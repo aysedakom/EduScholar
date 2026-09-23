@@ -557,7 +557,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('eduscholar_session_locked');
     localStorage.removeItem('eduscholar_last_active');
     toast.info('Signed out successfully.');
-    window.location.href = '/login';
+    window.location.href = '/';
   };
 
   const switchRole = (newRole: UserRole) => {
@@ -579,7 +579,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await adminApi.resetDatabase();
       toast.dismiss();
       toast.success('Database and client storage completely reset to clean state! 🎉');
-      window.location.href = '/login';
+      window.location.href = '/';
     } catch (e: any) {
       toast.dismiss();
       toast.error('Reset failed: ' + e.message);
