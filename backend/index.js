@@ -27,7 +27,6 @@ app.use(
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
         connectSrc: ["'self'", 'wss:', 'ws:', 'https:', 'http:'],
         objectSrc: ["'none'"],
-        upgradeInsecureRequests: [],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -50,7 +49,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+      if (!origin) return callback(null, 'https://eduscholar.up.railway.app');
       if (
         allowedOrigins.includes(origin) ||
         /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
@@ -58,7 +57,7 @@ app.use(
       ) {
         return callback(null, origin);
       }
-      return callback(new Error('CORS policy error: Origin not allowed'));
+      return callback(null, 'https://eduscholar.up.railway.app');
     },
     credentials: true,
   })
