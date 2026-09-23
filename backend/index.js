@@ -16,15 +16,53 @@ const openapiSpec = require('./docs/openapi.json');
 
 const app = express();
 app.disable('x-powered-by');
-app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        connectSrc: ["'self'", 'wss:', 'ws:', 'https:', 'http:'],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: [],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+  })
+);
 const server = http.createServer(app);
 const port = process.env.PORT || 5000;
 const host = '0.0.0.0';
 
-app.use(cors());
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim())
+  : [
+      'https://eduscholar.up.railway.app',
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5000',
+      'http://127.0.0.1:5173',
+    ];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        allowedOrigins.includes(origin) ||
+        /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
+        origin.endsWith('.railway.app')
+      ) {
+        return callback(null, origin);
+      }
+      return callback(new Error('CORS policy error: Origin not allowed'));
+    },
+    credentials: true,
+  })
+);
 app.use(express.json());
 
 // Security Response Headers
