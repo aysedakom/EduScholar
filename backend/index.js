@@ -7,6 +7,7 @@ require('dotenv').config();
 const http = require('http');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
 const { initDb } = require('./config/db');
 const { initSocketServer } = require('./realtime/socketServer');
@@ -14,6 +15,11 @@ const { initPgListener } = require('./realtime/pgListener');
 const openapiSpec = require('./docs/openapi.json');
 
 const app = express();
+app.disable('x-powered-by');
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false
+}));
 const server = http.createServer(app);
 const port = process.env.PORT || 5000;
 const host = '0.0.0.0';

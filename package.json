@@ -12,5 +12,8 @@
     "tunnel": "npx localtunnel --port 5173",
     "build": "npm --prefix frontend install && npm --prefix frontend run build && npm --prefix backend install",
     "start": "node backend/index.js"
+  },
+  "dependencies": {
+    "helmet": "^8.3.0"
   }
 }

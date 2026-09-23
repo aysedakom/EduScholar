@@ -1,17 +1,25 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
   ],
+  build: {
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        sourcemap: false,
+      },
+    },
+  },
   server: {
-    host: true, // Listen on all network addresses (0.0.0.0) so mobile and tunnels can connect
+    host: true,
     port: 5173,
     strictPort: false,
-    allowedHosts: true, // Allow tunnel hostnames like trycloudflare.com and loca.lt
+    allowedHosts: true,
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
@@ -23,4 +31,4 @@ export default defineConfig({
       },
     },
   },
-})
+});
