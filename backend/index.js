@@ -21,11 +21,19 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
-        connectSrc: ["'self'", 'wss:', 'ws:', 'https:', 'http:'],
+        connectSrc: [
+          "'self'",
+          'https://eduscholar.up.railway.app',
+          'wss://eduscholar.up.railway.app',
+          'http://localhost:5000',
+          'ws://localhost:5000',
+          'http://localhost:5173',
+          'ws://localhost:5173',
+        ],
         objectSrc: ["'none'"],
       },
     },
