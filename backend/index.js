@@ -27,6 +27,9 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        mediaSrc: ["'self'", 'data:', 'blob:', 'https:'],
+        frameSrc: ["'self'", 'https:'],
+        manifestSrc: ["'self'"],
         connectSrc: [
           "'self'",
           'https://eduscholar.up.railway.app',
