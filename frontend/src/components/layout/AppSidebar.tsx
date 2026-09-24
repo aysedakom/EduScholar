@@ -24,7 +24,6 @@ import {
   FileCode,
   HardDrive,
   User,
-  Palette,
   X
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
