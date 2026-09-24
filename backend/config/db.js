@@ -13,10 +13,11 @@ const DB_NAME = process.env.DB_NAME || 'eduscholar';
 
 // Helper to construct pool configuration
 const createPoolConfig = (database) => {
-  if (process.env.DATABASE_URL) {
-    const isLocal = process.env.DATABASE_URL.includes('localhost') || process.env.DATABASE_URL.includes('127.0.0.1');
+  const dbUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL_PRIVATE || process.env.DATABASE_URL;
+  if (dbUrl) {
+    const isLocal = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
     return {
-      connectionString: process.env.DATABASE_URL,
+      connectionString: dbUrl,
       ssl: isLocal ? false : { rejectUnauthorized: false },
       max: 15,
       idleTimeoutMillis: 30000,
@@ -46,7 +47,8 @@ const pool = new Pool(createPoolConfig(DB_NAME));
  * If the DB does not exist, create it.
  */
 async function ensureDatabaseExists() {
-  if (process.env.DATABASE_URL) {
+  const dbUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL_PRIVATE || process.env.DATABASE_URL;
+  if (dbUrl) {
     console.log('[db] Using cloud DATABASE_URL, skipping CREATE DATABASE check');
     return;
   }
