@@ -1,3 +1,4 @@
+// Sidebar Navigation Component v2.1 (Updated: User Management in Utilities, Theme Customization in Header Dropdown)
 import React from 'react';
 import {
   LayoutDashboard,
@@ -24,7 +25,6 @@ import {
   FileCode,
   HardDrive,
   User,
-  Palette,
   X
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
