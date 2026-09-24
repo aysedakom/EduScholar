@@ -285,7 +285,12 @@ export const AIChatWidget: React.FC = () => {
             }}
             className="p-3 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2"
           >
+            <label htmlFor="ai-chat-input" className="sr-only">
+              Type your message to AI Assistant
+            </label>
             <input
+              id="ai-chat-input"
+              name="aiChatMessage"
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
