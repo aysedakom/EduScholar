@@ -668,7 +668,7 @@ export const ProfileManagementPage: React.FC = () => {
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 sticky top-20">
               <CardHeader>
                 <CardTitle className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                  <Sliders className="h-4 w-4 text-blue-600" /> Real-time Live UI Preview
+                  <Sliders className="h-4 w-4 text-primary" /> Real-time Live UI Preview
                 </CardTitle>
                 <CardDescription className="text-xs text-slate-500">
                   This preview updates dynamically as you toggle colors & modes.
@@ -710,7 +710,7 @@ export const ProfileManagementPage: React.FC = () => {
                     type="text"
                     readOnly
                     value="Active focus ring matches theme color"
-                    className="w-full rounded-xl border border-blue-500 bg-white dark:bg-slate-900 p-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none ring-2 ring-blue-500/30"
+                    className="w-full rounded-xl border border-primary bg-white dark:bg-slate-900 p-2.5 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none ring-2 ring-primary/30"
                   />
                 </div>
 
@@ -718,10 +718,10 @@ export const ProfileManagementPage: React.FC = () => {
                 <div className="space-y-1.5 pt-1">
                   <div className="flex justify-between text-xs font-bold">
                     <span className="text-slate-700 dark:text-slate-300">Grant Progress</span>
-                    <span className="text-blue-600 dark:text-blue-400 font-mono">85%</span>
+                    <span className="text-primary font-mono">85%</span>
                   </div>
                   <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div className="h-full bg-blue-600 rounded-full transition-all duration-300" style={{ width: '85%' }} />
+                    <div className="h-full bg-primary rounded-full transition-all duration-300" style={{ width: '85%' }} />
                   </div>
                 </div>
               </CardContent>

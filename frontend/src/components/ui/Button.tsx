@@ -30,14 +30,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97] hover-lift select-none rounded-xl';
 
     const variants = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-600/30 border border-blue-600 font-bold',
+      primary: 'bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-primary/25 border border-primary font-bold',
       secondary: 'bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700 shadow-xs font-bold',
       outline:
         'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-800 font-bold',
       ghost:
         'bg-slate-100/70 dark:bg-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 text-slate-900 dark:text-slate-100 shadow-xs hover:bg-slate-200/80 dark:hover:bg-slate-700/80 font-bold',
       destructive: 'bg-red-600 text-white hover:bg-red-700 shadow-md shadow-red-600/30 border border-red-600 font-bold',
-      link: 'text-blue-600 dark:text-blue-400 underline-offset-4 hover:underline p-0 h-auto font-bold',
+      link: 'text-primary underline-offset-4 hover:underline p-0 h-auto font-bold',
     };
 
     const sizes = {

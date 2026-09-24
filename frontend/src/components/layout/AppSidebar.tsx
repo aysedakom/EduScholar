@@ -310,7 +310,7 @@ export function AppSidebar({ collapsed = false, mobileOpen = false, onClose }: A
                             ? 'lg:justify-center lg:p-2.5 justify-between px-3 py-2 text-xs font-bold'
                             : 'justify-between px-3 py-2 text-xs font-bold',
                           isActive
-                            ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                            ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30 font-bold'
                             : 'text-slate-400 hover:bg-slate-800/80 hover:text-white'
                         )
                       }
