@@ -162,11 +162,13 @@ export const UserManagementPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <Search className="h-4 w-4 text-slate-400" />
             <input
+              id="admin-user-search-query"
+              name="searchQuery"
               type="text"
               placeholder="Search user name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full sm:w-64 h-9 px-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-primary shadow-xs"
+              className="w-full sm:w-64 h-9 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-primary shadow-xs"
             />
           </div>
 
@@ -290,36 +292,42 @@ export const UserManagementPage: React.FC = () => {
         >
           <form onSubmit={handleSaveUser} className="space-y-4 text-xs">
             <div>
-              <label className="block font-bold text-slate-800 mb-1">User Full Name</label>
+              <label htmlFor="user-full-name-input" className="block font-bold text-slate-800 dark:text-slate-200 mb-1">User Full Name</label>
               <input
+                id="user-full-name-input"
+                name="userFullName"
                 type="text"
                 placeholder="e.g. Dr. Robert Vance"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs"
+                className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs dark:text-white"
               />
             </div>
 
             <div>
-              <label className="block font-bold text-slate-800 mb-1">Email Address</label>
+              <label htmlFor="user-email-input" className="block font-bold text-slate-800 dark:text-slate-200 mb-1">Email Address</label>
               <input
+                id="user-email-input"
+                name="userEmail"
                 type="email"
                 placeholder="robert.vance@qc.edu.ph"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs"
+                className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs dark:text-white"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-800 mb-1">Assign Role</label>
+                <label htmlFor="user-role-select" className="block font-bold text-slate-800 dark:text-slate-200 mb-1">Assign Role</label>
                 <select
+                  id="user-role-select"
+                  name="userRole"
                   value={role}
                   onChange={(e) => setRole(e.target.value as any)}
-                  className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs"
+                  className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs dark:text-white"
                 >
                   <option value="Staff">Financial Aid Staff</option>
                   <option value="Admin">Super Admin</option>
@@ -330,14 +338,16 @@ export const UserManagementPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-800 mb-1">Department / Campus</label>
+                <label htmlFor="user-department-input" className="block font-bold text-slate-800 dark:text-slate-200 mb-1">Department / Campus</label>
                 <input
+                  id="user-department-input"
+                  name="userDepartment"
                   type="text"
                   placeholder="QCYDO Aid Office"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
                   required
-                  className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs"
+                  className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs focus:outline-none focus:border-primary shadow-xs dark:text-white"
                 />
               </div>
             </div>

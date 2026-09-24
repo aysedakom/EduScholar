@@ -618,6 +618,8 @@ export const MessagesPage: React.FC = () => {
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
             <input
+              id="messages-search-query"
+              name="searchQuery"
               type="text"
               placeholder={isScholarshipAdmin ? 'Search student name or ID...' : 'Search channels & messages...'}
               value={searchQuery}
@@ -834,6 +836,8 @@ export const MessagesPage: React.FC = () => {
           {/* Message Input Box */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex gap-2">
             <input
+              id="messages-live-chat-input"
+              name="messageInput"
               type="text"
               disabled={!phtInfo.isOpen && !isAdminOrStaff}
               placeholder={
@@ -886,8 +890,10 @@ export const MessagesPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Title:</label>
+              <label htmlFor="announcement-title-input" className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Title:</label>
               <input
+                id="announcement-title-input"
+                name="annTitle"
                 type="text"
                 placeholder="e.g. Schedule of 1st Semester Allowance Disbursement..."
                 value={annTitle}
@@ -898,8 +904,10 @@ export const MessagesPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Target Audience:</label>
+                <label htmlFor="announcement-target-group-select" className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Target Audience:</label>
                 <select
+                  id="announcement-target-group-select"
+                  name="targetGroup"
                   value={targetGroup}
                   onChange={(e) => setTargetGroup(e.target.value)}
                   className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
@@ -913,8 +921,10 @@ export const MessagesPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Broadcast Priority:</label>
+                <label htmlFor="announcement-priority-select" className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Broadcast Priority:</label>
                 <select
+                  id="announcement-priority-select"
+                  name="priority"
                   value={priority}
                   onChange={(e) => setPriority(e.target.value as any)}
                   className="w-full h-10 px-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl focus:outline-none focus:border-blue-600 font-semibold"
@@ -927,8 +937,10 @@ export const MessagesPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Body:</label>
+              <label htmlFor="announcement-body-textarea" className="font-bold text-slate-700 dark:text-slate-300 block mb-1">Announcement Body:</label>
               <textarea
+                id="announcement-body-textarea"
+                name="annMessage"
                 rows={4}
                 placeholder="Write the official notification message for scholars..."
                 value={annMessage}

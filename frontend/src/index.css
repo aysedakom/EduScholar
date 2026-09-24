@@ -96,6 +96,34 @@
     color-scheme: dark;
   }
 
+  /* Font Scaling Options */
+  [data-font-size="sm"] {
+    font-size: 93.75%;
+  }
+  [data-font-size="md"] {
+    font-size: 100%;
+  }
+  [data-font-size="lg"] {
+    font-size: 106.25%;
+  }
+
+  /* Dynamic Accent Colors */
+  [data-accent="emerald"] { --primary: #10b981; --ring: #10b981; }
+  [data-accent="indigo"] { --primary: #6366f1; --ring: #6366f1; }
+  [data-accent="rose"] { --primary: #f43f5e; --ring: #f43f5e; }
+  [data-accent="amber"] { --primary: #d97706; --ring: #d97706; }
+  [data-accent="purple"] { --primary: #a855f7; --ring: #a855f7; }
+  [data-accent="cyan"] { --primary: #06b6d4; --ring: #06b6d4; }
+  [data-accent="blue"] { --primary: #2563eb; --ring: #2563eb; }
+
+  .dark[data-accent="emerald"] { --primary: #34d399; --ring: #34d399; }
+  .dark[data-accent="indigo"] { --primary: #818cf8; --ring: #818cf8; }
+  .dark[data-accent="rose"] { --primary: #fb7185; --ring: #fb7185; }
+  .dark[data-accent="amber"] { --primary: #fbbf24; --ring: #fbbf24; }
+  .dark[data-accent="purple"] { --primary: #c084fc; --ring: #c084fc; }
+  .dark[data-accent="cyan"] { --primary: #22d3ee; --ring: #22d3ee; }
+  .dark[data-accent="blue"] { --primary: #3b82f6; --ring: #3b82f6; }
+
   html {
     background-color: var(--background);
     color: var(--foreground);

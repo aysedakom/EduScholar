@@ -1,4 +1,4 @@
-import { Bell, Menu, ChevronDown, CheckCheck, Sun, Moon } from 'lucide-react';
+import { Bell, Menu, ChevronDown, CheckCheck, Sun, Moon, User as UserIcon, Palette, Lock, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -299,35 +299,105 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
               </p>
             </div>
 
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-extrabold text-xs text-white shadow-xs ring-2 ring-blue-600/20 shrink-0">
-              {getUserInitials(user?.name)}
-            </div>
+            {user?.avatar ? (
+              <img
+                src={user.avatar}
+                alt={user?.name || 'User Avatar'}
+                className="h-8 w-8 rounded-full object-cover shadow-xs ring-2 ring-blue-600/20 shrink-0"
+              />
+            ) : (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 font-extrabold text-xs text-white shadow-xs ring-2 ring-blue-600/20 shrink-0">
+                {getUserInitials(user?.name)}
+              </div>
+            )}
 
             <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors shrink-0" />
           </button>
 
           {open && (
-            <div className="absolute right-0 top-12 w-52 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-xl z-50 animate-in fade-in duration-150">
-              <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-800 mb-1">
-                <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate">{user?.name}</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold font-mono">
-                  {user?.role === 'student'
-                    ? `Application ID: ${user?.application_code || user?.reference_id || user?.applicationId || user?.application_id || (user?.id ? `APP-2026-${String(user.id).padStart(4, '0')}` : 'APP-2026-0001')}`
-                    : (user?.role ? user.role.replace('_', ' ') : 'Administrator')}
-                </p>
-                {user?.email && (
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>
-                )}
+            <div className="absolute right-0 top-12 w-64 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl z-50 animate-in fade-in duration-150">
+              <div className="px-3 py-2.5 border-b border-slate-100 dark:border-slate-800 mb-1 bg-slate-50/60 dark:bg-slate-800/50 rounded-xl">
+                <div className="flex items-center gap-2.5">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="User photo" className="h-9 w-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 shrink-0" />
+                  ) : (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 font-bold text-xs text-white shrink-0">
+                      {getUserInitials(user?.name)}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-slate-900 dark:text-white uppercase truncate">{user?.name || 'PIA MARIE FANER'}</p>
+                    <p className="text-[10px] text-blue-600 dark:text-blue-400 font-bold font-mono truncate">
+                      {user?.role === 'student'
+                        ? `ID: ${user?.application_code || user?.reference_id || user?.applicationId || user?.application_id || (user?.id ? `APP-2026-${String(user.id).padStart(4, '0')}` : 'APP-2026-0001')}`
+                        : (user?.role ? user.role.replace('_', ' ').toUpperCase() : 'ADMINISTRATOR')}
+                    </p>
+                    {user?.email && (
+                      <p className="text-[10px] text-slate-400 truncate mt-0.5">{user.email}</p>
+                    )}
+                  </div>
+                </div>
               </div>
-              <button
-                onClick={() => {
-                  setOpen(false);
-                  logout();
-                }}
-                className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
-              >
-                {t('nav.signout')}
-              </button>
+
+              <div className="space-y-0.5 py-1">
+                {/* 1. My Profile Management */}
+                <Link
+                  to="/profile-management"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl transition-all"
+                >
+                  <UserIcon className="h-4 w-4 text-blue-500" />
+                  <span>My Profile & Account</span>
+                </Link>
+
+                {/* 2. Customize UI Theme */}
+                <Link
+                  to="/profile-management?tab=appearance"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-purple-600 dark:hover:text-purple-400 rounded-xl transition-all"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Palette className="h-4 w-4 text-purple-500" />
+                    <span>Customize UI Theme</span>
+                  </div>
+                  <span className="bg-purple-100 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-[9px] font-extrabold px-1.5 py-0.2 rounded-md">
+                    Colors
+                  </span>
+                </Link>
+
+                {/* 3. Security & Password */}
+                <Link
+                  to="/profile-management?tab=security"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-emerald-600 dark:hover:text-emerald-400 rounded-xl transition-all"
+                >
+                  <Lock className="h-4 w-4 text-emerald-500" />
+                  <span>Security & Password</span>
+                </Link>
+
+                {/* 4. Notifications */}
+                <Link
+                  to="/notifications"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-amber-600 dark:hover:text-amber-400 rounded-xl transition-all"
+                >
+                  <Bell className="h-4 w-4 text-amber-500" />
+                  <span>Notifications Center</span>
+                </Link>
+              </div>
+
+              <div className="border-t border-slate-100 dark:border-slate-800 pt-1 mt-1">
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    logout();
+                  }}
+                  className="w-full flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-extrabold hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 cursor-pointer transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{t('nav.signout')}</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

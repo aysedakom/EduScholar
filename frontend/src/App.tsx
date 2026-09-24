@@ -31,6 +31,7 @@ import { MessagesPage } from './pages/MessagesPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { SupportPage } from './pages/SupportPage';
+import { ProfileManagementPage } from './pages/ProfileManagementPage';
 import { AdminPartnerSchoolsPage } from './pages/admin/AdminPartnerSchoolsPage';
 
 import { ReportsModulePage } from './pages/admin/ReportsModulePage';
@@ -164,7 +165,10 @@ export function App() {
               <Route path="/student/registry" element={<StudentRegistryPage />} />
               <Route path="/student-registry" element={<StudentRegistryPage />} />
               <Route path="/student/profile" element={<StudentRegistryPage />} />
-              <Route path="/profile" element={<StudentRegistryPage />} />
+              <Route path="/profile" element={<ProfileManagementPage />} />
+              <Route path="/profile-management" element={<ProfileManagementPage />} />
+              <Route path="/settings" element={<ProfileManagementPage />} />
+              <Route path="/user/profile" element={<ProfileManagementPage />} />
 
               {/* Student Interactive Features Routes */}
               <Route path="/quiz" element={<ScholarshipQuizPage />} />

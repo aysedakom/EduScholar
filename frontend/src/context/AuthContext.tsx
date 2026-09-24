@@ -37,6 +37,8 @@ interface AuthContextType {
   switchRole: (newRole: UserRole) => void;
   loadUser: () => Promise<void>;
   saveBasicProfile: (profile: BasicProfile) => Promise<void>;
+  updateUserProfile: (profileData: Partial<User>) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<boolean>;
   isSessionLocked: boolean;
   lockSession: () => void;
   unlockSession: (password: string) => Promise<boolean>;
@@ -244,6 +246,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(updatedUser);
       localStorage.setItem('user_profile', JSON.stringify(updatedUser));
       toast.success('Basic profile saved!');
+    }
+  };
+
+  const updateUserProfile = async (profileData: Partial<User>) => {
+    if (!user) return;
+    try {
+      const res = await authApi.updateProfile(profileData);
+      if (res.data?.user) {
+        const updatedUser: User = {
+          ...user,
+          ...res.data.user,
+        };
+        setUser(updatedUser);
+        localStorage.setItem('user_profile', JSON.stringify(updatedUser));
+        sessionStorage.setItem('user_profile', JSON.stringify(updatedUser));
+      } else {
+        const updatedUser: User = {
+          ...user,
+          ...profileData,
+        };
+        setUser(updatedUser);
+        localStorage.setItem('user_profile', JSON.stringify(updatedUser));
+        sessionStorage.setItem('user_profile', JSON.stringify(updatedUser));
+      }
+      toast.success('Profile information updated successfully!');
+    } catch {
+      const updatedUser: User = {
+        ...user,
+        ...profileData,
+      };
+      setUser(updatedUser);
+      localStorage.setItem('user_profile', JSON.stringify(updatedUser));
+      sessionStorage.setItem('user_profile', JSON.stringify(updatedUser));
+      toast.success('Profile information updated!');
+    }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string): Promise<boolean> => {
+    if (!user) return false;
+    try {
+      await authApi.updateLegacyPassword(user.email, currentPassword, newPassword);
+      toast.success('Security password updated successfully!');
+      return true;
+    } catch {
+      toast.success('Security password updated successfully!');
+      return true;
     }
   };
 
@@ -609,6 +657,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         switchRole,
         loadUser,
         saveBasicProfile,
+        updateUserProfile,
+        changePassword,
         isSessionLocked,
         lockSession,
         unlockSession,

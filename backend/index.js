@@ -21,7 +21,9 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+        scriptSrcElem: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
+        scriptSrcAttr: ["'self'", "'unsafe-eval'", "'unsafe-inline'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
         imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
@@ -34,6 +36,7 @@ app.use(
           'http://localhost:5173',
           'ws://localhost:5173',
         ],
+        workerSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
       },
     },

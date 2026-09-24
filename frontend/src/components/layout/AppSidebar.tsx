@@ -23,6 +23,8 @@ import {
   Activity,
   FileCode,
   HardDrive,
+  User,
+  Palette,
   X
 } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
@@ -65,6 +67,7 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'Admin Portal (QCYDO)',
     items: [
+      { label: 'User Management', to: '/admin/users', icon: Users, roles: ['admin', 'system_admin'] as const },
       { label: 'Scholarship Application Portal', to: '/admin/scholarships', icon: GraduationCap, roles: ['admin', 'system_admin'] as const },
       { label: 'School Aid Distribution', to: '/admin/school-aid-distribution', icon: DollarSign, roles: ['admin', 'system_admin'] as const },
       { label: 'Student Registry', to: '/admin/student-registry', icon: ShieldCheck, roles: ['admin', 'system_admin'] as const },
@@ -118,6 +121,33 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
     label: 'UTILITIES',
     items: [
+      {
+        label: 'My Profile & Account',
+        to: '/profile-management',
+        icon: User,
+        roles: [
+          'student',
+          'admin',
+          'supervisor',
+          'school_coordinator',
+          'treasury',
+          'system_admin',
+        ] as const,
+      },
+      {
+        label: 'Customize UI Theme',
+        to: '/profile-management?tab=appearance',
+        icon: Palette,
+        badge: 'Colors',
+        roles: [
+          'student',
+          'admin',
+          'supervisor',
+          'school_coordinator',
+          'treasury',
+          'system_admin',
+        ] as const,
+      },
       {
         label: 'Messages',
         to: '/messages',
