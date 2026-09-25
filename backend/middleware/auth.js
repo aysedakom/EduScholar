@@ -14,7 +14,15 @@ const authMiddleware = async (req, res, next) => {
   try {
     // 1. Try standard JWT verification
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_super_secret_key_change_this');
+      if (!decoded.name && decoded.id) {
+        try {
+          const uRes = await pool.query('SELECT name FROM users WHERE id = $1', [decoded.id]);
+          if (uRes.rows[0]) {
+            decoded.name = uRes.rows[0].name;
+          }
+        } catch (_) {}
+      }
       req.user = decoded;
       return next();
     } catch (jwtErr) {

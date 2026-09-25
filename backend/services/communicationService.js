@@ -686,8 +686,25 @@ class CommunicationService {
       }
 
       const senderId = currentUser.id;
-      const senderName = currentUser.name || (currentUser.role === 'admin' ? 'ADMIN (Financial Aid Desk)' : currentUser.role === 'treasury' ? 'City Treasury Officer' : 'Staff');
-      const senderRole = currentUser.role;
+      let senderName = currentUser.name;
+      if (!senderName && senderId) {
+        try {
+          const uRes = await pool.query('SELECT name FROM users WHERE id = $1', [senderId]);
+          if (uRes.rows[0]?.name) senderName = uRes.rows[0].name;
+        } catch (_) {}
+      }
+      if (!senderName) {
+        senderName = currentUser.role === 'admin' 
+          ? 'QCYDO Admin Desk' 
+          : currentUser.role === 'treasury' 
+          ? 'City Treasury Disbursing Officer' 
+          : currentUser.role === 'school_coordinator'
+          ? 'School Coordinator'
+          : currentUser.role === 'supervisor'
+          ? 'Program Supervisor'
+          : 'Student Applicant';
+      }
+      const senderRole = currentUser.role || 'student';
       const message = data.message;
       const recipientId = data.recipient_id || null;
       let recipientRole = 'admin';

@@ -829,7 +829,7 @@ export const MessagesPage: React.FC = () => {
               </div>
             ) : (
               messages.map((c) => {
-                const isMe = String(c.sender_id) === String(user?.id) || (isAdminOrStaff && c.sender_role === 'admin') || (!isAdminOrStaff && c.sender_role === 'student');
+                const isMe = String(c.sender_id) === String(user?.id);
                 const isSystem = c.sender_role === 'system';
 
                 if (isSystem) {
@@ -840,13 +840,17 @@ export const MessagesPage: React.FC = () => {
                   );
                 }
 
+                const displayName = c.sender_name && c.sender_name !== 'Staff' 
+                  ? c.sender_name 
+                  : (c.sender_role === 'student' ? 'Student Applicant' : 'QCYDO Admin Desk');
+
                 return (
                   <div
                     key={c.id}
                     className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5`}
                   >
                     <span className="text-[9px] text-slate-400 px-1 font-medium">
-                      {c.sender_name} • {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {displayName} • {new Date(c.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                     <div
                       className={`p-3 rounded-2xl max-w-sm font-medium leading-relaxed shadow-xs whitespace-pre-line ${

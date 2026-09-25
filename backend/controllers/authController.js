@@ -8,7 +8,7 @@ const { validateStandardPassword } = require('../utils/passwordValidator');
 
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role, name: user.name },
     process.env.JWT_SECRET || 'your_super_secret_key_change_this',
     { expiresIn: '7d' }
   );
