@@ -1,7 +1,13 @@
 
+const path = require('path');
+const fs = require('fs');
 const dns = require('dns');
 if (dns.setDefaultResultOrder) {
   dns.setDefaultResultOrder('ipv4first');
+}
+const envLocalPath = path.join(__dirname, '../.env.local');
+if (fs.existsSync(envLocalPath)) {
+  require('dotenv').config({ path: envLocalPath });
 }
 require('dotenv').config();
 const http = require('http');
@@ -145,8 +151,6 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-const path = require('path');
-const fs = require('fs');
 const frontendDist = path.join(__dirname, '../frontend/dist');
 if (fs.existsSync(frontendDist)) {
   console.log('[EduScholar Server] Serving frontend production bundle from frontend/dist');
