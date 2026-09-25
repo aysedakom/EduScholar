@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, Minimize2, RefreshCw, User as UserIcon } from 'lucide-react';
+import { Bot, Send, Minimize2, RefreshCw, User as UserIcon, Headphones } from 'lucide-react';
 import type { ChatMessage } from '../../types';
 import { cn } from '../../utils/cn';
 import { useLanguage } from '../../context/LanguageContext';
+import { PublicLiveChatSupportModal } from '../public/PublicLiveChatSupportModal';
 
 export const AIChatWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isLiveSupportOpen, setIsLiveSupportOpen] = useState(false);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -305,8 +307,29 @@ export const AIChatWidget: React.FC = () => {
               <Send className="h-4 w-4" />
             </button>
           </form>
+
+          {/* Quick Trigger for Live Support Desk Queue */}
+          <div className="p-2.5 bg-blue-50 dark:bg-slate-800/90 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-[11px]">
+            <span className="text-slate-600 dark:text-slate-300 font-medium">Need human assistance?</span>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setIsLiveSupportOpen(true);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+            >
+              <Headphones className="h-3.5 w-3.5" />
+              Live Support Desk
+            </button>
+          </div>
         </div>
       )}
+
+      {/* Public / Student Live Support Chat Modal with Queueing & Pre-Chat Form */}
+      <PublicLiveChatSupportModal
+        isOpen={isLiveSupportOpen}
+        onClose={() => setIsLiveSupportOpen(false)}
+      />
     </div>
   );
 };

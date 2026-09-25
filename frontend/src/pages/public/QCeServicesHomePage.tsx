@@ -85,7 +85,7 @@ export const QCeServicesHomePage: React.FC = () => {
             </button>
 
             <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <img src="/logo-system.webp" alt="GovServe Logo" className={`h-9 w-9 object-contain p-1 rounded-xl shadow-sm shrink-0 ${isDark ? 'bg-slate-800' : 'bg-blue-50'}`} />
+              <img src="/logo-system.webp" alt="GovServe Logo" className={`h-9 w-9 object-contain p-1 rounded-full shadow-sm shrink-0 ${isDark ? 'bg-slate-800' : 'bg-blue-50'}`} />
               <div className="min-w-0">
                 <span className={`font-heading font-extrabold text-base sm:text-lg leading-none block truncate ${isDark ? 'text-white' : 'text-slate-900'}`}>GovServe</span>
                 <span className={`text-[10px] font-semibold truncate block ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>QC eServices Hub</span>

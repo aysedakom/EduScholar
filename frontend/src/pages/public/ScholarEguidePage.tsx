@@ -54,7 +54,7 @@ export const ScholarEguidePage: React.FC = () => {
               <img
                 src="/logo-system.webp"
                 alt="GovServe Logo"
-                className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200 dark:border-slate-700 shadow-xs"
+                className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-full border border-blue-200 dark:border-slate-700 shadow-xs"
               />
               <div>
                 <span className="font-heading font-extrabold text-lg text-slate-900 dark:text-white leading-none block">GovServe</span>

@@ -150,6 +150,37 @@ async function ensureTables() {
         );
         CREATE INDEX IF NOT EXISTS idx_chat_messages_conv ON chat_messages(conversation_id, created_at);
 
+        -- 2.1 Live Chat Sessions Table (Live Queue, Auto-Close, Guest Support, Status Lifecycle)
+        CREATE TABLE IF NOT EXISTS live_chat_sessions (
+          id SERIAL PRIMARY KEY,
+          session_code VARCHAR(50) UNIQUE NOT NULL,
+          guest_name VARCHAR(150) NOT NULL,
+          guest_email VARCHAR(200),
+          user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          category VARCHAR(100) NOT NULL,
+          initial_message TEXT NOT NULL,
+          status VARCHAR(30) DEFAULT 'Waiting' CHECK (status IN ('Waiting', 'Active', 'Resolved', 'Expired', 'Closed', 'Archived')),
+          assigned_admin_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          assigned_admin_name VARCHAR(150),
+          last_message_at TIMESTAMPTZ DEFAULT NOW(),
+          last_user_activity_at TIMESTAMPTZ DEFAULT NOW(),
+          closed_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_live_chat_sessions_status ON live_chat_sessions(status, created_at);
+
+        CREATE TABLE IF NOT EXISTS live_chat_messages (
+          id SERIAL PRIMARY KEY,
+          session_id INTEGER REFERENCES live_chat_sessions(id) ON DELETE CASCADE,
+          sender_type VARCHAR(30) NOT NULL CHECK (sender_type IN ('student', 'guest', 'admin', 'system')),
+          sender_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          sender_name VARCHAR(150) NOT NULL,
+          message TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+        CREATE INDEX IF NOT EXISTS idx_live_chat_messages_session ON live_chat_messages(session_id, created_at);
+
         -- 3. Announcements Table
         CREATE TABLE IF NOT EXISTS announcements (
           id SERIAL PRIMARY KEY,

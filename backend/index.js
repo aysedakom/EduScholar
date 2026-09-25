@@ -120,6 +120,7 @@ const communicationRoutes = require('./routes/communication');
 const calendarRoutes = require('./routes/calendar');
 const ticketRoutes = require('./routes/tickets');
 const portalSettingsRoutes = require('./routes/portalSettings');
+const liveChatRoutes = require('./routes/liveChat');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/opportunities', opportunityRoutes);
@@ -140,6 +141,7 @@ app.use('/api/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/portal-settings', portalSettingsRoutes);
+app.use('/api/live-chat', liveChatRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({

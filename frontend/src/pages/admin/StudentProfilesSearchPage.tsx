@@ -380,7 +380,7 @@ export const StudentProfilesSearchPage: React.FC = () => {
                                   <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-2">
                                       <div className="h-9 w-9 rounded-full bg-white p-1 shadow-md flex items-center justify-center shrink-0">
-                                        <img src="/logo-system.webp" alt="QC Logo" className="h-7 w-7 object-contain" />
+                                        <img src="/logo-system.webp" alt="QC Logo" className="h-7 w-7 object-contain rounded-full border border-blue-200 dark:border-slate-700" />
                                       </div>
                                       <div>
                                         <h3 className="font-heading text-[11px] font-black tracking-wider uppercase">QC SCHOLAR REGISTRY</h3>

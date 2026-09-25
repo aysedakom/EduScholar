@@ -70,7 +70,7 @@ export const StudentRegistryPage: React.FC = () => {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-full bg-white p-1 shadow-md flex items-center justify-center shrink-0">
-                <img src="/logo-system.webp" alt="QC Logo" className="h-8 w-8 object-contain" />
+                <img src="/logo-system.webp" alt="QC Logo" className="h-8 w-8 object-contain rounded-full border border-blue-200 dark:border-slate-700" />
               </div>
               <div>
                 <h3 className="font-heading text-xs font-black tracking-wider uppercase">QC SCHOLAR REGISTRY</h3>

@@ -141,7 +141,7 @@ export const LandingPage: React.FC = () => {
             </button>
 
             <Link to="/" className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-xl border border-blue-200/80 dark:border-slate-700 shadow-xs shrink-0" />
+              <img src="/logo-system.webp" alt="GovServe Logo" className="h-9 w-9 object-contain bg-blue-50 dark:bg-slate-800 p-1 rounded-full border border-blue-200/80 dark:border-slate-700 shadow-xs shrink-0" />
               <div className="min-w-0">
                 <span className="font-heading font-extrabold text-base sm:text-lg text-slate-900 dark:text-white leading-none block truncate">GovServe</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold truncate block">Campus Aid Hub Portal</span>

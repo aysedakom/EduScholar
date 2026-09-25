@@ -13,7 +13,7 @@ export const PublicFooter: React.FC = () => {
           {/* Col 1: LGU Branding */}
           <div className="md:col-span-5 space-y-3">
             <div className="flex items-center gap-3">
-              <img src="/logo-system.webp" alt="GovServe Quezon City Logo" className="h-9 w-9 object-contain bg-slate-900 p-1 rounded-xl border border-slate-800 shrink-0" />
+              <img src="/logo-system.webp" alt="GovServe Quezon City Logo" className="h-9 w-9 object-contain bg-slate-900 p-1 rounded-full border border-slate-800 shrink-0" />
               <div>
                 <span className="font-heading font-extrabold text-white text-base block">GovServe – Quezon City</span>
                 <span className="text-slate-400 text-[11px] font-semibold">{isTagalog ? 'Pamahalaang Lokal ng Lungsod Quezon' : 'Quezon City Local Government Unit'}</span>

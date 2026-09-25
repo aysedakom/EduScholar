@@ -31,6 +31,7 @@ import {
   type ConversationThread,
   type ChatMessageItem,
 } from '../api/communication';
+import { AdminLiveChatDashboard } from '../components/admin/AdminLiveChatDashboard';
 
 /**
  * Helper to compute live Philippine Standard Time (PHT, UTC+8)
@@ -97,6 +98,7 @@ export const MessagesPage: React.FC = () => {
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   // Conversations & Chat State
+  const [mainTab, setMainTab] = useState<'live_dashboard' | 'direct_chat'>(isAdminOrStaff ? 'live_dashboard' : 'direct_chat');
   const [conversations, setConversations] = useState<ConversationThread[]>([]);
   const [selectedConv, setSelectedConv] = useState<ConversationThread | null>(null);
   const selectedConvRef = useRef<ConversationThread | null>(null);
@@ -499,7 +501,36 @@ export const MessagesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Announcements Broadcast Card */}
+      {/* View Switcher Tabs for Admin/Staff */}
+      {isAdminOrStaff && (
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-200/60 dark:bg-slate-800/80 rounded-2xl w-fit text-xs font-bold">
+          <button
+            onClick={() => setMainTab('live_dashboard')}
+            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              mainTab === 'live_dashboard'
+                ? 'bg-blue-600 text-white shadow-md font-extrabold'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            🟢 Live Chat Queue & Statuses
+          </button>
+          <button
+            onClick={() => setMainTab('direct_chat')}
+            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              mainTab === 'direct_chat'
+                ? 'bg-blue-600 text-white shadow-md font-extrabold'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            💬 Inter-Agency Channels & Announcements
+          </button>
+        </div>
+      )}
+
+      {mainTab === 'live_dashboard' && isAdminOrStaff ? (
+        <AdminLiveChatDashboard />
+      ) : (
+        <>
       <Card className="border border-blue-200 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/30 dark:from-slate-900 dark:via-slate-900 dark:to-blue-950/20">
         <CardHeader className="flex flex-row items-center justify-between pb-3 cursor-pointer" onClick={() => setShowAnnouncements(!showAnnouncements)}>
           <div className="flex items-center gap-2.5">
@@ -966,6 +997,8 @@ export const MessagesPage: React.FC = () => {
             </div>
           </form>
         </Modal>
+      )}
+      </>
       )}
     </div>
   );

@@ -274,7 +274,7 @@ export const SendScholarshipNoticeModal: React.FC<SendScholarshipNoticeModalProp
               <div className="flex items-center justify-between border-b border-blue-200 dark:border-blue-800 pb-2">
                 <div className="flex items-center gap-2">
                   <div className="h-7 w-7 rounded-full bg-white p-0.5 shadow-xs flex items-center justify-center">
-                    <img src="/logo-system.webp" alt="QC Logo" className="h-6 w-6 object-contain" />
+                    <img src="/logo-system.webp" alt="QC Logo" className="h-6 w-6 object-contain rounded-full" />
                   </div>
                   <div>
                     <h5 className="font-heading text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
