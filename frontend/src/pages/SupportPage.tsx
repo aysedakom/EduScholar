@@ -535,7 +535,7 @@ export const SupportPage: React.FC = () => {
                 variant="primary"
                 size="sm"
                 onClick={handleCreateTicket}
-                disabled={user?.role === 'student' && tickets.length >= 2}
+                disabled={user?.role === 'student' && tickets.length >= 3}
                 className="font-bold"
               >
                 Submit Ticket
@@ -544,13 +544,13 @@ export const SupportPage: React.FC = () => {
           }
         >
           <form onSubmit={handleCreateTicket} className="space-y-4 text-xs">
-            {user?.role === 'student' && tickets.length >= 2 && (
+            {user?.role === 'student' && tickets.length >= 3 && (
               <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 rounded-xl text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-1">
                 <p className="font-bold flex items-center gap-1 text-amber-900 dark:text-amber-200">
-                  ⚠️ Ticket Limit Reached (2 / 2 max)
+                  ⚠️ Ticket Limit Reached (3 / 3 max)
                 </p>
                 <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-                  Students are limited to a maximum of 2 support tickets. You currently have 2 tickets registered in your profile. Please resolve your existing tickets before submitting a new one.
+                  Students are limited to a maximum of 3 support tickets in the queue. You currently have 3 tickets registered in your profile. Please resolve your existing tickets before submitting a new one.
                 </p>
               </div>
             )}
@@ -568,17 +568,33 @@ export const SupportPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block font-bold text-slate-900 dark:text-white mb-1">Category</label>
+                <label className="block font-bold text-slate-900 dark:text-white mb-1">Category & Office Concern</label>
                 <select
                   value={ticketCategory}
                   onChange={(e) => setTicketCategory(e.target.value)}
                   className="w-full h-10 px-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
                 >
-                  <option value="Scholarship Eligibility" className="dark:bg-slate-900 dark:text-white">Scholarship Eligibility</option>
-                  <option value="Grants & Bursaries" className="dark:bg-slate-900 dark:text-white">Grants & Bursaries</option>
-                  <option value="Document Vault" className="dark:bg-slate-900 dark:text-white">Document Vault</option>
-                  <option value="Disbursement & Payroll" className="dark:bg-slate-900 dark:text-white">Disbursement & Payouts</option>
-                  <option value="Technical Issue" className="dark:bg-slate-900 dark:text-white">Technical / Login Issue</option>
+                  <optgroup label="🏛️ QCYDO Admin">
+                    <option value="Scholarship Application Status">Application Status & Guidelines</option>
+                    <option value="Requirements & Documents">Requirements & Documents</option>
+                    <option value="Scholarship Renewal">Scholarship Renewal</option>
+                  </optgroup>
+                  <optgroup label="💰 City Treasury">
+                    <option value="Disbursement Status">Disbursement Status & Schedule</option>
+                    <option value="LandBank ATM Card">LandBank ATM / Cash Card</option>
+                    <option value="Stipend & Payout Voucher">Stipend & Payout Voucher</option>
+                  </optgroup>
+                  <optgroup label="🏫 Registrar / Coordinator">
+                    <option value="COR & Enrollment Clearance">COR & Enrollment Clearance</option>
+                    <option value="TOR & Grade Endorsement">TOR & Grade Endorsement</option>
+                  </optgroup>
+                  <optgroup label="📋 Program Supervisor">
+                    <option value="Evaluation Appeal">Evaluation Appeal / Review</option>
+                    <option value="Work-Study Rating">Work-Study Rating</option>
+                  </optgroup>
+                  <optgroup label="💻 System Admin">
+                    <option value="Technical Issue">Technical / Password Issue</option>
+                  </optgroup>
                 </select>
               </div>
 

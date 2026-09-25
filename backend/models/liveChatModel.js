@@ -40,6 +40,22 @@ const getQueuePosition = async (sessionId) => {
  */
 const createSession = async ({ guest_name, guest_email, category, initial_message, user_id }) => {
   try {
+    // Enforce 3 active/waiting session limit per user or email
+    const activeCheck = await pool.query(
+      `SELECT COUNT(*)::integer as count 
+       FROM live_chat_sessions 
+       WHERE status IN ('Waiting', 'Active') 
+         AND (
+           (user_id IS NOT NULL AND user_id = $1)
+           OR (guest_email IS NOT NULL AND LOWER(guest_email) = LOWER($2))
+         )`,
+      [user_id || -1, guest_email || '']
+    );
+
+    if (activeCheck.rows[0]?.count >= 3) {
+      throw new Error('Queue limit reached: You are restricted to a maximum of 3 active live chat requests in the queue. Please resolve your existing chats first.');
+    }
+
     const sessionCode = `LIVE-${Math.floor(100000 + Math.random() * 900000)}`;
     const selectedCategory = ALLOWED_CATEGORIES.includes(category) ? category : 'Other Concern';
 

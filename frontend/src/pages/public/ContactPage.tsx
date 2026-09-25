@@ -418,16 +418,85 @@ export const ContactPage: React.FC = () => {
                     <Button onClick={() => { setCreatedTicketCode(null); setActiveDeskTab('my-tickets'); }} className="font-bold">View My Tickets</Button>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <Input label="Full Name *" value={name} onChange={(e) => setName(e.target.value)} required />
-                      <Input label="Email Address *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    </div>
-                    <Input label="Inquiry Subject *" value={subject} onChange={(e) => setSubject(e.target.value)} required />
-                    <label className="block text-xs font-semibold">Message *</label>
-                    <textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full p-3 text-xs bg-slate-50 border rounded-xl" required />
-                    <Button type="submit" variant="primary" size="lg" isLoading={isSubmitting} className="w-full font-extrabold">Queue Support Ticket</Button>
-                  </form>
+                  <>
+                    {user?.role === 'student' && myTickets.length >= 3 && (
+                      <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-1">
+                        <p className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-200">
+                          ⚠️ Ticket Queue Limit Reached (3 / 3 Max)
+                        </p>
+                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                          Students are restricted to a maximum of 3 active support tickets in the queue. You currently have 3 tickets in your profile. Please wait for an officer to address your open tickets before submitting a new one.
+                        </p>
+                      </div>
+                    )}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <Input label="Full Name *" value={name} onChange={(e) => setName(e.target.value)} required />
+                        <Input label="Email Address *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-xs font-semibold mb-1 text-slate-900 dark:text-white">
+                          Inquiry Subject / Concern Category *
+                        </label>
+                        <select
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          required
+                          className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
+                        >
+                          <optgroup label="🏛️ QCYDO Admin & Scholarship Office">
+                            <option value="Scholarship Application Status & Guidelines">Scholarship Application Status & Guidelines</option>
+                            <option value="Requirements & Document Verification">Requirements & Document Verification</option>
+                            <option value="Scholarship Renewal & Continuing Assistance">Scholarship Renewal & Continuing Assistance</option>
+                            <option value="Student Profile & Account Verification">Student Profile & Account Verification</option>
+                            <option value="General Scholarship Inquiries">General Scholarship Inquiries</option>
+                          </optgroup>
+                          
+                          <optgroup label="💰 City Treasury (Disbursement & Payouts)">
+                            <option value="Disbursement Status & Payout Schedule">Disbursement Status & Payout Schedule</option>
+                            <option value="LandBank Cash Card & ATM Processing">LandBank Cash Card & ATM Processing</option>
+                            <option value="Stipend Verification & Bank Voucher Concerns">Stipend Verification & Bank Voucher Concerns</option>
+                            <option value="Disbursement Payment Issue / Refund">Disbursement Payment Issue / Refund</option>
+                          </optgroup>
+                          
+                          <optgroup label="🏫 School Coordinator & Registrar Office">
+                            <option value="Enrollment & Certificate of Registration (COR)">Enrollment & Certificate of Registration (COR)</option>
+                            <option value="Official Transcript (TOR) & Grade Submissions">Official Transcript (TOR) & Grade Submissions</option>
+                            <option value="Partner School Slots & Endorsement Status">Partner School Slots & Endorsement Status</option>
+                            <option value="Campus Registrar Clearance & Accreditation">Campus Registrar Clearance & Accreditation</option>
+                          </optgroup>
+
+                          <optgroup label="📋 Program Supervisor (Evaluation Review)">
+                            <option value="Application Evaluation Appeal & Re-assessment">Application Evaluation Appeal & Re-assessment</option>
+                            <option value="Work-Study Performance Evaluation">Work-Study Performance Evaluation</option>
+                            <option value="Academic Standing & Probation Review">Academic Standing & Probation Review</option>
+                          </optgroup>
+
+                          <optgroup label="💻 System Admin & Technical Support">
+                            <option value="Technical Bug & System Error Report">Technical Bug & System Error Report</option>
+                            <option value="Password Reset & Email OTP Verification">Password Reset & Email OTP Verification</option>
+                            <option value="Document Vault Upload Failure">Document Vault Upload Failure</option>
+                            <option value="Other Technical Concerns">Other Technical Concerns</option>
+                          </optgroup>
+                        </select>
+                      </div>
+
+                      <label className="block text-xs font-semibold">Message & Detailed Description *</label>
+                      <textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full p-3 text-xs bg-slate-50 border rounded-xl" required placeholder="Describe your concern or inquiry in detail..." />
+                      
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        isLoading={isSubmitting}
+                        disabled={user?.role === 'student' && myTickets.length >= 3}
+                        className="w-full font-extrabold"
+                      >
+                        Queue Support Ticket
+                      </Button>
+                    </form>
+                  </>
                 )}
               </Card>
             )}
