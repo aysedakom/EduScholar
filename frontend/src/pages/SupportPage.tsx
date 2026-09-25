@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/cn';
 import { createTicket, getTickets } from '../api/tickets';
+import { AdminLiveChatDashboard } from '../components/admin/AdminLiveChatDashboard';
 
 interface FAQItem {
   id: string;
@@ -290,6 +291,11 @@ export const SupportPage: React.FC = () => {
   };
   const backNav = getBackNav();
 
+  const isOfficer = user?.role !== 'student';
+  const [activeSupportTab, setActiveSupportTab] = useState<'live_chat_queue' | 'tickets_faq'>(
+    isOfficer ? 'live_chat_queue' : 'tickets_faq'
+  );
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       {/* Header Banner */}
@@ -305,12 +311,12 @@ export const SupportPage: React.FC = () => {
             </Link>
             <span className="text-slate-400 text-xs">/</span>
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
-              Help Desk & Inquiry Ticketing
+              Help Desk & System Support
             </span>
           </div>
-          <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Support & Knowledge Center</h1>
+          <h1 className="font-heading font-extrabold text-2xl md:text-3xl text-slate-900 dark:text-white">Help Desk & System Support</h1>
           <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 font-medium">
-            Search financial aid FAQs, interact with AI assistant, or submit a support ticket to officers.
+            Manage live chat queues, resolve student inquiry tickets, and access system administrative support.
           </p>
         </div>
 
@@ -326,6 +332,37 @@ export const SupportPage: React.FC = () => {
           </Button>
         </div>
       </div>
+
+      {/* Main Tab Switcher for Admin / Officers / System Admin */}
+      {isOfficer && (
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-200/60 dark:bg-slate-800/80 rounded-2xl w-fit text-xs font-bold">
+          <button
+            onClick={() => setActiveSupportTab('live_chat_queue')}
+            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              activeSupportTab === 'live_chat_queue'
+                ? 'bg-blue-600 text-white shadow-md font-extrabold'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            🟢 Live Chat Support Queue
+          </button>
+          <button
+            onClick={() => setActiveSupportTab('tickets_faq')}
+            className={`px-4 py-2 rounded-xl transition-all cursor-pointer ${
+              activeSupportTab === 'tickets_faq'
+                ? 'bg-blue-600 text-white shadow-md font-extrabold'
+                : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            🎫 Ticket Inbox & Knowledge Base
+          </button>
+        </div>
+      )}
+
+      {isOfficer && activeSupportTab === 'live_chat_queue' ? (
+        <AdminLiveChatDashboard />
+      ) : (
+        <>
 
       {/* Quick Access Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -518,6 +555,8 @@ export const SupportPage: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </>
+      )}
 
       {/* Ticket Modal */}
       {showTicketModal && (
