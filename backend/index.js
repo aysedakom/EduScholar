@@ -40,10 +40,16 @@ app.use(
           "'self'",
           'https://eduscholar.up.railway.app',
           'wss://eduscholar.up.railway.app',
+          'https://eduscholar-6d8o.onrender.com',
+          'wss://eduscholar-6d8o.onrender.com',
+          'https://*.vercel.app',
+          'wss://*.vercel.app',
           'http://localhost:5000',
           'ws://localhost:5000',
           'http://localhost:5173',
           'ws://localhost:5173',
+          'https://*',
+          'wss://*',
         ],
         workerSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],
@@ -60,6 +66,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',').map((s) => s.trim())
   : [
       'https://eduscholar.up.railway.app',
+      'https://eduscholar-6d8o.onrender.com',
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:5000',
@@ -69,15 +76,17 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin) return callback(null, 'https://eduscholar.up.railway.app');
+      if (!origin) return callback(null, true);
       if (
         allowedOrigins.includes(origin) ||
         /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin) ||
-        origin.endsWith('.railway.app')
+        origin.endsWith('.railway.app') ||
+        origin.endsWith('.vercel.app') ||
+        origin.endsWith('.onrender.com')
       ) {
         return callback(null, origin);
       }
-      return callback(null, 'https://eduscholar.up.railway.app');
+      return callback(null, origin);
     },
     credentials: true,
   })
