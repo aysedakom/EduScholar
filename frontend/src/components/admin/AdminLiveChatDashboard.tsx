@@ -375,16 +375,19 @@ export const AdminLiveChatDashboard: React.FC = () => {
               {/* Card Header & Admin Action Toolbar (Requirement 26) */}
               <CardHeader className="p-4 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">
                       {selectedSession.guest_name}
                     </h3>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                      Queuer ID: {selectedSession.user_id ? `STU-${selectedSession.user_id}` : 'PUBLIC-GUEST'}
+                    </span>
                     <span className="text-xs font-semibold text-slate-500">
                       ({selectedSession.category})
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                    Session Code: <span className="font-mono">{selectedSession.session_code}</span> | Started: {formatStartedTime(selectedSession.created_at)}
+                    📧 Email: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedSession.guest_email || 'No Email Provided'}</span> • Session Code: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{selectedSession.session_code}</span> • Started: {formatStartedTime(selectedSession.created_at)}
                   </p>
                 </div>
 

@@ -383,14 +383,49 @@ export const ContactPage: React.FC = () => {
             )}
 
             {activeDeskTab === 'ticket-chat' && selectedTicket && (
-              <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 shadow-soft space-y-4">
-                <div className="flex justify-between items-center pb-3 border-b">
-                  <button onClick={() => setActiveDeskTab('my-tickets')} className="text-xs font-bold text-blue-600">← Back</button>
-                  <div className="p-2 bg-blue-50 rounded-xl border flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-blue-600" />
-                    <span className="text-xs font-mono font-extrabold text-blue-700">{String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}</span>
+              <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <button onClick={() => setActiveDeskTab('my-tickets')} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                    ← Back to Tickets
+                  </button>
+                  <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-xl border border-blue-200 dark:border-blue-800 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="text-xs font-mono font-extrabold text-blue-700 dark:text-blue-300">
+                      {String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:{String(secondsLeft % 60).padStart(2, '0')}
+                    </span>
                   </div>
                 </div>
+
+                {/* Queuer & Ticket Identification Banner */}
+                <div className="p-3.5 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex flex-wrap items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-blue-600 text-white font-extrabold flex items-center justify-center text-sm shadow-xs shrink-0">
+                      {(selectedTicket.applicant_name || selectedTicket.user_name || user?.name || 'A').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                          {selectedTicket.applicant_name || selectedTicket.user_name || user?.name || 'Queuer Applicant'}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          Queuer ID: {selectedTicket.student_id || selectedTicket.studentId || user?.student_id || (selectedTicket.user_id ? `STU-${selectedTicket.user_id}` : 'PUBLIC-QUEUER')}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+                        📧 Email: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedTicket.applicant_email || selectedTicket.user_email || user?.email || 'N/A'}</span> • 🎫 Ticket Code: <span className="font-mono font-bold text-slate-800 dark:text-slate-200">#{selectedTicket.ticket_code || selectedTicket.id}</span>
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+                      Category: {selectedTicket.category || 'General Inquiry'}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl text-[11px] font-bold bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">
+                      Priority: {selectedTicket.priority || 'Medium'}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="h-72 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl overflow-y-auto space-y-3 text-xs">
                   {ticketMessages.map((m) => (
                     <div key={m.id} className={`flex flex-col ${String(m.sender_id) === String(user?.id) ? 'items-end' : 'items-start'}`}>
