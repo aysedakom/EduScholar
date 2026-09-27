@@ -29,7 +29,6 @@ import { Input } from '../../components/ui/Input';
 import { formatCurrency } from '../../utils/cn';
 import { getScholars, updateScholarStatus } from '../../api/registry';
 import type { ScholarRegistryRecord } from '../../api/registry';
-import { DEFAULT_FALLBACK_SCHOLARS_RAW } from '../../utils/masterFallbackData';
 
 export const PayrollAuthorizationPage: React.FC = () => {
   const [scholars, setScholars] = useState<ScholarRegistryRecord[]>([]);
@@ -51,11 +50,11 @@ export const PayrollAuthorizationPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await getScholars();
-      const data = (Array.isArray(res.data) && res.data.length > 0) ? res.data : DEFAULT_FALLBACK_SCHOLARS_RAW;
+      const data = Array.isArray(res.data) ? res.data : [];
       setScholars(data);
     } catch (err) {
       console.error('Failed to load scholars for payroll review:', err);
-      setScholars(DEFAULT_FALLBACK_SCHOLARS_RAW);
+      setScholars([]);
     } finally {
       setIsLoading(false);
     }

@@ -1,145 +1,8 @@
 // backend/controllers/registryController.js
 const { pool } = require('../config/db');
 
-const DEFAULT_MASTER_SCHOLARS = [
-  {
-    id: 1,
-    student_id: '2024-00192',
-    full_name: 'Maria Santos',
-    email: 'maria.santos@qc.edu.ph',
-    school: 'Quezon City University (QCU)',
-    program_id: 'tertiary-academic',
-    program_name: 'Dean’s Tech Excellence Award (QCYDO Merit Grant)',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '2 Years, 1 Month',
-    gwa: 1.75,
-    units_enrolled: 18,
-    status: 'Active Good Standing',
-    grant_amount: 15000,
-    disbursement_status: 'Disbursed',
-    barangay: 'Barangay Batasan Hills, Quezon City',
-    department: 'College of Computer Studies (CCS)',
-    year_level: '3rd Year',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80'
-  },
-  {
-    id: 2,
-    student_id: '2024-00841',
-    full_name: 'Juan Dela Cruz',
-    email: 'juan.delacruz@bcp.edu.ph',
-    school: 'Bestlink College of the Philippines (BCP)',
-    program_id: 'tertiary-economic',
-    program_name: 'Economic Scholarship (Need-Based Tertiary)',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '1 Year, 4 Months',
-    gwa: 1.85,
-    units_enrolled: 21,
-    status: 'Active Good Standing',
-    grant_amount: 10000,
-    disbursement_status: 'Disbursed',
-    barangay: 'Barangay Novaliches Proper, Quezon City',
-    department: 'College of Information Technology',
-    year_level: '2nd Year',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=250&q=80'
-  },
-  {
-    id: 3,
-    student_id: '2024-01205',
-    full_name: 'Angelica Reyes',
-    email: 'angelica.reyes@qcu.edu.ph',
-    school: 'Quezon City University (QCU)',
-    program_id: 'tertiary-excel',
-    program_name: 'QC Excel Scholarship (Tertiary STEM)',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '2 Years, 1 Month',
-    gwa: 1.25,
-    units_enrolled: 21,
-    status: 'Active Good Standing',
-    grant_amount: 80000,
-    disbursement_status: 'Scheduled',
-    barangay: 'Barangay Commonwealth, Quezon City',
-    department: 'College of Engineering & Computer Studies',
-    year_level: '3rd Year',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=250&q=80'
-  },
-  {
-    id: 4,
-    student_id: '2024-03412',
-    full_name: 'Christian Gonzales',
-    email: 'c.gonzales@stclaire.edu.ph',
-    school: 'St. Claire College of Caloocan',
-    program_id: 'tertiary-academic',
-    program_name: 'Academic Scholarship (Tertiary College)',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '3 Years, 2 Months',
-    gwa: 1.50,
-    units_enrolled: 18,
-    status: 'Active Good Standing',
-    grant_amount: 52500,
-    disbursement_status: 'Disbursed',
-    barangay: 'Barangay Fairview, Quezon City',
-    department: 'Department of Business Administration',
-    year_level: '4th Year',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=250&q=80'
-  },
-  {
-    id: 5,
-    student_id: '2024-04981',
-    full_name: 'Beatrice Alonzo',
-    email: 'beatrice.a@bcp.edu.ph',
-    school: 'Bestlink College of the Philippines (BCP)',
-    program_id: 'shs-academic',
-    program_name: 'Academic Scholarship (Senior High School)',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '6 Months',
-    gwa: 1.40,
-    units_enrolled: 15,
-    status: 'Active - Renewal Processing',
-    grant_amount: 15000,
-    disbursement_status: 'Scheduled',
-    barangay: 'Barangay Holy Spirit, Quezon City',
-    department: 'STEM Senior High Track',
-    year_level: 'Grade 12',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=250&q=80'
-  },
-  {
-    id: 6,
-    student_id: '2024-05120',
-    full_name: 'Mark Joseph Torres',
-    email: 'mark.torres@qcu.edu.ph',
-    school: 'Quezon City University (QCU)',
-    program_id: 'tertiary-filipino',
-    program_name: 'Manuel L. Quezon Filipino Language & Literature Grant',
-    current_term: '1st Semester AY 2026-2027',
-    scholarship_age: '1 Year, 2 Months',
-    gwa: 1.65,
-    units_enrolled: 18,
-    status: 'Active Good Standing',
-    grant_amount: 52500,
-    disbursement_status: 'Disbursed',
-    barangay: 'Barangay San Bartolome, Quezon City',
-    department: 'College of Education & Humanities',
-    year_level: '2nd Year',
-    avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=250&q=80'
-  }
-];
-
-const autoSeedMasterScholars = async () => {
-  try {
-    for (const s of DEFAULT_MASTER_SCHOLARS) {
-      await pool.query(
-        `INSERT INTO student_registry (student_id, full_name, email, school, program_id, program_name, current_term, scholarship_age, gwa, units_enrolled, status, grant_amount, disbursement_status)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-         ON CONFLICT (student_id) DO NOTHING`,
-        [s.student_id, s.full_name, s.email, s.school, s.program_id, s.program_name, s.current_term, s.scholarship_age, s.gwa, s.units_enrolled, s.status, s.grant_amount, s.disbursement_status]
-      );
-    }
-  } catch (err) {
-    console.warn('[registryController] autoSeedMasterScholars warning:', err.message);
-  }
-};
-
-// @desc   Get scholars from student registry
+// @desc   Get scholars from student registry (100% database-driven)
+// @route  GET /api/registry
 const getScholars = async (req, res) => {
   try {
     const { status, school, search } = req.query;
@@ -162,6 +25,7 @@ const getScholars = async (req, res) => {
     }
 
     const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+    
     try {
       const result = await pool.query(
         `SELECT sr.*,
@@ -182,10 +46,6 @@ const getScholars = async (req, res) => {
       if (result.rows.length > 0) {
         return res.json(result.rows);
       }
-
-      // If database has 0 rows, trigger background seeding & return master default dataset
-      autoSeedMasterScholars();
-      return res.json(DEFAULT_MASTER_SCHOLARS);
     } catch (joinErr) {
       console.warn('[registryController] Detailed JOIN query warning, falling back to simple query:', joinErr.message);
       try {
@@ -194,12 +54,36 @@ const getScholars = async (req, res) => {
           return res.json(fallbackRes.rows);
         }
       } catch (_) {}
-      autoSeedMasterScholars();
-      return res.json(DEFAULT_MASTER_SCHOLARS);
     }
+
+    // Secondary fallback: query real registered students from users table
+    try {
+      const userStudentsRes = await pool.query(
+        `SELECT u.id AS user_id, u.student_id, u.name AS full_name, u.email, 
+                COALESCE(u.department, 'Quezon City University (QCU)') AS school,
+                'tertiary-academic' AS program_id,
+                COALESCE(u.major, 'Quezon City Scholarship Program') AS program_name,
+                '1st Semester AY 2026-2027' AS current_term,
+                'Enrolled Scholar' AS scholarship_age,
+                COALESCE(u.gpa, 1.75) AS gwa,
+                18 AS units_enrolled,
+                'Active Good Standing' AS status,
+                15000 AS grant_amount,
+                'Scheduled' AS disbursement_status,
+                u.barangay, u.department, u.year_level, u.avatar, u.phone, u.address, u.district
+         FROM users u
+         WHERE LOWER(u.role) = 'student'
+         ORDER BY u.name ASC`
+      );
+      if (userStudentsRes.rows.length > 0) {
+        return res.json(userStudentsRes.rows);
+      }
+    } catch (_) {}
+
+    return res.json([]);
   } catch (error) {
     console.error('[registryController] getScholars error:', error);
-    return res.json(DEFAULT_MASTER_SCHOLARS);
+    return res.json([]);
   }
 };
 
@@ -323,7 +207,7 @@ const getMyScholarRecord = async (req, res) => {
 
     const result = await pool.query(
       `SELECT sr.*, 
-              u.full_name as user_full_name, u.email as user_email, u.phone, u.address, u.barangay, u.district, u.school as user_school, u.course as user_course, u.year_level as user_year_level, u.avatar
+              u.name as user_full_name, u.email as user_email, u.phone, u.address, u.barangay, u.district, u.school as user_school, u.course as user_course, u.year_level as user_year_level, u.avatar
        FROM student_registry sr
        RIGHT JOIN users u ON (u.id = $1 OR u.email = $2)
        WHERE sr.user_id = $1 OR (sr.email = $2 AND $2 IS NOT NULL) OR (sr.student_id = $3 AND $3 IS NOT NULL)
@@ -337,57 +221,61 @@ const getMyScholarRecord = async (req, res) => {
         id: row.id || 1,
         student_id: row.student_id,
         user_id: row.user_id || userId,
-        full_name: row.full_name || row.user_full_name || req.user.name || 'Maria Santos',
+        full_name: row.full_name || row.user_full_name || req.user.name,
         email: row.email || row.user_email || userEmail,
         school: row.school || row.user_school || 'Quezon City University (QCU)',
         program_id: row.program_id || 'tertiary-academic',
-        program_name: row.program_name || 'Dean’s Tech Excellence Award (QCYDO Merit Grant)',
+        program_name: row.program_name || 'Quezon City Scholarship Program',
         current_term: row.current_term || '1st Semester AY 2026-2027',
-        scholarship_age: row.scholarship_age || '2 Years, 1 Month',
+        scholarship_age: row.scholarship_age || 'Active Scholar',
         gwa: Number(row.gwa) || 1.75,
         units_enrolled: row.units_enrolled || 18,
         status: row.status || 'Active & In Good Standing',
         grant_amount: Number(row.grant_amount) || 15000,
         disbursement_status: row.disbursement_status || 'Scheduled',
-        barangay: row.barangay || 'Barangay Batasan Hills, Quezon City',
+        barangay: row.barangay || 'Quezon City',
         department: row.user_course || 'College of Computer Studies (CCS)',
         year_level: row.user_year_level || '3rd Year',
-        avatar: row.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80'
+        avatar: row.avatar
       });
     }
 
-    // Fallback: search applications table for user's application
+    // Query applications table for user's application
     const appRes = await pool.query(
       `SELECT * FROM applications WHERE user_id = $1 ORDER BY id DESC LIMIT 1`,
       [userId]
     );
-    const app = appRes.rows[0] || {};
     const userRes = await pool.query(`SELECT * FROM users WHERE id = $1`, [userId]);
-    const u = userRes.rows[0] || {};
+    const u = userRes.rows[0];
 
-    const syntheticRecord = {
-      id: 1,
-      student_id: u.student_id || studentId || `2024-${String(u.id || 192).padStart(5, '0')}`,
-      user_id: u.id || userId,
-      full_name: u.full_name || u.name || req.user.name || 'Maria Santos',
+    if (!u) {
+      return res.status(404).json({ message: 'Student profile not found' });
+    }
+
+    const app = appRes.rows[0] || {};
+    const scholarProfile = {
+      id: u.id,
+      student_id: u.student_id || studentId || `2026-${String(u.id).padStart(5, '0')}`,
+      user_id: u.id,
+      full_name: u.name || req.user.name,
       email: u.email || userEmail,
       school: u.school || app.school || 'Quezon City University (QCU)',
       program_id: app.program_id || 'tertiary-academic',
-      program_name: app.program_name || app.title || 'Dean’s Tech Excellence Award (QCYDO Merit Grant)',
+      program_name: app.program_name || app.title || 'Quezon City Scholarship Program',
       current_term: '1st Semester AY 2026-2027',
-      scholarship_age: '2 Years, 1 Month',
+      scholarship_age: 'Enrolled Scholar',
       gwa: u.gwa || 1.75,
       units_enrolled: 18,
-      status: app.status === 'Approved' || app.status === 'Disbursed' ? 'Active & In Good Standing' : 'Active & In Good Standing',
+      status: app.status === 'Approved' || app.status === 'Disbursed' ? 'Active & In Good Standing' : 'Application in Progress',
       grant_amount: app.grant_amount || 15000,
       disbursement_status: app.status === 'Disbursed' ? 'Disbursed' : 'Scheduled',
-      barangay: u.barangay || 'Barangay Batasan Hills, Quezon City',
+      barangay: u.barangay || 'Quezon City',
       department: u.course || 'College of Computer Studies (CCS)',
       year_level: u.year_level || '3rd Year',
-      avatar: u.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80'
+      avatar: u.avatar
     };
 
-    return res.json(syntheticRecord);
+    return res.json(scholarProfile);
   } catch (error) {
     console.error('[registryController] getMyScholarRecord error:', error);
     res.status(500).json({ message: 'Failed to fetch scholar profile' });

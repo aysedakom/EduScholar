@@ -7,7 +7,6 @@ import { Button } from '../../components/ui/Button';
 import { formatCurrency } from '../../utils/cn';
 import { getScholars } from '../../api/registry';
 import { useAuth } from '../../context/AuthContext';
-import { DEFAULT_FALLBACK_SCHOLARS_RAW } from '../../utils/masterFallbackData';
 
 interface MasterStudentRow {
   id: string;
@@ -34,12 +33,8 @@ export const MasterStudentDatabasePage: React.FC = () => {
     const fetchStudents = async () => {
       try {
         const res = await getScholars();
-        if (isMounted) {
-          const rawData = (res.data && Array.isArray(res.data) && res.data.length > 0)
-            ? res.data
-            : DEFAULT_FALLBACK_SCHOLARS_RAW;
-
-          const mapped: MasterStudentRow[] = rawData.map((s: any) => ({
+        if (res.data && Array.isArray(res.data) && isMounted) {
+          const mapped: MasterStudentRow[] = res.data.map((s: any) => ({
             id: `STU-${s.id}`,
             studentId: s.student_id,
             name: s.full_name,
@@ -53,20 +48,7 @@ export const MasterStudentDatabasePage: React.FC = () => {
           setStudents(mapped);
         }
       } catch {
-        if (isMounted) {
-          const mapped: MasterStudentRow[] = DEFAULT_FALLBACK_SCHOLARS_RAW.map((s: any) => ({
-            id: `STU-${s.id}`,
-            studentId: s.student_id,
-            name: s.full_name,
-            email: s.email,
-            gpa: Number(s.gwa) || 1.75,
-            university: s.school,
-            course: s.program_name,
-            yearLevel: (s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year',
-            totalAidReceived: Number(s.grant_amount) || 10000,
-          }));
-          setStudents(mapped);
-        }
+        if (isMounted) setStudents([]);
       }
     };
     fetchStudents();

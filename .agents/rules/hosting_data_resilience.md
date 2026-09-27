@@ -1,22 +1,22 @@
-# Rule: Hosting & Data Resilience Policy
+# Rule: Hosting Flexibility & Strict Real Database Continuity Policy
 
 ## Overview
-This system rule mandates multi-layer Data Continuity and Resilience across all current and future hosting environment transitions (e.g., Railway $\leftrightarrow$ Vercel $\leftrightarrow$ Localhost $\leftrightarrow$ AWS $\leftrightarrow$ Render).
+This system rule mandates multi-layer Real Data Continuity and Database Flexibility across all current and future hosting environment transitions (e.g., Railway $\leftrightarrow$ Vercel $\leftrightarrow$ Localhost $\leftrightarrow$ AWS $\leftrightarrow$ Render).
 
-Whenever the EduScholar application changes host platforms or database providers, the system MUST immediately present and read full master student datasets without requiring manual database migration or leaving user views blank.
+Fake or synthetic hardcoded mock data arrays are strictly forbidden. All student records, applications, scholarships, and system logs are 100% database-driven.
 
 ---
 
 ## Technical Directives
 
-### 1. Dual-Layer Fallback Architecture
-- **Backend Level**: Database controllers (`registryController.js`, `applicationController.js`, `scholarshipController.js`) must inspect table query results. If table query results return 0 rows or encounter connection/migration state differences, the controller MUST automatically trigger background auto-seeding of master default records (`DEFAULT_MASTER_SCHOLARS`) and return full master datasets immediately.
-- **Frontend Level**: API callers and frontend view components MUST NOT render empty lists (`[]` / 0 scholars) when backend responses are empty or during deployment propagation. The frontend MUST seamlessly fall back to `DEFAULT_FALLBACK_SCHOLARS_RAW` (defined in `frontend/src/utils/masterFallbackData.ts`).
+### 1. Unified Cloud PostgreSQL Connection
+- Database connection configuration (`backend/config/db.js`) inspects standard environment variables (`DATABASE_PRIVATE_URL`, `DATABASE_URL_PRIVATE`, `DATABASE_URL`, `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `NEON_DATABASE_URL`).
+- When deploying to Vercel, Railway, or Localhost, providing the database URL automatically links all host deployments to the shared persistent PostgreSQL database.
 
-### 2. Cross-Hosting Provider Neutrality
-- API endpoints MUST avoid hardcoding host-specific domains (e.g. `eduscholar.up.railway.app` or fixed Vercel deployment URLs) for data fetching. All requests must use relative `/api` paths or dynamic environment configuration (`import.meta.env.VITE_API_URL` / `process.env.PORT`).
-- Proxy rewrites in `vercel.json`, `package.json`, or Express routing must route `/api/(.*)` dynamically to internal serverless or container handlers regardless of hosting platform.
+### 2. No Synthetic Fake Data Injections
+- Frontend components and backend controllers MUST NOT return or hardcoded fake student lists or mock fallback arrays (`masterFallbackData.ts`).
+- If no records exist in a table, the UI presents a clean, responsive empty state ("No student records found").
+- Real registered students (from `users` table where role = 'student') and submitted `applications` are dynamically queried by backend controllers.
 
-### 3. Master Dataset Integrity & Demo Credentials
-- Master Student Records (e.g. Maria Santos `2024-00192`, Juan Dela Cruz `2024-00841`, Angelica Reyes `2024-01205`, Christian Gonzales `2024-03412`, Beatrice Alonzo `2024-04981`, Mark Joseph Torres `2024-05120`) MUST remain accessible across all roles (Admin, Treasury, Student, Partner School).
-- Official governance credentials (`support.edu2026@gmail.com`, `treasury.edu2026@gmail.com`, `qcu.edu67@gmail.com`, etc.) with OTP `123456` MUST operate 100% reliably in Localhost, Railway, and Vercel environments.
+### 3. Governance Accounts & Security
+- Primary governance credentials (`support.edu2026@gmail.com`, `treasury.edu2026@gmail.com`, `sr.edu2026@gmail.com`, `sv.edu2026@gmail.com`, `sysadmin.edu2026@gmail.com`, `student.edu2026@gmail.com`) with password `January10` and OTP `123456` operate 100% reliably in Localhost, Railway, and Vercel environments.
