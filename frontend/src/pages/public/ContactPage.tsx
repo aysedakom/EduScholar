@@ -50,8 +50,18 @@ export const ContactPage: React.FC = () => {
   };
   const backNav = getBackNav();
 
+  const isStaff = !!user?.role && user.role !== 'student';
+
   // Active Desk Tabs: 'new-ticket' | 'my-tickets' | 'ticket-chat'
-  const [activeDeskTab, setActiveDeskTab] = useState<'new-ticket' | 'my-tickets' | 'ticket-chat'>('new-ticket');
+  const [activeDeskTab, setActiveDeskTab] = useState<'new-ticket' | 'my-tickets' | 'ticket-chat'>(
+    isStaff ? 'my-tickets' : 'new-ticket'
+  );
+
+  useEffect(() => {
+    if (isStaff && activeDeskTab === 'new-ticket') {
+      setActiveDeskTab('my-tickets');
+    }
+  }, [isStaff, activeDeskTab]);
 
   // Form State
   const [name, setName] = useState(user?.name || '');
@@ -183,6 +193,10 @@ export const ContactPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStaff) {
+      toast.error('Administrative accounts operate on the receiving end and cannot submit tickets.');
+      return;
+    }
     if (!name || !email || !message) {
       toast.error('Please complete all required fields.');
       return;
@@ -331,8 +345,12 @@ export const ContactPage: React.FC = () => {
           </div>
           {user && (
             <div className="flex gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl w-full md:w-auto">
-              <button onClick={() => setActiveDeskTab('new-ticket')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab === 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>Submit Ticket</button>
-              <button onClick={() => setActiveDeskTab('my-tickets')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab !== 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>My Tickets ({myTickets.length})</button>
+              {!isStaff && (
+                <button onClick={() => setActiveDeskTab('new-ticket')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab === 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>Submit Ticket</button>
+              )}
+              <button onClick={() => setActiveDeskTab('my-tickets')} className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex-1 ${activeDeskTab !== 'new-ticket' ? 'bg-white dark:bg-slate-900 text-blue-600 shadow-xs' : 'text-slate-600 dark:text-slate-400'}`}>
+                {isStaff ? `Inquiry Desk Queue (${myTickets.length})` : `My Tickets (${myTickets.length})`}
+              </button>
             </div>
           )}
         </div>
@@ -364,20 +382,35 @@ export const ContactPage: React.FC = () => {
             {activeDeskTab === 'my-tickets' && (
               <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-heading font-extrabold text-lg flex items-center gap-2"><Ticket className="h-5 w-5 text-blue-600" /> My Filed Support Tickets</h3>
-                  <Button variant="outline" size="sm" onClick={() => setActiveDeskTab('new-ticket')} className="font-bold text-xs">+ Raise New Ticket</Button>
+                  <h3 className="font-heading font-extrabold text-lg flex items-center gap-2">
+                    <Ticket className="h-5 w-5 text-blue-600" />
+                    {isStaff ? 'Incoming Inquiry Desk Queue & Oversight' : 'My Filed Support Tickets'}
+                  </h3>
+                  {!isStaff && (
+                    <Button variant="outline" size="sm" onClick={() => setActiveDeskTab('new-ticket')} className="font-bold text-xs">+ Raise New Ticket</Button>
+                  )}
                 </div>
-                <div className="divide-y divide-slate-100 dark:divide-slate-800 border rounded-2xl overflow-hidden">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
                   {myTickets.map((tkt) => (
-                    <div key={tkt.id} onClick={() => handleSelectTicketToChat(tkt)} className="p-4 hover:bg-slate-50 cursor-pointer flex items-center justify-between">
+                    <div key={tkt.id} onClick={() => handleSelectTicketToChat(tkt)} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center justify-between transition-colors">
                       <div className="space-y-1">
-                        <code className="text-xs font-bold text-blue-600 font-mono">{tkt.ticket_code}</code>
-                        <h4 className="font-bold text-sm">{tkt.subject}</h4>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-bold text-blue-600 font-mono">{tkt.ticket_code}</code>
+                          {isStaff && (
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                              • <strong className="text-slate-900 dark:text-white">{tkt.applicant_name || tkt.user_name || 'Queuer'}</strong> ({tkt.applicant_email || tkt.user_email || 'No email'})
+                            </span>
+                          )}
+                        </div>
+                        <h4 className="font-bold text-sm text-slate-900 dark:text-white">{tkt.subject}</h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium line-clamp-1">{tkt.description}</p>
                       </div>
-                      <Button variant="outline" size="sm" className="font-bold text-xs">Open Chat</Button>
+                      <Button variant="outline" size="sm" className="font-bold text-xs shrink-0">
+                        {isStaff ? 'Inspect & Oversee' : 'Open Chat'}
+                      </Button>
                     </div>
                   ))}
-                  {myTickets.length === 0 && <p className="p-8 text-center text-slate-400">No support tickets found.</p>}
+                  {myTickets.length === 0 && <p className="p-8 text-center text-slate-400 text-xs font-medium">No support tickets found in queue.</p>}
                 </div>
               </Card>
             )}
@@ -386,7 +419,7 @@ export const ContactPage: React.FC = () => {
               <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
                   <button onClick={() => setActiveDeskTab('my-tickets')} className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                    ← Back to Tickets
+                    ← Back to Tickets Queue
                   </button>
                   <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-xl border border-blue-200 dark:border-blue-800 flex items-center gap-2">
                     <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -429,111 +462,125 @@ export const ContactPage: React.FC = () => {
                 <div className="h-72 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl overflow-y-auto space-y-3 text-xs">
                   {ticketMessages.map((m) => (
                     <div key={m.id} className={`flex flex-col ${String(m.sender_id) === String(user?.id) ? 'items-end' : 'items-start'}`}>
-                      <div className={`p-3 rounded-2xl max-w-sm ${String(m.sender_id) === String(user?.id) ? 'bg-blue-600 text-white' : 'bg-white border'}`}>{m.message}</div>
+                      <div className={`p-3 rounded-2xl max-w-sm ${String(m.sender_id) === String(user?.id) ? 'bg-blue-600 text-white' : 'bg-white border text-slate-900 dark:bg-slate-800 dark:text-white dark:border-slate-700'}`}>{m.message}</div>
                     </div>
                   ))}
                 </div>
                 <form onSubmit={handleSendTicketMessage} className="flex gap-2">
-                  <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} className="flex-1 h-10 px-3.5 text-xs rounded-xl border" placeholder="Type your message..." />
-                  <Button type="submit" variant="primary" size="sm" isLoading={isSendingMsg} className="font-bold">Send</Button>
+                  <input type="text" value={chatInput} onChange={(e) => setChatInput(e.target.value)} className="flex-1 h-10 px-3.5 text-xs rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white" placeholder={isStaff ? "Respond to queuer inquiry..." : "Type your message..."} />
+                  <Button type="submit" variant="primary" size="sm" isLoading={isSendingMsg} className="font-bold">Send Response</Button>
                 </form>
               </Card>
             )}
 
             {activeDeskTab === 'new-ticket' && (
-              <Card className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-6">
-                <div>
-                  <h2 className="font-heading font-extrabold text-2xl">Submit Support Ticket</h2>
-                  <p className="text-xs text-slate-500 mt-1">Fill out the details below to queue your inquiry.</p>
-                </div>
-                {createdTicketCode ? (
-                  <div className="text-center p-8 rounded-2xl bg-emerald-50 border text-emerald-900 space-y-4">
-                    <CheckCircle2 className="h-12 w-12 mx-auto text-emerald-600" />
-                    <h3 className="font-black text-xl">Ticket #{createdTicketCode} Queued!</h3>
-                    <Button onClick={() => { setCreatedTicketCode(null); setActiveDeskTab('my-tickets'); }} className="font-bold">View My Tickets</Button>
+              isStaff ? (
+                <Card className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-4 text-center">
+                  <div className="p-6 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-200 space-y-2">
+                    <h3 className="font-bold text-base">Administrative Oversight & Inquiry Desk</h3>
+                    <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300 max-w-lg mx-auto">
+                      Administrative roles operate on the receiving and oversight end of the inquiry ticketing desk. Staff accounts oversee and answer questions submitted to the inquiry queue, and cannot submit support tickets.
+                    </p>
+                    <Button onClick={() => setActiveDeskTab('my-tickets')} className="mt-2 font-bold text-xs bg-blue-600 hover:bg-blue-700 text-white" variant="primary">
+                      Go to Inquiry Desk Queue & Oversight
+                    </Button>
                   </div>
-                ) : (
-                  <>
-                    {user?.role === 'student' && myTickets.length >= 3 && (
-                      <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-1">
-                        <p className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-200">
-                          ⚠️ Ticket Queue Limit Reached (3 / 3 Max)
-                        </p>
-                        <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
-                          Students are restricted to a maximum of 3 active support tickets in the queue. You currently have 3 tickets in your profile. Please wait for an officer to address your open tickets before submitting a new one.
-                        </p>
-                      </div>
-                    )}
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Input label="Full Name *" value={name} onChange={(e) => setName(e.target.value)} required />
-                        <Input label="Email Address *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                      </div>
-                      
-                      <div>
-                        <label className="block text-xs font-semibold mb-1 text-slate-900 dark:text-white">
-                          Inquiry Subject / Concern Category *
-                        </label>
-                        <select
-                          value={subject}
-                          onChange={(e) => setSubject(e.target.value)}
-                          required
-                          className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
+                </Card>
+              ) : (
+                <Card className="p-6 sm:p-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-soft space-y-6">
+                  <div>
+                    <h2 className="font-heading font-extrabold text-2xl">Submit Support Ticket</h2>
+                    <p className="text-xs text-slate-500 mt-1">Fill out the details below to queue your inquiry.</p>
+                  </div>
+                  {createdTicketCode ? (
+                    <div className="text-center p-8 rounded-2xl bg-emerald-50 border text-emerald-900 space-y-4">
+                      <CheckCircle2 className="h-12 w-12 mx-auto text-emerald-600" />
+                      <h3 className="font-black text-xl">Ticket #{createdTicketCode} Queued!</h3>
+                      <Button onClick={() => { setCreatedTicketCode(null); setActiveDeskTab('my-tickets'); }} className="font-bold">View My Tickets</Button>
+                    </div>
+                  ) : (
+                    <>
+                      {user?.role === 'student' && myTickets.length >= 3 && (
+                        <div className="p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-900 dark:text-amber-200 text-xs font-semibold space-y-1">
+                          <p className="font-bold flex items-center gap-1.5 text-amber-900 dark:text-amber-200">
+                            ⚠️ Ticket Queue Limit Reached (3 / 3 Max)
+                          </p>
+                          <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                            Students are restricted to a maximum of 3 active support tickets in the queue. You currently have 3 tickets in your profile. Please wait for an officer to address your open tickets before submitting a new one.
+                          </p>
+                        </div>
+                      )}
+                      <form onSubmit={handleSubmit} className="space-y-5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <Input label="Full Name *" value={name} onChange={(e) => setName(e.target.value)} required />
+                          <Input label="Email Address *" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-xs font-semibold mb-1 text-slate-900 dark:text-white">
+                            Inquiry Subject / Concern Category *
+                          </label>
+                          <select
+                            value={subject}
+                            onChange={(e) => setSubject(e.target.value)}
+                            required
+                            className="w-full h-10 px-3.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl text-xs focus:outline-none focus:border-blue-600 font-medium"
+                          >
+                            <optgroup label="🏛️ QCYDO Admin & Scholarship Office">
+                              <option value="Scholarship Application Status & Guidelines">Scholarship Application Status & Guidelines</option>
+                              <option value="Requirements & Document Verification">Requirements & Document Verification</option>
+                              <option value="Scholarship Renewal & Continuing Assistance">Scholarship Renewal & Continuing Assistance</option>
+                              <option value="Student Profile & Account Verification">Student Profile & Account Verification</option>
+                              <option value="General Scholarship Inquiries">General Scholarship Inquiries</option>
+                            </optgroup>
+                            
+                            <optgroup label="💰 City Treasury (Disbursement & Payouts)">
+                              <option value="Disbursement Status & Payout Schedule">Disbursement Status & Payout Schedule</option>
+                              <option value="LandBank Cash Card & ATM Processing">LandBank Cash Card & ATM Processing</option>
+                              <option value="Stipend Verification & Bank Voucher Concerns">Stipend Verification & Bank Voucher Concerns</option>
+                              <option value="Disbursement Payment Issue / Refund">Disbursement Payment Issue / Refund</option>
+                            </optgroup>
+                            
+                            <optgroup label="🏫 School Coordinator & Registrar Office">
+                              <option value="Enrollment & Certificate of Registration (COR)">Enrollment & Certificate of Registration (COR)</option>
+                              <option value="Official Transcript (TOR) & Grade Submissions">Official Transcript (TOR) & Grade Submissions</option>
+                              <option value="Partner School Slots & Endorsement Status">Partner School Slots & Endorsement Status</option>
+                              <option value="Campus Registrar Clearance & Accreditation">Campus Registrar Clearance & Accreditation</option>
+                            </optgroup>
+
+                            <optgroup label="📋 Program Supervisor (Evaluation Review)">
+                              <option value="Application Evaluation Appeal & Re-assessment">Application Evaluation Appeal & Re-assessment</option>
+                              <option value="Work-Study Performance Evaluation">Work-Study Performance Evaluation</option>
+                              <option value="Academic Standing & Probation Review">Academic Standing & Probation Review</option>
+                            </optgroup>
+
+                            <optgroup label="💻 System Admin & Technical Support">
+                              <option value="Technical Bug & System Error Report">Technical Bug & System Error Report</option>
+                              <option value="Password Reset & Email OTP Verification">Password Reset & Email OTP Verification</option>
+                              <option value="Document Vault Upload Failure">Document Vault Upload Failure</option>
+                              <option value="Other Technical Concerns">Other Technical Concerns</option>
+                            </optgroup>
+                          </select>
+                        </div>
+
+                        <label className="block text-xs font-semibold">Message & Detailed Description *</label>
+                        <textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl" required placeholder="Describe your concern or inquiry in detail..." />
+                        
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          size="lg"
+                          isLoading={isSubmitting}
+                          disabled={user?.role === 'student' && myTickets.length >= 3}
+                          className="w-full font-extrabold"
                         >
-                          <optgroup label="🏛️ QCYDO Admin & Scholarship Office">
-                            <option value="Scholarship Application Status & Guidelines">Scholarship Application Status & Guidelines</option>
-                            <option value="Requirements & Document Verification">Requirements & Document Verification</option>
-                            <option value="Scholarship Renewal & Continuing Assistance">Scholarship Renewal & Continuing Assistance</option>
-                            <option value="Student Profile & Account Verification">Student Profile & Account Verification</option>
-                            <option value="General Scholarship Inquiries">General Scholarship Inquiries</option>
-                          </optgroup>
-                          
-                          <optgroup label="💰 City Treasury (Disbursement & Payouts)">
-                            <option value="Disbursement Status & Payout Schedule">Disbursement Status & Payout Schedule</option>
-                            <option value="LandBank Cash Card & ATM Processing">LandBank Cash Card & ATM Processing</option>
-                            <option value="Stipend Verification & Bank Voucher Concerns">Stipend Verification & Bank Voucher Concerns</option>
-                            <option value="Disbursement Payment Issue / Refund">Disbursement Payment Issue / Refund</option>
-                          </optgroup>
-                          
-                          <optgroup label="🏫 School Coordinator & Registrar Office">
-                            <option value="Enrollment & Certificate of Registration (COR)">Enrollment & Certificate of Registration (COR)</option>
-                            <option value="Official Transcript (TOR) & Grade Submissions">Official Transcript (TOR) & Grade Submissions</option>
-                            <option value="Partner School Slots & Endorsement Status">Partner School Slots & Endorsement Status</option>
-                            <option value="Campus Registrar Clearance & Accreditation">Campus Registrar Clearance & Accreditation</option>
-                          </optgroup>
-
-                          <optgroup label="📋 Program Supervisor (Evaluation Review)">
-                            <option value="Application Evaluation Appeal & Re-assessment">Application Evaluation Appeal & Re-assessment</option>
-                            <option value="Work-Study Performance Evaluation">Work-Study Performance Evaluation</option>
-                            <option value="Academic Standing & Probation Review">Academic Standing & Probation Review</option>
-                          </optgroup>
-
-                          <optgroup label="💻 System Admin & Technical Support">
-                            <option value="Technical Bug & System Error Report">Technical Bug & System Error Report</option>
-                            <option value="Password Reset & Email OTP Verification">Password Reset & Email OTP Verification</option>
-                            <option value="Document Vault Upload Failure">Document Vault Upload Failure</option>
-                            <option value="Other Technical Concerns">Other Technical Concerns</option>
-                          </optgroup>
-                        </select>
-                      </div>
-
-                      <label className="block text-xs font-semibold">Message & Detailed Description *</label>
-                      <textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full p-3 text-xs bg-slate-50 border rounded-xl" required placeholder="Describe your concern or inquiry in detail..." />
-                      
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        size="lg"
-                        isLoading={isSubmitting}
-                        disabled={user?.role === 'student' && myTickets.length >= 3}
-                        className="w-full font-extrabold"
-                      >
-                        Queue Support Ticket
-                      </Button>
-                    </form>
-                  </>
-                )}
-              </Card>
+                          Queue Support Ticket
+                        </Button>
+                      </form>
+                    </>
+                  )}
+                </Card>
+              )
             )}
           </div>
         </div>

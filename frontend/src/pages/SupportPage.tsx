@@ -320,17 +320,19 @@ export const SupportPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => setShowTicketModal(true)}
-            leftIcon={<Plus className="h-4 w-4" />}
-            className="font-bold shadow-md shadow-blue-600/20"
-          >
-            Raise Support Ticket
-          </Button>
-        </div>
+        {!isOfficer && (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => setShowTicketModal(true)}
+              leftIcon={<Plus className="h-4 w-4" />}
+              className="font-bold shadow-md shadow-blue-600/20"
+            >
+              Raise Support Ticket
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Main Tab Switcher for Admin / Officers / System Admin */}
@@ -505,8 +507,8 @@ export const SupportPage: React.FC = () => {
       {/* Support Ticket History */}
       <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
         <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
-          <CardTitle className="text-slate-900 dark:text-white">My Support Tickets</CardTitle>
-          <CardDescription className="text-slate-500 dark:text-slate-400">Track status and officer responses for submitted inquiries</CardDescription>
+          <CardTitle className="text-slate-900 dark:text-white">{isOfficer ? 'Support Tickets Inbox & Oversight' : 'My Support Tickets'}</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-slate-400">{isOfficer ? 'Oversee and review incoming student inquiry tickets' : 'Track status and officer responses for submitted inquiries'}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
