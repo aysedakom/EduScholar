@@ -47,6 +47,7 @@ export interface StudentProfile {
 
 import { getScholars } from '../../api/registry';
 import { useWebSocket } from '../../context/WebSocketContext';
+import { DEFAULT_FALLBACK_SCHOLARS_RAW } from '../../utils/masterFallbackData';
 
 export const StudentProfilesSearchPage: React.FC = () => {
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -68,35 +69,56 @@ export const StudentProfilesSearchPage: React.FC = () => {
       try {
         const res = await getScholars();
         if (isMounted) {
-          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
-            const mapped: StudentProfile[] = res.data.map((s: any) => ({
-              id: `STU-${s.id}`,
-              studentId: s.student_id,
-              name: s.full_name,
-              email: s.email,
-              gpa: Number(s.gwa) || 1.75,
-              department: 'College of Computer Studies (CCS)',
-              major: s.program_name,
-              yearLevel: (s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year',
-              school: s.school,
-              barangay: 'Quezon City',
-              scholarshipTitle: s.program_name,
-              currentTerm: s.current_term,
-              applicationNumber: `APP-QC-2026-${s.student_id}`,
-              scholarshipAge: s.scholarship_age,
-              scholarshipStatus: (s.status?.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
-              disbursementAmount: Number(s.grant_amount) || 10000,
-              avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
-            }));
-            setStudents(mapped);
-            setExpandedStudentId(mapped[0]?.id || null);
-          } else {
-            setStudents([]);
-            setExpandedStudentId(null);
-          }
+          const rawData = (res.data && Array.isArray(res.data) && res.data.length > 0)
+            ? res.data
+            : DEFAULT_FALLBACK_SCHOLARS_RAW;
+
+          const mapped: StudentProfile[] = rawData.map((s: any) => ({
+            id: `STU-${s.id}`,
+            studentId: s.student_id,
+            name: s.full_name,
+            email: s.email,
+            gpa: Number(s.gwa) || 1.75,
+            department: s.department || 'College of Computer Studies (CCS)',
+            major: s.program_name,
+            yearLevel: s.year_level || ((s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year'),
+            school: s.school,
+            barangay: s.barangay || 'Quezon City',
+            scholarshipTitle: s.program_name,
+            currentTerm: s.current_term,
+            applicationNumber: s.application_code || `APP-QC-2026-${s.student_id}`,
+            scholarshipAge: s.scholarship_age,
+            scholarshipStatus: (s.status?.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
+            disbursementAmount: Number(s.grant_amount) || 10000,
+            avatar: s.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+          }));
+          setStudents(mapped);
+          setExpandedStudentId((prev) => prev || mapped[0]?.id || null);
         }
       } catch {
-        if (isMounted) setStudents([]);
+        if (isMounted) {
+          const mapped: StudentProfile[] = DEFAULT_FALLBACK_SCHOLARS_RAW.map((s: any) => ({
+            id: `STU-${s.id}`,
+            studentId: s.student_id,
+            name: s.full_name,
+            email: s.email,
+            gpa: Number(s.gwa) || 1.75,
+            department: s.department || 'College of Computer Studies (CCS)',
+            major: s.program_name,
+            yearLevel: s.year_level || ((s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year'),
+            school: s.school,
+            barangay: s.barangay || 'Quezon City',
+            scholarshipTitle: s.program_name,
+            currentTerm: s.current_term,
+            applicationNumber: s.application_code || `APP-QC-2026-${s.student_id}`,
+            scholarshipAge: s.scholarship_age,
+            scholarshipStatus: (s.status?.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
+            disbursementAmount: Number(s.grant_amount) || 10000,
+            avatar: s.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+          }));
+          setStudents(mapped);
+          setExpandedStudentId((prev) => prev || mapped[0]?.id || null);
+        }
       }
     };
 

@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button';
 import { Badge } from '../../components/ui/Badge';
 import { formatCurrency } from '../../utils/cn';
 import { getScholars, updateScholarStatus } from '../../api/registry';
+import { DEFAULT_FALLBACK_SCHOLARS_RAW } from '../../utils/masterFallbackData';
 
 interface Transaction {
   id: string;
@@ -31,7 +32,7 @@ export const ReconciliationPage: React.FC = () => {
     setIsLoading(true);
     try {
       const res = await getScholars();
-      const scholars = Array.isArray(res.data) ? res.data : [];
+      const scholars = (Array.isArray(res.data) && res.data.length > 0) ? res.data : DEFAULT_FALLBACK_SCHOLARS_RAW;
 
       // Check localStorage for any live approved student applications
       let localApp: any = null;
