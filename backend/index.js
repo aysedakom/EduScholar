@@ -132,27 +132,47 @@ const portalSettingsRoutes = require('./routes/portalSettings');
 const liveChatRoutes = require('./routes/liveChat');
 
 app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/opportunities', opportunityRoutes);
+app.use('/opportunities', opportunityRoutes);
 app.use('/api/scholarships', scholarshipRoutes);
+app.use('/scholarships', scholarshipRoutes);
 app.use('/api/bursaries', bursaryRoutes);
+app.use('/bursaries', bursaryRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/applications', applicationRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/documents', documentRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/notifications', notificationRoutes);
 app.use('/api/partners', partnerRoutes);
+app.use('/partners', partnerRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/reports', reportRoutes);
 app.use('/api/distributions', distributionRoutes);
+app.use('/distributions', distributionRoutes);
 app.use('/api/registry', registryRoutes);
+app.use('/registry', registryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 app.use('/api/qcid', qcidRoutes);
+app.use('/qcid', qcidRoutes);
 app.use('/api/schools-sync', schoolSyncRoutes);
+app.use('/schools-sync', schoolSyncRoutes);
 app.use('/api/funds', fundRoutes);
+app.use('/funds', fundRoutes);
 app.use('/api/communication', communicationRoutes);
+app.use('/communication', communicationRoutes);
 app.use('/api/calendar', calendarRoutes);
+app.use('/calendar', calendarRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/tickets', ticketRoutes);
 app.use('/api/portal-settings', portalSettingsRoutes);
+app.use('/portal-settings', portalSettingsRoutes);
 app.use('/api/live-chat', liveChatRoutes);
+app.use('/live-chat', liveChatRoutes);
 
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.json({
     status: 'online',
     system: 'EduScholar Quezon City Scholarship Management System',
