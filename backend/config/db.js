@@ -11,16 +11,24 @@ const DB_USER = process.env.DB_USER || 'postgres';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'January10';
 const DB_NAME = process.env.DB_NAME || 'eduscholar';
 
+const getCloudDatabaseUrl = () => {
+  return process.env.DATABASE_PRIVATE_URL ||
+         process.env.DATABASE_URL_PRIVATE ||
+         process.env.DATABASE_URL ||
+         process.env.POSTGRES_URL ||
+         process.env.NEON_DATABASE_URL ||
+         process.env.POSTGRES_PRISMA_URL ||
+         process.env.POSTGRES_URL_NON_POOLING ||
+         process.env.VERCEL_POSTGRES_URL ||
+         process.env.RAILWAY_DATABASE_URL ||
+         (process.env.VERCEL || process.env.NODE_ENV === 'production'
+           ? 'postgresql://postgres:fmpvksIODYJyyEOgMcetIJvaLaHsaQoP@altaria.proxy.rlwy.net:45528/railway'
+           : null);
+};
+
 // Helper to construct pool configuration
 const createPoolConfig = (database) => {
-  const dbUrl = process.env.DATABASE_PRIVATE_URL ||
-                process.env.DATABASE_URL_PRIVATE ||
-                process.env.DATABASE_URL ||
-                process.env.POSTGRES_URL ||
-                process.env.NEON_DATABASE_URL ||
-                process.env.POSTGRES_PRISMA_URL ||
-                process.env.POSTGRES_URL_NON_POOLING ||
-                process.env.VERCEL_POSTGRES_URL;
+  const dbUrl = getCloudDatabaseUrl();
   if (dbUrl) {
     const isLocal = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
     return {
@@ -54,7 +62,7 @@ const pool = new Pool(createPoolConfig(DB_NAME));
  * If the DB does not exist, create it.
  */
 async function ensureDatabaseExists() {
-  const dbUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL_PRIVATE || process.env.DATABASE_URL;
+  const dbUrl = getCloudDatabaseUrl();
   if (dbUrl) {
     console.log('[db] Using cloud DATABASE_URL, skipping CREATE DATABASE check');
     return;
