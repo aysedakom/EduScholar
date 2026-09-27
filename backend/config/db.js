@@ -22,7 +22,7 @@ const getCloudDatabaseUrl = () => {
          process.env.VERCEL_POSTGRES_URL ||
          process.env.RAILWAY_DATABASE_URL ||
          (process.env.VERCEL || process.env.NODE_ENV === 'production'
-           ? 'postgresql://postgres:fmpvksIODYJyyEOgMcetIJvaLaHsaQoP@altaria.proxy.rlwy.net:45528/railway'
+           ? 'postgresql://neondb_owner:npg_suj9Gvxpb2ZJ@ep-purple-smoke-b5n7wfkx-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require'
            : null);
 };
 
