@@ -23,6 +23,27 @@ router.post('/reset-db', async (req, res) => {
 // GET /api/admin/users - List all users in PostgreSQL database
 router.get('/users', authMiddleware, async (req, res) => {
   try {
+    const checkCount = await pool.query('SELECT COUNT(*)::int as count FROM users');
+    if (checkCount.rows[0].count < 7) {
+      const defaultPassHash = await bcrypt.hash('January10', 10);
+      const officialAccounts = [
+        { name: 'ADMIN', email: 'support.edu2026@gmail.com', role: 'admin', dept: 'Quezon City Youth Development Office (QCYDO)' },
+        { name: 'City Treasury Disbursing Officer', email: 'treasury.edu2026@gmail.com', role: 'treasury', dept: 'Quezon City Hall Treasury Office' },
+        { name: 'John Steaven Balansag', email: 'sr.edu2026@gmail.com', role: 'school_coordinator', dept: 'Quezon City University & Partner Schools' },
+        { name: 'Scholarship Program Supervisor', email: 'sv.edu2026@gmail.com', role: 'supervisor', dept: 'Quezon City Youth Development Office (QCYDO)' },
+        { name: 'System Administrator', email: 'sysadmin.edu2026@gmail.com', role: 'system_admin', dept: 'Quezon City IT & System Services' },
+        { name: 'Juan Dela Cruz (Student Scholar)', email: 'student.edu2026@gmail.com', role: 'student', dept: 'Quezon City University' },
+        { name: 'Demo Student Account', email: 'student@gmail.com', role: 'student', dept: 'Quezon City University' },
+      ];
+      for (const u of officialAccounts) {
+        await pool.query(`
+          INSERT INTO users (name, email, password, role, department, status, is_email_verified)
+          VALUES ($1, $2, $3, $4, $5, 'active', true)
+          ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, role = EXCLUDED.role, is_email_verified = true, status = 'active'
+        `, [u.name, u.email.toLowerCase().trim(), defaultPassHash, u.role, u.dept]);
+      }
+    }
+
     const result = await pool.query(
       'SELECT id, name, email, role, department, major, gpa, status, student_id, is_email_verified, created_at FROM users ORDER BY id ASC'
     );

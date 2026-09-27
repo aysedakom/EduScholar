@@ -27,7 +27,12 @@ export const UserManagementPage: React.FC = () => {
     const fetchUsers = async () => {
       try {
         const res = await getUsers();
-        if (res.data && Array.isArray(res.data) && res.data.length > 0 && isMounted) {
+        const rawData: any = res.data;
+        const userList: any[] = Array.isArray(rawData)
+          ? rawData
+          : (Array.isArray(rawData?.data) ? rawData.data : (Array.isArray(rawData?.users) ? rawData.users : []));
+
+        if (Array.isArray(userList) && userList.length > 0 && isMounted) {
           const roleLabelMap: Record<string, string> = {
             student: 'Student',
             admin: 'Admin',
@@ -36,11 +41,11 @@ export const UserManagementPage: React.FC = () => {
             treasury: 'Staff',
             system_admin: 'Admin',
           };
-          const mapped: ManagedUser[] = res.data.map((u: any) => ({
+          const mapped: ManagedUser[] = userList.map((u: any) => ({
             id: `USR-${String(u.id).padStart(3, '0')}`,
-            name: u.name,
-            email: u.email,
-            role: (roleLabelMap[u.role] || 'Staff') as any,
+            name: u.name || 'User Account',
+            email: u.email || 'N/A',
+            role: (roleLabelMap[u.role] || u.role || 'Staff') as any,
             department: u.department || 'Quezon City Youth Development Office',
             status: (u.status === 'active' || u.is_email_verified ? 'Active' : 'Pending Approval') as any,
             createdAt: u.created_at ? u.created_at.split('T')[0] : new Date().toISOString().split('T')[0],
