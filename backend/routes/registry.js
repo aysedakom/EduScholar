@@ -4,6 +4,7 @@ const router = express.Router();
 const registryController = require('../controllers/registryController');
 const authMiddleware = require('../middleware/auth');
 
+router.get('/me', authMiddleware, registryController.getMyScholarRecord);
 router.get('/', authMiddleware, registryController.getScholars);
 router.post('/', authMiddleware, registryController.addScholar);
 router.patch('/:id/status', authMiddleware, registryController.updateScholarStatus);

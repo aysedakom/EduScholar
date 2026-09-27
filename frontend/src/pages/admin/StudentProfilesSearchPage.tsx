@@ -24,6 +24,7 @@ import { INSTALLED_DEPARTMENTS } from '../../utils/departments';
 import { formatCurrency } from '../../utils/cn';
 import { SendScholarshipNoticeModal, type NoticeRecipient } from '../../components/admin/SendScholarshipNoticeModal';
 import { ScholarshipAwardCertificateModal } from '../../components/common/ScholarshipAwardCertificateModal';
+import { EduScholarDigitalIDCard } from '../../components/student/EduScholarDigitalIDCard';
 
 export interface StudentProfile {
   id: string;
@@ -375,45 +376,26 @@ export const StudentProfilesSearchPage: React.FC = () => {
 
                               {/* Top Row: Digital Scholar Pass Card & Verified Profile Details */}
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                {/* Digital Scholar Pass (Student Registry Card) */}
-                                <div className="md:col-span-1 bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 p-5 rounded-3xl text-white shadow-xl flex flex-col justify-between space-y-5 border border-slate-800">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex items-center gap-2">
-                                      <div className="h-9 w-9 rounded-full bg-white p-1 shadow-md flex items-center justify-center shrink-0">
-                                        <img src="/logo-system.webp" alt="QC Logo" className="h-7 w-7 object-contain rounded-full border border-blue-200 dark:border-slate-700" />
-                                      </div>
-                                      <div>
-                                        <h3 className="font-heading text-[11px] font-black tracking-wider uppercase">QC SCHOLAR REGISTRY</h3>
-                                        <span className="text-[9px] text-blue-300">GovServe Education Division</span>
-                                      </div>
-                                    </div>
-                                    <Badge variant="success" size="sm" className="bg-emerald-500/20 text-emerald-300 border-emerald-400/30 text-[10px]">
-                                      <ShieldCheck className="h-3 w-3 mr-1" /> VERIFIED
-                                    </Badge>
-                                  </div>
-
-                                  <div className="flex items-center gap-3.5">
-                                    <img
-                                      src={stu.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80'}
-                                      alt={stu.name}
-                                      className="h-14 w-14 rounded-2xl object-cover border-2 border-white/20 shadow-md"
-                                    />
-                                    <div>
-                                      <h2 className="font-heading font-extrabold text-base text-white">{stu.name}</h2>
-                                      <p className="text-xs text-blue-200 font-mono">{stu.studentId}</p>
-                                      <span className="text-[11px] text-slate-300">{stu.major}</span>
-                                    </div>
-                                  </div>
-
-                                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                                    <div>
-                                      <span className="text-[9px] uppercase tracking-wider text-slate-400 block">Registry Status</span>
-                                      <span className="text-emerald-400 font-bold flex items-center gap-1 text-[11px]">
-                                        <CheckCircle2 className="h-3 w-3" /> Valid for AY 2026-2027
-                                      </span>
-                                    </div>
-                                    <QrCode className="h-8 w-8 text-white/80 opacity-80" />
-                                  </div>
+                                {/* Digital Scholar Pass (EduScholar Digital ID Card) */}
+                                <div className="md:col-span-1">
+                                  <EduScholarDigitalIDCard
+                                    data={{
+                                      studentId: stu.studentId,
+                                      fullName: stu.name,
+                                      email: stu.email,
+                                      school: stu.school,
+                                      department: stu.department,
+                                      programName: stu.scholarshipTitle,
+                                      yearLevel: stu.yearLevel,
+                                      gwa: stu.gpa,
+                                      status: stu.scholarshipStatus,
+                                      avatar: stu.avatar,
+                                      barangay: stu.barangay,
+                                      currentTerm: stu.currentTerm,
+                                      scholarshipAge: stu.scholarshipAge,
+                                      grantAmount: stu.disbursementAmount
+                                    }}
+                                  />
                                 </div>
 
                                 {/* Verified Details Grid */}

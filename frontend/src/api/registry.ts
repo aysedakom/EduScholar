@@ -38,6 +38,10 @@ export const getScholars = (params?: { status?: string; school?: string; search?
   return api.get<ScholarRegistryRecord[]>('/registry', { params });
 };
 
+export const getMyScholarRecord = () => {
+  return api.get<ScholarRegistryRecord>('/registry/me');
+};
+
 export const addScholar = (payload: Partial<ScholarRegistryRecord>) => {
   return api.post<ScholarRegistryRecord>('/registry', payload);
 };

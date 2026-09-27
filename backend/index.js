@@ -237,3 +237,5 @@ app.post('/api/sync/trigger', (req, res) => {
     console.warn('[EduScholar Server] Background services warning:', error.message);
   }
 })();
+
+module.exports = app;
