@@ -25,6 +25,8 @@ import {
   type DrawdownRequestItem,
 } from '../../api/funds';
 
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
+
 export const FundPoolsManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'pools' | 'drawdowns'>('pools');
   const [funds, setFunds] = useState<FundPoolItem[]>([]);
@@ -64,13 +66,17 @@ export const FundPoolsManagementPage: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      toast.error('Failed to load fund pools data');
     }
   };
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useAutoRefresh(loadData, {
+    tableNames: ['treasury_fund_pools', 'treasury_drawdown_requests'],
+    intervalMs: 5000,
+  });
 
   // Aggregate Metrics
   const totalAllocatedBudget = funds.reduce((sum, f) => sum + (Number(f.total_budget) || 0), 0);

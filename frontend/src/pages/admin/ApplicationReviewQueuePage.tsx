@@ -12,6 +12,7 @@ import { SendScholarshipNoticeModal, type NoticeRecipient } from '../../componen
 import { getMyApplications, updateApplicationStatus } from '../../api/applications';
 import { ALL_SCHOLARSHIP_PROGRAMS, getProgramTermGrant } from '../../utils/scholarshipPrograms';
 import type { Application } from '../../types';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 
 export interface ReviewDocItem {
   id: string;
@@ -238,6 +239,11 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
   useEffect(() => {
     loadReviewsFromDb();
   }, []);
+
+  useAutoRefresh(loadReviewsFromDb, {
+    tableNames: ['applications', 'documents'],
+    intervalMs: 5000,
+  });
 
   const filteredApps = applications.filter((app) => {
     const matchesSearch =

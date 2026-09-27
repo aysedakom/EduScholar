@@ -46,7 +46,7 @@ export interface StudentProfile {
 }
 
 import { getScholars } from '../../api/registry';
-import { useWebSocket } from '../../context/WebSocketContext';
+import { useAutoRefresh } from '../../hooks/useAutoRefresh';
 
 export const StudentProfilesSearchPage: React.FC = () => {
   const [students, setStudents] = useState<StudentProfile[]>([]);
@@ -59,8 +59,6 @@ export const StudentProfilesSearchPage: React.FC = () => {
   const [noticeRecipient, setNoticeRecipient] = useState<NoticeRecipient | null>(null);
   const [selectedCertStudent, setSelectedCertStudent] = useState<StudentProfile | null>(null);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
-
-  const { subscribeToTable } = useWebSocket();
 
   useEffect(() => {
     let isMounted = true;
@@ -101,17 +99,37 @@ export const StudentProfilesSearchPage: React.FC = () => {
     };
 
     fetchRegistry();
+  }, []);
 
-    // Real-time PostgreSQL -> WebSocket subscription
-    const unsubscribe = subscribeToTable('student_registry', () => {
-      fetchRegistry();
-    });
-
-    return () => {
-      isMounted = false;
-      unsubscribe();
-    };
-  }, [subscribeToTable]);
+  useAutoRefresh(() => {
+    getScholars().then((res) => {
+      if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+        const mapped: StudentProfile[] = res.data.map((s: any) => ({
+          id: `STU-${s.id}`,
+          studentId: s.student_id,
+          name: s.full_name,
+          email: s.email,
+          gpa: Number(s.gwa) || 1.75,
+          department: s.department || 'College of Computer Studies (CCS)',
+          major: s.program_name,
+          yearLevel: s.year_level || ((s.scholarship_age || '').includes('Year 2') ? '2nd Year' : (s.scholarship_age || '').includes('Year 3') ? '3rd Year' : '1st Year'),
+          school: s.school,
+          barangay: s.barangay || 'Quezon City',
+          scholarshipTitle: s.program_name,
+          currentTerm: s.current_term,
+          applicationNumber: s.application_code || `APP-QC-2026-${s.student_id}`,
+          scholarshipAge: s.scholarship_age,
+          scholarshipStatus: (s.status?.includes('Active') ? 'Active & In Good Standing' : 'Active - Renewal Processing') as any,
+          disbursementAmount: Number(s.grant_amount) || 10000,
+          avatar: s.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=250&q=80',
+        }));
+        setStudents(mapped);
+      }
+    }).catch(() => {});
+  }, {
+    tableNames: ['student_registry', 'users'],
+    intervalMs: 5000,
+  });
 
   const filteredStudents = students.filter((stu) => {
     const matchesSearch =

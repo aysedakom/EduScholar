@@ -110,75 +110,8 @@ const ALL_ROLE_FAQS: FAQItem[] = [
 export const SupportPage: React.FC = () => {
   const { user } = useAuth();
   
-  // Role-filtered initial tickets
-  const getInitialTickets = (): SupportTicket[] => {
-    if (user?.role === 'school_coordinator') {
-      return [
-        {
-          id: 'TCK-COOR-101',
-          title: 'Registrar Batch CSV Column Format Validation',
-          category: 'Registrar CSV Upload',
-          priority: 'Medium',
-          status: 'Resolved',
-          date: '2026-08-20',
-          description: 'Clarified header formatting requirements for enrolled subjects matrix.',
-        },
-        {
-          id: 'TCK-COOR-102',
-          title: 'Graduating Senior Underload Waiver Clearance',
-          category: 'Academic Retention Waiver',
-          priority: 'High',
-          status: 'In Progress',
-          date: '2026-08-24',
-          description: 'Special exemption review for Accountancy senior enrolled in 12 units.',
-        },
-      ];
-    }
-    if (user?.role === 'treasury') {
-      return [
-        {
-          id: 'TCK-TRE-201',
-          title: 'Landbank ATM Batch #089 Reference Hash Mismatch',
-          category: 'Bank Reconciliation',
-          priority: 'High',
-          status: 'In Progress',
-          date: '2026-08-22',
-          description: 'Bank clearing reference mismatch on 2 transaction line items.',
-        },
-        {
-          id: 'TCK-TRE-202',
-          title: 'GCash Corporate API Webhook Disbursement Status',
-          category: 'E-Wallet Disbursement',
-          priority: 'Medium',
-          status: 'Resolved',
-          date: '2026-08-18',
-          description: 'Confirmed settlement for 150 student digital cash vouchers.',
-        },
-      ];
-    }
-    return [
-      {
-        id: 'TCK-9402',
-        title: 'Disbursement inquiry for Tertiary Merit Scholarship',
-        category: 'Disbursement & Payout',
-        priority: 'High',
-        status: 'In Progress',
-        date: '2026-08-10',
-        description: 'Grant status shows approved, inquiring about official ATM card release date.',
-      },
-      {
-        id: 'TCK-8819',
-        title: 'Document Vault COR upload status check',
-        category: 'Document Vault',
-        priority: 'Medium',
-        status: 'Resolved',
-        date: '2026-08-04',
-        description: 'Submitted 2026 Certificate of Registration verified by school registrar.',
-      },
-    ];
-  };
-
-  const [tickets, setTickets] = useState<SupportTicket[]>(getInitialTickets());
+  // Tickets are 100% database-driven — no hardcoded fallback data
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
 
   useEffect(() => {
     const fetchDbTickets = async () => {
@@ -524,7 +457,16 @@ export const SupportPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-sans">
-                {tickets.map((t) => (
+                {tickets.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="p-8 text-center text-slate-400 dark:text-slate-500">
+                      <Ticket className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                      <p className="font-semibold text-sm">{isOfficer ? 'No tickets in queue yet' : 'No support tickets submitted yet'}</p>
+                      <p className="text-xs mt-1">{isOfficer ? 'Student inquiry tickets will appear here once submitted.' : 'Submit a ticket using the button above to get help from our support team.'}</p>
+                    </td>
+                  </tr>
+                ) : (
+                  tickets.map((t) => (
                   <tr key={t.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="p-3.5 font-mono font-bold text-slate-900 dark:text-white">{t.id}</td>
                     <td className="p-3.5 font-semibold text-slate-900 dark:text-white">{t.title}</td>
@@ -551,7 +493,8 @@ export const SupportPage: React.FC = () => {
                       </Badge>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
