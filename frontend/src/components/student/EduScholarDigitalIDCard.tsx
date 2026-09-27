@@ -11,11 +11,7 @@ import {
   Printer,
   Download,
   Copy,
-  ExternalLink,
-  Award,
-  Calendar,
-  Lock,
-  FileCheck
+  Lock
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -313,7 +309,7 @@ export const EduScholarDigitalIDCard: React.FC<EduScholarDigitalIDCardProps> = (
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
         title="Official EduScholar QR Verification Pass"
-        size="md"
+        maxWidth="md"
       >
         <div className="space-y-6 text-center py-2">
           {/* Header Badge */}

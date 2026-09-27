@@ -32,6 +32,9 @@ export interface ScholarRegistryRecord {
   submission_date?: string;
   form_data?: any;
   documents_submitted?: any;
+  department?: string;
+  year_level?: string;
+  avatar?: string;
 }
 
 export const getScholars = (params?: { status?: string; school?: string; search?: string }) => {

@@ -4,7 +4,6 @@ import {
   Download,
   CheckCircle2,
   ShieldCheck,
-  QrCode,
   Building2,
   UserCheck,
   GraduationCap,

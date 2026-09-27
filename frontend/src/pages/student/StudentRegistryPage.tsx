@@ -10,8 +10,7 @@ import {
   Calendar,
   Clock,
   BookOpen,
-  FileCheck,
-  RefreshCw
+  FileCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
@@ -29,7 +28,6 @@ export const StudentRegistryPage: React.FC = () => {
   const profile = user?.basicProfile;
 
   const [scholarRecord, setScholarRecord] = useState<ScholarRegistryRecord | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     if (isAdmin) return;
@@ -42,9 +40,6 @@ export const StudentRegistryPage: React.FC = () => {
       })
       .catch((err) => {
         console.warn('Failed to fetch live scholar registry record:', err);
-      })
-      .finally(() => {
-        setLoading(false);
       });
   }, [isAdmin]);
 
