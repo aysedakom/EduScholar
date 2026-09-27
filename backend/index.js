@@ -207,12 +207,12 @@ if (fs.existsSync(frontendDist)) {
   });
 }
 
-initSocketServer(server);
-
-server.listen(port, host, () => {
-  console.log(`[EduScholar Server] HTTP listening on port ${port} (0.0.0.0:${port})`);
-  console.log(`[EduScholar Realtime] WebSocket listening on ws://0.0.0.0:${port}/ws`);
-  console.log(`[EduScholar Docs] Swagger OpenAPI available at http://0.0.0.0:${port}/api-docs`);
+// Middleware: Ensure DB initialization on Vercel/serverless environments
+app.use(async (req, res, next) => {
+  try {
+    await initDb();
+  } catch (_) {}
+  next();
 });
 
 const { startAutoSync, getSyncStatus, triggerSyncNow } = require('./services/autoSyncService');
@@ -226,16 +226,29 @@ app.post('/api/sync/trigger', (req, res) => {
   res.json({ message: 'Sync cycle triggered in background' });
 });
 
-// Initialize Database, PostgreSQL listener & Auto-Sync in background
-(async function initBackgroundServices() {
+// Guard server.listen & persistent socket services when running as standalone Node process (e.g. Railway/Localhost) vs Vercel Serverless
+if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
   try {
-    await initDb();
-    await initPgListener();
-    console.log('[EduScholar Server] Database and realtime listener ready.');
-    startAutoSync(12);
-  } catch (error) {
-    console.warn('[EduScholar Server] Background services warning:', error.message);
+    initSocketServer(server);
+    server.listen(port, host, () => {
+      console.log(`[EduScholar Server] HTTP listening on port ${port} (0.0.0.0:${port})`);
+      console.log(`[EduScholar Realtime] WebSocket listening on ws://0.0.0.0:${port}/ws`);
+      console.log(`[EduScholar Docs] Swagger OpenAPI available at http://0.0.0.0:${port}/api-docs`);
+    });
+  } catch (err) {
+    console.warn('[EduScholar Server] Server listen skipped or failed:', err.message);
   }
-})();
+
+  (async function initBackgroundServices() {
+    try {
+      await initDb();
+      await initPgListener();
+      console.log('[EduScholar Server] Database and realtime listener ready.');
+      startAutoSync(12);
+    } catch (error) {
+      console.warn('[EduScholar Server] Background services warning:', error.message);
+    }
+  })();
+}
 
 module.exports = app;

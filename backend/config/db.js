@@ -379,6 +379,7 @@ async function ensureTables() {
 let dbInitialized = false;
 
 async function initDb() {
+  if (dbInitialized) return;
   try {
     await ensureDatabaseExists();
     await ensureTables();
