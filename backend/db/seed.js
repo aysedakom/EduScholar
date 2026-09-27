@@ -136,30 +136,12 @@ async function seed() {
      ('City Council Emergency Relief & Calamity Bursary', '2026', 25000000.00, 0, 0, 'Active')`
   );
 
-  // 7. SEED AUTHENTIC STUDENT USERS & REGISTRY RECORDS
-  console.log('[seed] Seeding authentic student accounts & registry records...');
+  // 7. SEED OFFICIAL STUDENT SCHOLAR ACCOUNTS & REGISTRY RECORDS
+  console.log('[seed] Seeding official student scholar account & registry records...');
   const studentAccounts = [
     {
-      student_id: '23010366',
-      name: 'Pia Marie T. Faner',
-      email: 'pia.faner@bcp.edu.ph',
-      role: 'student',
-      school: 'Bestlink College of the Philippines (BCP)',
-      program_id: 'BSIT',
-      program_name: 'Bachelor of Science in Information Technology (BSIT)',
-      current_term: '1st Sem AY 2026-2027',
-      scholarship_age: 'Year 1 (1st Semester)',
-      gwa: 1.50,
-      units: 18,
-      status: 'Active Good Standing',
-      grant_amount: 10000,
-      disbursement_status: 'Scheduled',
-      district: 'District 5',
-      barangay: 'Brgy. Kaligayahan',
-    },
-    {
       student_id: '2026-889102',
-      name: 'Juan Manuel Dela Cruz',
+      name: 'Juan Dela Cruz (Student Scholar)',
       email: 'student.edu2026@gmail.com',
       role: 'student',
       school: 'Quezon City University (QCU)',
@@ -174,24 +156,6 @@ async function seed() {
       disbursement_status: 'Disbursed',
       district: 'District 2',
       barangay: 'Brgy. Batasan Hills',
-    },
-    {
-      student_id: '2026-339182',
-      name: 'Maria Clarissa Reyes',
-      email: 'clarissa.reyes@upd.edu.ph',
-      role: 'student',
-      school: 'University of the Philippines Diliman (UPD)',
-      program_id: 'BS CHE',
-      program_name: 'Bachelor of Science in Chemical Engineering (BS ChE)',
-      current_term: '1st Sem AY 2026-2027',
-      scholarship_age: 'Year 3 (5th Semester)',
-      gwa: 1.45,
-      units: 18,
-      status: 'Active Good Standing',
-      grant_amount: 105000,
-      disbursement_status: 'Disbursed',
-      district: 'District 3',
-      barangay: 'Brgy. UP Campus',
     },
     {
       student_id: '2026-554190',
