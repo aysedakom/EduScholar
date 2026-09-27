@@ -13,7 +13,14 @@ const DB_NAME = process.env.DB_NAME || 'eduscholar';
 
 // Helper to construct pool configuration
 const createPoolConfig = (database) => {
-  const dbUrl = process.env.DATABASE_PRIVATE_URL || process.env.DATABASE_URL_PRIVATE || process.env.DATABASE_URL;
+  const dbUrl = process.env.DATABASE_PRIVATE_URL ||
+                process.env.DATABASE_URL_PRIVATE ||
+                process.env.DATABASE_URL ||
+                process.env.POSTGRES_URL ||
+                process.env.NEON_DATABASE_URL ||
+                process.env.POSTGRES_PRISMA_URL ||
+                process.env.POSTGRES_URL_NON_POOLING ||
+                process.env.VERCEL_POSTGRES_URL;
   if (dbUrl) {
     const isLocal = dbUrl.includes('localhost') || dbUrl.includes('127.0.0.1');
     return {
@@ -86,6 +93,13 @@ async function ensureTables() {
       const { seed } = require('../db/seed');
       await seed();
     } else {
+      // Ensure student_registry is populated if empty
+      const regCheck = await pool.query(`SELECT COUNT(*)::int as count FROM student_registry`);
+      if (regCheck.rows[0].count === 0) {
+        console.log('[db] student_registry is empty, running master seed()...');
+        const { seed } = require('../db/seed');
+        await seed();
+      }
       // Ensure user_otps table exists on existing installations
       await pool.query(`
         CREATE TABLE IF NOT EXISTS user_otps (

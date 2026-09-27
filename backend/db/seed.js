@@ -136,6 +136,127 @@ async function seed() {
      ('City Council Emergency Relief & Calamity Bursary', '2026', 25000000.00, 0, 0, 'Active')`
   );
 
+  // 7. SEED AUTHENTIC STUDENT USERS & REGISTRY RECORDS
+  console.log('[seed] Seeding authentic student accounts & registry records...');
+  const studentAccounts = [
+    {
+      student_id: '23010366',
+      name: 'Pia Marie T. Faner',
+      email: 'pia.faner@bcp.edu.ph',
+      role: 'student',
+      school: 'Bestlink College of the Philippines (BCP)',
+      program_id: 'BSIT',
+      program_name: 'Bachelor of Science in Information Technology (BSIT)',
+      current_term: '1st Sem AY 2026-2027',
+      scholarship_age: 'Year 1 (1st Semester)',
+      gwa: 1.50,
+      units: 18,
+      status: 'Active Good Standing',
+      grant_amount: 10000,
+      disbursement_status: 'Scheduled',
+      district: 'District 5',
+      barangay: 'Brgy. Kaligayahan',
+    },
+    {
+      student_id: '2026-889102',
+      name: 'Juan Manuel Dela Cruz',
+      email: 'student.edu2026@gmail.com',
+      role: 'student',
+      school: 'Quezon City University (QCU)',
+      program_id: 'BSCS',
+      program_name: 'Bachelor of Science in Computer Science (BSCS)',
+      current_term: '1st Sem AY 2026-2027',
+      scholarship_age: 'Year 2 (3rd Semester)',
+      gwa: 1.75,
+      units: 21,
+      status: 'Active Good Standing',
+      grant_amount: 160000,
+      disbursement_status: 'Disbursed',
+      district: 'District 2',
+      barangay: 'Brgy. Batasan Hills',
+    },
+    {
+      student_id: '2026-339182',
+      name: 'Maria Clarissa Reyes',
+      email: 'clarissa.reyes@upd.edu.ph',
+      role: 'student',
+      school: 'University of the Philippines Diliman (UPD)',
+      program_id: 'BS CHE',
+      program_name: 'Bachelor of Science in Chemical Engineering (BS ChE)',
+      current_term: '1st Sem AY 2026-2027',
+      scholarship_age: 'Year 3 (5th Semester)',
+      gwa: 1.45,
+      units: 18,
+      status: 'Active Good Standing',
+      grant_amount: 105000,
+      disbursement_status: 'Disbursed',
+      district: 'District 3',
+      barangay: 'Brgy. UP Campus',
+    },
+    {
+      student_id: '2026-554190',
+      name: 'Demo Student Account',
+      email: 'student@gmail.com',
+      role: 'student',
+      school: 'Quezon City University (QCU)',
+      program_id: 'BSCS',
+      program_name: 'Bachelor of Science in Computer Science (BSCS)',
+      current_term: '1st Sem AY 2026-2027',
+      scholarship_age: 'Year 1 (2nd Semester)',
+      gwa: 2.00,
+      units: 18,
+      status: 'Active Good Standing',
+      grant_amount: 20000,
+      disbursement_status: 'Scheduled',
+      district: 'District 1',
+      barangay: 'Brgy. San Bartolome',
+    },
+  ];
+
+  for (const st of studentAccounts) {
+    const uRes = await pool.query(
+      `INSERT INTO users (name, email, password, role, student_id, department, major, gpa, status, is_email_verified)
+       VALUES ($1, $2, $3, 'student', $4, $5, $6, $7, 'active', true)
+       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, student_id = $4, status = 'active'
+       RETURNING id`,
+      [st.name, st.email, hashedPassword, st.student_id, st.school, st.program_name, st.gwa]
+    );
+
+    const userId = uRes.rows[0]?.id;
+
+    await pool.query(
+      `INSERT INTO student_registry 
+       (student_id, user_id, full_name, email, school, program_id, program_name, current_term, scholarship_age, gwa, units_enrolled, status, grant_amount, disbursement_status, district)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+       ON CONFLICT (student_id) DO UPDATE SET 
+         full_name = EXCLUDED.full_name,
+         user_id = EXCLUDED.user_id,
+         email = EXCLUDED.email,
+         school = EXCLUDED.school,
+         program_name = EXCLUDED.program_name,
+         gwa = EXCLUDED.gwa,
+         status = EXCLUDED.status,
+         disbursement_status = EXCLUDED.disbursement_status`,
+      [st.student_id, userId, st.name, st.email, st.school, st.program_id, st.program_name, st.current_term, st.scholarship_age, st.gwa, st.units, st.status, st.grant_amount, st.disbursement_status, st.district]
+    );
+
+    const appCode = `APP-QC-2026-${st.student_id.slice(-4)}`;
+    await pool.query(
+      `INSERT INTO applications (application_code, user_id, type, program_id, program_name, title, district, barangay, amount, status, progress, form_data)
+       VALUES ($1, $2, 'Scholarship', 'tertiary-excel', $3, $4, $5, $6, $7, 'Approved', 100, '{}'::jsonb)
+       ON CONFLICT (application_code) DO NOTHING`,
+      [appCode, userId, st.program_name, `${st.program_name} Application`, st.district, st.barangay, st.grant_amount]
+    );
+
+    const auditCode = `AUDIT-2026-${st.student_id.slice(-4)}`;
+    await pool.query(
+      `INSERT INTO education_monitoring_reports (audit_code, student_id, name, email, barangay, school, program, semester_aid_amount, current_term, current_gwa, units_enrolled, units_passed, retention_status, registrar_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11, 'Retention Cleared', true)
+       ON CONFLICT (audit_code) DO NOTHING`,
+      [auditCode, st.student_id, st.name, st.email, st.barangay, st.school, st.program_name, st.grant_amount, st.current_term, st.gwa, st.units]
+    );
+  }
+
   console.log('[seed] Clean database seeding completed successfully! 🚀');
 }
 
