@@ -33,9 +33,9 @@ const createVerificationToken = async ({ email, expiresInMinutes = 60 }) => {
 
   const result = await pool.query(
     `INSERT INTO user_otps (email, otp_code, otp_purpose, expires_at, attempts)
-     VALUES ($1, $2, 'verify_email', NOW() + ($3 || ' minutes')::INTERVAL, 0)
+     VALUES ($1, $2, 'verify_email', NOW() + ($3 * INTERVAL '1 minute'), 0)
      RETURNING id, email, otp_code, otp_purpose, expires_at, created_at`,
-    [normalizedEmail, token, expiresInMinutes]
+    [normalizedEmail, token, Number(expiresInMinutes)]
   );
 
   return result.rows[0];
@@ -91,9 +91,9 @@ const createOtp = async ({ email, purpose = 'login', expiresInMinutes = 1 }) => 
   // Insert new OTP record (1 minute expiration)
   const result = await pool.query(
     `INSERT INTO user_otps (email, otp_code, otp_purpose, expires_at, attempts)
-     VALUES ($1, $2, $3, NOW() + ($4 || ' minutes')::INTERVAL, 0)
+     VALUES ($1, $2, $3, NOW() + ($4 * INTERVAL '1 minute'), 0)
      RETURNING id, email, otp_code, otp_purpose, expires_at, created_at`,
-    [normalizedEmail, otpCode, purpose, expiresInMinutes]
+    [normalizedEmail, otpCode, purpose, Number(expiresInMinutes)]
   );
 
   return result.rows[0];
@@ -172,9 +172,9 @@ const createPasswordResetToken = async ({ email, expiresInMinutes = 30 }) => {
 
   const result = await pool.query(
     `INSERT INTO user_otps (email, otp_code, otp_purpose, expires_at, attempts)
-     VALUES ($1, $2, 'reset_password', NOW() + ($3 || ' minutes')::INTERVAL, 0)
+     VALUES ($1, $2, 'reset_password', NOW() + ($3 * INTERVAL '1 minute'), 0)
      RETURNING id, email, otp_code, otp_purpose, expires_at, created_at`,
-    [normalizedEmail, token, expiresInMinutes]
+    [normalizedEmail, token, Number(expiresInMinutes)]
   );
 
   return result.rows[0];
