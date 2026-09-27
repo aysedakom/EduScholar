@@ -62,7 +62,7 @@ CREATE TABLE user_otps (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
   email VARCHAR(200) NOT NULL,
-  otp_code VARCHAR(100) NOT NULL,
+  otp_code VARCHAR(200) NOT NULL,
   otp_purpose VARCHAR(50) DEFAULT 'login' CHECK (otp_purpose IN ('login', 'register', 'verify_email', 'reset_password')),
   expires_at TIMESTAMPTZ NOT NULL,
   attempts INTEGER DEFAULT 0,

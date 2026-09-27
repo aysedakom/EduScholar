@@ -106,14 +106,19 @@ async function ensureTables() {
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
           email VARCHAR(200) NOT NULL,
-          otp_code VARCHAR(10) NOT NULL,
-          otp_purpose VARCHAR(50) DEFAULT 'login' CHECK (otp_purpose IN ('login', 'register', 'reset_password')),
+          otp_code VARCHAR(200) NOT NULL,
+          otp_purpose VARCHAR(50) DEFAULT 'login' CHECK (otp_purpose IN ('login', 'register', 'verify_email', 'reset_password')),
           expires_at TIMESTAMPTZ NOT NULL,
           attempts INTEGER DEFAULT 0,
           consumed_at TIMESTAMPTZ,
           created_at TIMESTAMPTZ DEFAULT NOW()
         );
         CREATE INDEX IF NOT EXISTS idx_user_otps_email ON user_otps(email, otp_purpose, consumed_at);
+
+        -- Fix existing databases: widen otp_code column and update CHECK constraint
+        ALTER TABLE user_otps ALTER COLUMN otp_code TYPE VARCHAR(200);
+        ALTER TABLE user_otps DROP CONSTRAINT IF EXISTS user_otps_otp_purpose_check;
+        ALTER TABLE user_otps ADD CONSTRAINT user_otps_otp_purpose_check CHECK (otp_purpose IN ('login', 'register', 'verify_email', 'reset_password'));
         ALTER TABLE documents ADD COLUMN IF NOT EXISTS file_data TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS district VARCHAR(100);
         ALTER TABLE applications ADD COLUMN IF NOT EXISTS district VARCHAR(100);
