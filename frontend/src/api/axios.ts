@@ -1,57 +1,62 @@
-// axios configuration
+// axios configuration with seamless bi-directional Railway <-> Localhost automatic failover
 import axios from 'axios';
+
+const RAILWAY_BACKEND_URL = 'https://eduscholar.up.railway.app/api';
+const LOCALHOST_BACKEND_URL = 'http://localhost:5000/api';
 
 const apiBaseUrl = (import.meta as any).env?.VITE_API_URL || '/api';
 
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
-  timeout: 20000,
+  timeout: 15000,
 });
 
 // Interceptor: attach token to every request
 api.interceptors.request.use((config) => {
   const token = sessionStorage.getItem('token') || localStorage.getItem('token');
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = 'Bearer ' + token;
   }
   return config;
 });
 
-// Interceptor: Automatic Localhost failover when network connection drops (Local Dev only)
+// Interceptor: Bi-directional Automatic Failover between Railway & Localhost
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    const isDev = (import.meta as any).env?.DEV === true;
-    if (
-      isDev &&
-      (!error.response || error.code === 'ERR_NETWORK') &&
-      originalRequest &&
-      !originalRequest._retryLocal &&
-      !originalRequest.baseURL?.includes('localhost:5000')
-    ) {
-      originalRequest._retryLocal = true;
+    const isNetworkOrServerError =
+      !error.response ||
+      error.code === 'ERR_NETWORK' ||
+      error.code === 'ECONNABORTED' ||
+      [502, 503, 504].includes(error.response?.status);
+
+    if (isNetworkOrServerError && originalRequest && !originalRequest._retryFailover) {
+      originalRequest._retryFailover = true;
+
+      // Reroute between Localhost and Railway
+      const currentUrl = originalRequest.baseURL || apiBaseUrl;
+      const isCurrentlyLocal = currentUrl.includes('localhost') || currentUrl === '/api';
+      const fallbackUrl = isCurrentlyLocal ? RAILWAY_BACKEND_URL : LOCALHOST_BACKEND_URL;
+
       try {
-        console.warn('⚡ Network connection issue detected. Rerouting request to localhost backend (http://localhost:5000)...');
-        originalRequest.baseURL = 'http://localhost:5000/api';
+        console.warn('[Failover] Primary target (' + currentUrl + ') offline/unreachable. Rerouting request to fallback endpoint (' + fallbackUrl + ')...');
+        originalRequest.baseURL = fallbackUrl;
         return await axios(originalRequest);
-      } catch (localErr) {
-        return Promise.reject(localErr);
+      } catch (fallbackErr) {
+        return Promise.reject(fallbackErr);
       }
     }
     return Promise.reject(error);
   }
 );
 
-// Reconnection Listener: Auto-sync flush when internet connection is restored
+// Reconnection Listener: Auto-sync trigger when internet connection is restored
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    console.log('🌐 Internet connection restored. Triggering auto-sync...');
-    const isDev = (import.meta as any).env?.DEV === true;
-    if (isDev) {
-      axios.post('http://localhost:5000/api/sync/trigger').catch(() => {});
-    }
+    console.log('[Connection] Internet connection restored. Triggering auto-sync...');
+    axios.post('http://localhost:5000/api/sync/trigger').catch(() => {});
     api.post('/sync/trigger').catch(() => {});
   });
 }

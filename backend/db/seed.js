@@ -1,23 +1,22 @@
 // backend/db/seed.js
-// Production Seed Script: Seeds only official master catalogs & verified Admin account.
-// All student applications, registry records, documents, and notifications are 100% REAL-TIME & database-driven.
+// Production Seed Script: Purges all sample/fake student records and seeds ONLY official governance accounts & master catalogs.
 
 const bcrypt = require('bcryptjs');
 const { pool } = require('../config/db');
 
 async function seed() {
-  console.log('[seed] Starting clean master catalog seeding...');
+  console.log('[seed] Starting clean master catalog seeding & applicant database reset...');
   const hashedPassword = await bcrypt.hash('January10', 10);
 
-  // 1. SEED OFFICIAL STAFF & GOVERNANCE ROLES
+  // 1. SEED OFFICIAL STAFF & GOVERNANCE ROLES (ADMIN & SYSTEM ADMIN UNIFIED)
   console.log('[seed] Seeding primary official system accounts...');
   const officialAccounts = [
     {
-      name: 'ADMIN',
+      name: 'ADMIN / System Administrator',
       email: 'support.edu2026@gmail.com',
       role: 'admin',
-      dept: 'Quezon City Youth Development Office (QCYDO)',
-      major: 'Scholarship Head Administrator',
+      dept: 'Quezon City Youth Development Office (QCYDO) & IT Administration',
+      major: 'Scholarship Head & System Administrator',
       phone: '+63 918 234 5678',
     },
     {
@@ -50,12 +49,42 @@ async function seed() {
     await pool.query(
       `INSERT INTO users (name, email, password, role, department, major, phone, address, barangay, city, financial_aid_year, status, is_email_verified)
        VALUES ($1, $2, $3, $4, $5, $6, $7, 'Quezon City Hall Complex, Diliman', 'Barangay Central', 'Quezon City', '2026-2027', 'active', true)
-       ON CONFLICT (email) DO UPDATE SET password = $3, role = $4, is_email_verified = true, status = 'active'`,
-      [acc.name, acc.email, hashedPassword, acc.role, acc.dept, acc.major, acc.phone]
+       ON CONFLICT (email) DO UPDATE SET name = $1, password = $3, role = $4, department = $5, major = $6, is_email_verified = true, status = 'active'`,
+      [acc.name, acc.email.toLowerCase().trim(), hashedPassword, acc.role, acc.dept, acc.major, acc.phone]
     );
   }
 
-  // 2. SEED ACCREDITED PARTNER SCHOOLS CATALOG
+  // Remove separate sysadmin account if it exists
+  await pool.query(`DELETE FROM users WHERE email = 'sysadmin.edu2026@gmail.com'`);
+
+
+  // 2. PURGE ALL STUDENT & APPLICANT DATA FOR CLEAN RESET
+  console.log('[seed] Resetting applicant database: Purging all student records, applications, documents, tickets, and logs...');
+  try {
+    await pool.query(`
+      TRUNCATE TABLE applications CASCADE;
+      TRUNCATE TABLE documents CASCADE;
+      TRUNCATE TABLE student_registry CASCADE;
+      TRUNCATE TABLE education_monitoring_reports CASCADE;
+      TRUNCATE TABLE student_evaluations CASCADE;
+      TRUNCATE TABLE notifications CASCADE;
+      TRUNCATE TABLE support_tickets CASCADE;
+      TRUNCATE TABLE chat_messages CASCADE;
+      TRUNCATE TABLE live_chat_messages CASCADE;
+      TRUNCATE TABLE live_chat_sessions CASCADE;
+      TRUNCATE TABLE email_logs CASCADE;
+      TRUNCATE TABLE system_logs CASCADE;
+      TRUNCATE TABLE user_otps CASCADE;
+
+      DELETE FROM users WHERE role NOT IN ('admin', 'treasury', 'school_coordinator', 'supervisor', 'system_admin');
+      DELETE FROM users WHERE email IN ('student.edu2026@gmail.com', 'student@gmail.com');
+    `);
+    console.log('[seed] All student records and application submissions successfully purged.');
+  } catch (purgeErr) {
+    console.warn('[seed] Data purge notice:', purgeErr.message);
+  }
+
+  // 3. SEED ACCREDITED PARTNER SCHOOLS CATALOG
   console.log('[seed] Seeding accredited partner schools master catalog (3 institutions)...');
   const partnerSchoolsSeed = [
     ['SCH-QC-001', 'Bestlink College of the Philippines (BCP)', 'BCP Novaliches', 'Private', '1071 Quirino Highway, Brgy. Kaligayahan, Novaliches, Quezon City', 'Engr. Charlie I. Cariño (Registrar / Dean)', '(02) 8417-4355', 'bcp.edu67@gmail.com', 'Accredited', 0, 2500, 'BSIT, BSCS, BSCpE, BSBA, BSHM, BSED, BEED, BSCRIM', '2024-01-01', '2028-12-31'],
@@ -88,7 +117,7 @@ async function seed() {
     );
   }
 
-  // 3. SEED OFFICIAL QCSP SCHOLARSHIP TRACKS
+  // 4. SEED OFFICIAL QCSP SCHOLARSHIP TRACKS
   console.log('[seed] Seeding QCSP scholarship programs...');
   await pool.query(
     `INSERT INTO scholarships (program_code, title, short_title, category_id, category_title, level, badge, summary, tuition_grant, stipend, total_max, amount, min_gwa_text, min_gwa_number, qualifications, deadline, status, slots, applied_count)
@@ -106,7 +135,7 @@ async function seed() {
      ON CONFLICT (program_code) DO NOTHING`
   );
 
-  // 4. SEED OFFICIAL BURSARIES CATALOG
+  // 5. SEED OFFICIAL BURSARIES CATALOG
   console.log('[seed] Seeding bursaries catalog...');
   await pool.query(
     `INSERT INTO bursaries (title, type, amount, deadline, eligibility, funds_available, description, requirement_notes, status)
@@ -116,7 +145,7 @@ async function seed() {
      ('Solo-Parent Dependent Higher Education Support', 'Sectoral Support', 10000.00, '2026-10-31', 'Children or solo parents pursuing undergraduate diplomas in Metro Manila.', 280000.00, 'Supplemental semestral assistance for solo-parent households in Quezon City.', 'QC Social Services & Development Department (SSDD) Solo Parent ID.', 'Ongoing')`
   );
 
-  // 5. SEED OFFICIAL DISCOVERY OPPORTUNITIES
+  // 6. SEED OFFICIAL DISCOVERY OPPORTUNITIES
   console.log('[seed] Seeding discovery opportunities...');
   await pool.query(
     `INSERT INTO opportunities (title, provider_name, provider_logo, provider_type, category, funding_type, eligibility_badge, deadline, external_url, description, amount, location, status)
@@ -126,7 +155,7 @@ async function seed() {
      ('CHED Tulong Dunong Tertiary Subsidy', 'Commission on Higher Education (CHED)', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=100&q=80', 'Government', 'Bursary', 'Need-Based', 'Undergraduate Enrollees', '2026-10-30', 'https://ched.gov.ph', 'Direct financial subsidy supporting qualified low-income tertiary learners in state and local universities.', 15000.00, 'Quezon City / NCR', 'open')`
   );
 
-  // 6. SEED TREASURY BUDGETS
+  // 7. SEED TREASURY BUDGETS
   console.log('[seed] Seeding treasury budget allocations...');
   await pool.query(
     `INSERT INTO treasury_budgets (fund_name, fiscal_year, total_allocation, disbursed_amount, committed_amount, status)
@@ -136,92 +165,7 @@ async function seed() {
      ('City Council Emergency Relief & Calamity Bursary', '2026', 25000000.00, 0, 0, 'Active')`
   );
 
-  // 7. SEED OFFICIAL STUDENT SCHOLAR ACCOUNTS & REGISTRY RECORDS
-  console.log('[seed] Seeding official student scholar account & registry records...');
-  const studentAccounts = [
-    {
-      student_id: '2026-889102',
-      name: 'Juan Dela Cruz (Student Scholar)',
-      email: 'student.edu2026@gmail.com',
-      role: 'student',
-      school: 'Quezon City University (QCU)',
-      program_id: 'BSCS',
-      program_name: 'Bachelor of Science in Computer Science (BSCS)',
-      current_term: '1st Sem AY 2026-2027',
-      scholarship_age: 'Year 2 (3rd Semester)',
-      gwa: 1.75,
-      units: 21,
-      status: 'Active Good Standing',
-      grant_amount: 160000,
-      disbursement_status: 'Disbursed',
-      district: 'District 2',
-      barangay: 'Brgy. Batasan Hills',
-    },
-    {
-      student_id: '2026-554190',
-      name: 'Demo Student Account',
-      email: 'student@gmail.com',
-      role: 'student',
-      school: 'Quezon City University (QCU)',
-      program_id: 'BSCS',
-      program_name: 'Bachelor of Science in Computer Science (BSCS)',
-      current_term: '1st Sem AY 2026-2027',
-      scholarship_age: 'Year 1 (2nd Semester)',
-      gwa: 2.00,
-      units: 18,
-      status: 'Active Good Standing',
-      grant_amount: 20000,
-      disbursement_status: 'Scheduled',
-      district: 'District 1',
-      barangay: 'Brgy. San Bartolome',
-    },
-  ];
-
-  for (const st of studentAccounts) {
-    const uRes = await pool.query(
-      `INSERT INTO users (name, email, password, role, student_id, department, major, gpa, status, is_email_verified)
-       VALUES ($1, $2, $3, 'student', $4, $5, $6, $7, 'active', true)
-       ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, student_id = $4, status = 'active'
-       RETURNING id`,
-      [st.name, st.email, hashedPassword, st.student_id, st.school, st.program_name, st.gwa]
-    );
-
-    const userId = uRes.rows[0]?.id;
-
-    await pool.query(
-      `INSERT INTO student_registry 
-       (student_id, user_id, full_name, email, school, program_id, program_name, current_term, scholarship_age, gwa, units_enrolled, status, grant_amount, disbursement_status, district)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-       ON CONFLICT (student_id) DO UPDATE SET 
-         full_name = EXCLUDED.full_name,
-         user_id = EXCLUDED.user_id,
-         email = EXCLUDED.email,
-         school = EXCLUDED.school,
-         program_name = EXCLUDED.program_name,
-         gwa = EXCLUDED.gwa,
-         status = EXCLUDED.status,
-         disbursement_status = EXCLUDED.disbursement_status`,
-      [st.student_id, userId, st.name, st.email, st.school, st.program_id, st.program_name, st.current_term, st.scholarship_age, st.gwa, st.units, st.status, st.grant_amount, st.disbursement_status, st.district]
-    );
-
-    const appCode = `APP-QC-2026-${st.student_id.slice(-4)}`;
-    await pool.query(
-      `INSERT INTO applications (application_code, user_id, type, program_id, program_name, title, district, barangay, amount, status, progress, form_data)
-       VALUES ($1, $2, 'Scholarship', 'tertiary-excel', $3, $4, $5, $6, $7, 'Approved', 100, '{}'::jsonb)
-       ON CONFLICT (application_code) DO NOTHING`,
-      [appCode, userId, st.program_name, `${st.program_name} Application`, st.district, st.barangay, st.grant_amount]
-    );
-
-    const auditCode = `AUDIT-2026-${st.student_id.slice(-4)}`;
-    await pool.query(
-      `INSERT INTO education_monitoring_reports (audit_code, student_id, name, email, barangay, school, program, semester_aid_amount, current_term, current_gwa, units_enrolled, units_passed, retention_status, registrar_verified)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11, 'Retention Cleared', true)
-       ON CONFLICT (audit_code) DO NOTHING`,
-      [auditCode, st.student_id, st.name, st.email, st.barangay, st.school, st.program_name, st.grant_amount, st.current_term, st.gwa, st.units]
-    );
-  }
-
-  console.log('[seed] Clean database seeding completed successfully! 🚀');
+  console.log('[seed] Clean database reset completed successfully! 🚀');
 }
 
 module.exports = { seed };
@@ -237,3 +181,4 @@ if (require.main === module) {
       process.exit(1);
     });
 }
+

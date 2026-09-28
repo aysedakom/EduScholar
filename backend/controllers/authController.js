@@ -171,12 +171,16 @@ const register = async (req, res) => {
     const verifyUrl = `${clientUrl}/verify-email?token=${tokenRecord.otp_code}&email=${encodeURIComponent(user.email)}`;
 
 
-    emailService.sendVerificationLinkEmail({
-      to: user.email,
-      name: user.name,
-      verifyUrl,
-      expiresInMinutes: 60,
-    }).catch((err) => console.warn('[authController] Email verification dispatch warning:', err.message));
+    try {
+      await emailService.sendVerificationLinkEmail({
+        to: user.email,
+        name: user.name,
+        verifyUrl,
+        expiresInMinutes: 60,
+      });
+    } catch (emailErr) {
+      console.warn('[authController] Email verification dispatch warning:', emailErr.message);
+    }
 
     try {
       const { triggerSyncNow } = require('../services/autoSyncService');
@@ -351,13 +355,13 @@ const login = async (req, res) => {
     // Fallback for official governance accounts if DB record is missing or DB is initializing
     if (!user) {
       const defaultAccounts = {
-        'support.edu2026@gmail.com': { id: 1, name: 'ADMIN', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO)', major: 'Scholarship Head Administrator' },
+        'support.edu2026@gmail.com': { id: 1, name: 'ADMIN / System Administrator', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
+        'sysadmin.edu2026@gmail.com': { id: 1, name: 'ADMIN / System Administrator', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
         'treasury.edu2026@gmail.com': { id: 2, name: 'City Treasury Disbursing Officer', role: 'treasury', department: 'Quezon City Hall Treasury Office', major: 'Disbursement & Fund Settlement' },
         'sr.edu2026@gmail.com': { id: 3, name: 'John Steaven Balansag', role: 'school_coordinator', department: 'Quezon City University & Partner Schools', major: 'University Registrar & Endorsement' },
         'sv.edu2026@gmail.com': { id: 4, name: 'Scholarship Program Supervisor', role: 'supervisor', department: 'Quezon City Youth Development Office (QCYDO)', major: 'Evaluation Executive Reviewer' },
-        'sysadmin.edu2026@gmail.com': { id: 5, name: 'System Administrator', role: 'system_admin', department: 'IT Infrastructure Division', major: 'System Architect' },
-        'student.edu2026@gmail.com': { id: 6, name: 'Maria Santos', role: 'student', department: 'College of Computer Studies (CCS)', major: 'BS Information Technology', student_id: '2024-00192' }
       };
+
 
       const fallback = defaultAccounts[normalizedEmail];
       if (fallback) {

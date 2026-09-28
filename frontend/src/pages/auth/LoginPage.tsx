@@ -166,9 +166,7 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
       setLockoutRemaining(0);
     }
 
-    if (emailLower.includes('sysadmin') || emailLower.startsWith('sysadmin@')) {
-      setSelectedRole('system_admin');
-    } else if (emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) {
+    if (emailLower.includes('sysadmin') || emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) {
       setSelectedRole('admin');
     } else if (emailLower === 'sv.edu2026@gmail.com' || emailLower.includes('supervisor') || emailLower.startsWith('supervisor@') || emailLower.startsWith('sv.')) {
       setSelectedRole('supervisor');
@@ -183,8 +181,7 @@ export function LoginPage({ defaultView }: LoginPageProps = {}) {
 
   const getRoleFromEmail = (targetEmail: string): UserRole => {
     const emailLower = targetEmail.toLowerCase().trim();
-    if (emailLower.includes('sysadmin') || emailLower.startsWith('sysadmin@')) return 'system_admin';
-    if (emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) return 'admin';
+    if (emailLower.includes('sysadmin') || emailLower === 'support.edu2026@gmail.com' || emailLower.includes('admin') || emailLower.startsWith('admin@')) return 'admin';
     if (emailLower === 'sv.edu2026@gmail.com' || emailLower.includes('supervisor') || emailLower.startsWith('supervisor@') || emailLower.startsWith('sv.')) return 'supervisor';
     if (emailLower === 'sr.edu2026@gmail.com' || emailLower.includes('school') || emailLower.startsWith('school@') || emailLower.startsWith('sr.')) return 'school_coordinator';
     if (emailLower === 'treasury.edu2026@gmail.com' || emailLower.includes('treasury') || emailLower.startsWith('treasury@')) return 'treasury';

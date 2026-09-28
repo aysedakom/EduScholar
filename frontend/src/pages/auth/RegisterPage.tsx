@@ -47,6 +47,7 @@ export function RegisterPage() {
         navigate(verifyUrl, { replace: true });
       } else {
         setError(res.message || 'Unable to create your account.');
+      }
     } catch (err: any) {
       const serverMsg = err?.response?.data?.message || err?.message;
       setError(serverMsg || 'Unable to create your account. Email may already be in use.');

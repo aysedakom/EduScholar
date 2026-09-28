@@ -13,8 +13,8 @@
 
 const { Pool } = require('pg');
 
-const localUrl = process.env.LOCAL_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://postgres:January10@localhost:5432/eduscholar';
-const railwayUrl = process.env.RAILWAY_DATABASE_URL;
+const localUrl = process.env.LOCAL_DATABASE_URL || 'postgresql://postgres:January10@localhost:5432/eduscholar';
+const railwayUrl = process.env.RAILWAY_DATABASE_URL || process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_suj9Gvxpb2ZJ@ep-purple-smoke-b5n7wfkx-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require';
 
 const TABLES_TO_SYNC = [
   'users',

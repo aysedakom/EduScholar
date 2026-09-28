@@ -93,6 +93,14 @@ app.use(
 );
 app.use(express.json());
 
+// Middleware: Ensure DB initialization on all hosting platforms (Railway, Localhost, Vercel)
+app.use(async (req, res, next) => {
+  try {
+    await initDb();
+  } catch (_) {}
+  next();
+});
+
 // Security Response Headers
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -227,13 +235,7 @@ if (fs.existsSync(frontendDist)) {
   });
 }
 
-// Middleware: Ensure DB initialization on Vercel/serverless environments
-app.use(async (req, res, next) => {
-  try {
-    await initDb();
-  } catch (_) {}
-  next();
-});
+
 
 const { startAutoSync, getSyncStatus, triggerSyncNow } = require('./services/autoSyncService');
 
