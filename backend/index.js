@@ -48,8 +48,6 @@ app.use(
           'ws://localhost:5000',
           'http://localhost:5173',
           'ws://localhost:5173',
-          'https://*',
-          'wss://*',
         ],
         workerSrc: ["'self'", 'blob:'],
         objectSrc: ["'none'"],

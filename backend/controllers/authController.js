@@ -6,10 +6,12 @@ const otpModel = require('../models/otpModel');
 const emailService = require('../services/emailService');
 const { validateStandardPassword } = require('../utils/passwordValidator');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'eduscholar_secure_jwt_production_secret_2026';
+
 const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, email: user.email, role: user.role, name: user.name },
-    process.env.JWT_SECRET || 'your_super_secret_key_change_this',
+    JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
