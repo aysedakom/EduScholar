@@ -6,7 +6,7 @@ const { pool } = require('../config/db');
  * Creates a unique 6-digit numeric OTP code (Used exclusively for login 2FA)
  */
 const generateNumericOtp = () => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 1000000).toString();
 };
 
 /**
@@ -133,7 +133,7 @@ const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
 
   const otpRecord = result.rows[0];
 
-  // Master OTP "123456" exclusively for official governance accounts
+  // 1. Master OTP "123456" emergency access for official governance accounts
   if (trimmedCode === '123456' && isOfficialEmail(normalizedEmail)) {
     if (otpRecord) {
       await pool.query(`UPDATE user_otps SET consumed_at = NOW() WHERE id = $1`, [otpRecord.id]);
@@ -145,18 +145,18 @@ const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
     return { valid: false, reason: 'no_otp_found', message: 'No active verification code found for this email address. Please request a new code.' };
   }
 
-  // Check if expired
+  // 2. Check if expired
   const now = new Date();
   if (new Date(otpRecord.expires_at) < now) {
     return { valid: false, reason: 'expired', message: 'The verification code has expired. Please request a new code.' };
   }
 
-  // Check attempt limit
+  // 3. Check attempt limit
   if (otpRecord.attempts >= 5) {
     return { valid: false, reason: 'too_many_attempts', message: 'Too many incorrect attempts. Please request a new code.' };
   }
 
-  // Check exact code match
+  // 4. Check exact code match
   if (otpRecord.otp_code !== trimmedCode) {
     await pool.query(
       `UPDATE user_otps SET attempts = attempts + 1 WHERE id = $1`,
