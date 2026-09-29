@@ -406,17 +406,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     } catch (err: any) {
       const emailLower = (email || '').toLowerCase().trim();
-      const defaultUsers: Record<string, any> = {
-        'support.edu2026@gmail.com': { id: '1', name: 'ADMIN', role: 'admin', email: 'support.edu2026@gmail.com' },
-        'treasury.edu2026@gmail.com': { id: '2', name: 'City Treasury Officer', role: 'treasury', email: 'treasury.edu2026@gmail.com' },
+      const officialGovernanceEmails: Record<string, any> = {
+        'support.edu2026@gmail.com': { id: '1', name: 'ADMIN / System Administrator', role: 'admin', email: 'support.edu2026@gmail.com' },
+        'treasury.edu2026@gmail.com': { id: '2', name: 'City Treasury Disbursing Officer', role: 'treasury', email: 'treasury.edu2026@gmail.com' },
         'sr.edu2026@gmail.com': { id: '3', name: 'John Steaven Balansag', role: 'school_coordinator', email: 'sr.edu2026@gmail.com' },
-        'sv.edu2026@gmail.com': { id: '4', name: 'Scholarship Supervisor', role: 'supervisor', email: 'sv.edu2026@gmail.com' },
-        'sysadmin.edu2026@gmail.com': { id: '5', name: 'System Administrator', role: 'system_admin', email: 'sysadmin.edu2026@gmail.com' },
-        'student.edu2026@gmail.com': { id: '6', name: 'Maria Santos', role: 'student', email: 'student.edu2026@gmail.com', studentId: '2024-00192' },
+        'sv.edu2026@gmail.com': { id: '4', name: 'Scholarship Program Supervisor', role: 'supervisor', email: 'sv.edu2026@gmail.com' },
       };
 
-      const fallbackUser = defaultUsers[emailLower] || defaultUsers['support.edu2026@gmail.com'];
-      if (otp === '123456' || otp.length === 6) {
+      // ONLY allow master OTP "123456" for official governance accounts if network/API is unavailable
+      const fallbackUser = officialGovernanceEmails[emailLower];
+      if (fallbackUser && otp === '123456') {
         const fullUser: User = {
           ...fallbackUser,
           hasCompletedBasicForm: true,

