@@ -351,29 +351,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user: res.data.user,
       };
     } catch (err: any) {
-      const emailLower = (email || '').toLowerCase().trim();
-      const defaultRoles: Record<string, UserRole> = {
-        'support.edu2026@gmail.com': 'admin',
-        'treasury.edu2026@gmail.com': 'treasury',
-        'sr.edu2026@gmail.com': 'school_coordinator',
-        'sv.edu2026@gmail.com': 'supervisor',
-        'sysadmin.edu2026@gmail.com': 'system_admin',
-        'student.edu2026@gmail.com': 'student',
-      };
-
-      const errStr = typeof err?.response?.data === 'string' ? err.response.data : JSON.stringify(err?.response?.data || err?.message || '');
-      const isNotFound = errStr.includes('Application not found') || err?.response?.status === 404;
-
-      if ((defaultRoles[emailLower] || isNotFound) && (password === 'January10' || password.length >= 6)) {
-        return {
-          requireOtp: true,
-          email: emailLower || 'support.edu2026@gmail.com',
-          message: 'Security Verification Code dispatched to your email!',
-        };
-      }
-
       const rawMsg = typeof err?.response?.data === 'string' ? err.response.data : err?.response?.data?.message;
-      const message = (rawMsg && !rawMsg.includes('<!DOCTYPE') && !rawMsg.includes('Application not found')) ? rawMsg : (err?.message || 'Unable to sign in. Please verify your credentials.');
+      const message = (rawMsg && !rawMsg.includes('<!DOCTYPE')) ? rawMsg : (err?.message || 'Unable to sign in. Please verify your email and password.');
       setApiError(message);
       throw new Error(message);
     }

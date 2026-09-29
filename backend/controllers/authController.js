@@ -128,6 +128,8 @@ const resolveClientUrl = (req) => {
   return 'http://localhost:5173';
 };
 
+const { validateRealEmail } = require('../utils/emailValidator');
+
 const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -136,12 +138,17 @@ const register = async (req, res) => {
       return res.status(400).json({ message: 'Name, email and password are required' });
     }
 
+    const emailCheck = await validateRealEmail(email);
+    if (!emailCheck.isValid) {
+      return res.status(400).json({ message: emailCheck.message });
+    }
+
     const pwdValidation = validateStandardPassword(password, { name, email });
     if (!pwdValidation.isValid) {
       return res.status(400).json({ message: pwdValidation.message });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = emailCheck.normalizedEmail;
     const existing = await userModel.findByEmail(normalizedEmail);
     if (existing) {
       if (existing.is_email_verified || existing.status === 'active') {
