@@ -12,6 +12,7 @@ if (fs.existsSync(envLocalPath)) {
 require('dotenv').config();
 const http = require('http');
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
 const helmet = require('helmet');
 const swaggerUi = require('swagger-ui-express');
@@ -21,6 +22,7 @@ const { initPgListener } = require('./realtime/pgListener');
 const openapiSpec = require('./docs/openapi.json');
 
 const app = express();
+app.use(compression());
 app.disable('x-powered-by');
 app.use(
   helmet({
