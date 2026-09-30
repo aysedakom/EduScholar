@@ -19,49 +19,10 @@ interface AssignedStudent {
   latestScore?: number;
 }
 
-const INITIAL_ASSIGNED_STUDENTS: AssignedStudent[] = [
-  {
-    id: 'STU-1001',
-    studentId: '2024-00192',
-    name: 'Maria Santos',
-    email: 'maria.santos@qc.edu.ph',
-    phone: '+63 917 882 9901',
-    jobTitle: 'Computer Lab Assistant',
-    department: 'Computer Science Lab',
-    hourlyRate: 18.50,
-    totalHoursLogged: 48.5,
-    attendanceRate: 98,
-    latestScore: 4.8,
-  },
-  {
-    id: 'STU-1002',
-    studentId: '2023-11048',
-    name: 'Joshua Reyes',
-    email: 'joshua.reyes@qc.edu.ph',
-    phone: '+63 998 112 3344',
-    jobTitle: 'Library Archive Cataloger',
-    department: 'University Library',
-    hourlyRate: 16.00,
-    totalHoursLogged: 36.0,
-    attendanceRate: 95,
-  },
-  {
-    id: 'STU-1004',
-    studentId: '2024-00912',
-    name: 'Samantha Tan',
-    email: 'samantha.tan@qc.edu.ph',
-    phone: '+63 918 221 4455',
-    jobTitle: 'Library Assistant',
-    department: 'University Library',
-    hourlyRate: 16.00,
-    totalHoursLogged: 60.0,
-    attendanceRate: 100,
-    latestScore: 4.9,
-  },
-];
+const INITIAL_ASSIGNED_STUDENTS: AssignedStudent[] = [];
 
 export const MyAssignedStudentsPage: React.FC = () => {
-  const [students] = useState<AssignedStudent[]>(INITIAL_ASSIGNED_STUDENTS);
+  const [students] = useState<AssignedStudent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredStudents = students.filter(

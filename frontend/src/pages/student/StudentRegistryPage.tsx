@@ -52,18 +52,18 @@ export const StudentRegistryPage: React.FC = () => {
     toast.success('Official QC Student Registry Certificate downloaded (PDF)');
   };
 
-  const studentId = scholarRecord?.student_id || profile?.studentId || user?.studentId || '2024-00192';
-  const fullName = scholarRecord?.full_name || profile?.fullName || user?.name || 'Maria Santos';
-  const schoolName = scholarRecord?.school || 'Quezon City University (QCU)';
-  const programName = scholarRecord?.program_name || 'Dean’s Tech Excellence Award (QCYDO Merit Grant)';
-  const department = scholarRecord?.department || profile?.department || 'College of Computer Studies (CCS)';
-  const yearLevel = scholarRecord?.year_level || profile?.yearLevel || '3rd Year';
-  const gwa = scholarRecord?.gwa || profile?.gpa || 1.75;
+  const studentId = scholarRecord?.student_id || profile?.studentId || user?.student_id || (user?.id ? `2026-${String(user.id).padStart(5, '0')}` : 'Pending Assignment');
+  const fullName = scholarRecord?.full_name || user?.name || profile?.fullName || 'Student Applicant';
+  const schoolName = scholarRecord?.school || user?.department || 'Quezon City University (QCU)';
+  const programName = scholarRecord?.program_name || 'Quezon City Financial Aid Program';
+  const department = scholarRecord?.department || user?.major || user?.department || 'Academic Department';
+  const yearLevel = scholarRecord?.year_level || profile?.yearLevel || '1st Year';
+  const gwa = scholarRecord?.gwa || user?.gpa || profile?.gpa || 1.75;
   const currentTerm = scholarRecord?.current_term || '1st Semester AY 2026-2027';
-  const scholarshipAge = scholarRecord?.scholarship_age || '2 Years, 1 Month';
-  const status = scholarRecord?.status || 'Active & In Good Standing';
+  const scholarshipAge = scholarRecord?.scholarship_age || 'Active Registration';
+  const status = scholarRecord?.status || (user?.status === 'active' ? 'Active Good Standing' : 'Pending Verification');
   const grantAmount = scholarRecord?.grant_amount || 15000;
-  const barangay = scholarRecord?.barangay || profile?.barangay || 'Barangay Batasan Hills, Quezon City';
+  const barangay = scholarRecord?.barangay || user?.barangay || profile?.barangay || 'Quezon City';
 
   const digitalIDData: DigitalIDData = {
     studentId,

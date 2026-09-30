@@ -43,7 +43,6 @@ export const DocumentVaultPage: React.FC = () => {
         ]);
 
         const apiData = docsRes.status === 'fulfilled' && docsRes.value?.data ? docsRes.value.data : [];
-        const savedVaultDocs: VaultDocument[] = JSON.parse(localStorage.getItem('vault_uploaded_documents') || '[]');
 
         // Extract submitted application attachments passed during application
         const appDocs: VaultDocument[] = [];
@@ -79,7 +78,7 @@ export const DocumentVaultPage: React.FC = () => {
           expiryDate: d.expiry_date,
         }));
 
-        let combined = [...savedVaultDocs, ...apiMapped, ...appDocs];
+        let combined = [...apiMapped, ...appDocs];
 
         // Deduplicate by filename
         const seenNames = new Set<string>();
@@ -90,51 +89,12 @@ export const DocumentVaultPage: React.FC = () => {
           return true;
         });
 
-        // Ensure the official mandatory requirements passed in the application form exist
-        if (combined.length === 0) {
-          combined = [
-            {
-              id: 'doc-mand-1',
-              name: 'Barangay_Certificate_of_Indigency_Low_Income.pdf',
-              category: 'Proof of Income / Indigency',
-              uploadDate: new Date().toISOString().split('T')[0],
-              status: 'verified',
-              size: '1.4 MB',
-            },
-            {
-              id: 'doc-mand-2',
-              name: 'Certified_True_Copy_of_Grades_COG_AY2026.pdf',
-              category: 'Academic Transcript',
-              uploadDate: new Date().toISOString().split('T')[0],
-              status: 'verified',
-              size: '2.1 MB',
-            },
-            {
-              id: 'doc-mand-3',
-              name: 'QC_Resident_ID_Student_Registration_Card.pdf',
-              category: 'Valid School ID / Resident ID',
-              uploadDate: new Date().toISOString().split('T')[0],
-              status: 'verified',
-              size: '1.1 MB',
-            },
-            {
-              id: 'doc-mand-4',
-              name: 'Barangay_Certificate_of_Residency_Verified.pdf',
-              category: 'Barangay Certificate of Residency',
-              uploadDate: new Date().toISOString().split('T')[0],
-              status: 'verified',
-              size: '1.3 MB',
-            },
-          ];
-        }
-
         if (mounted) {
           setDocuments(combined);
         }
       } catch {
-        const savedVaultDocs: VaultDocument[] = JSON.parse(localStorage.getItem('vault_uploaded_documents') || '[]');
         if (mounted) {
-          setDocuments(savedVaultDocs);
+          setDocuments([]);
         }
       }
     };

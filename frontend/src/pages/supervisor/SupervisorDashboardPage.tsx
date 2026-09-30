@@ -118,17 +118,12 @@ export const SupervisorDashboardPage: React.FC = () => {
           </CardHeader>
           <CardContent className="pt-2">
             <div className="space-y-3">
-              {[
-                { text: 'Maria Santos uploaded Transcript of Records (Computer Science)', time: '15 mins ago', status: 'Pending Approval' },
-                { text: 'Joshua Reyes submitted Certificate of Registration', time: '40 mins ago', status: 'Pending Approval' },
-                { text: 'Supervisor Vance completed Performance Evaluation for Samantha Tan', time: '2 hrs ago', status: 'Completed' },
-                { text: 'Gabriel Mendoza verified enrollment document (COR 2026)', time: '4 hrs ago', status: 'Verified' },
-              ].map((act, i) => (
-                <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-3 text-xs">
+              {[].map((act: any, i: number) => (
+                <div key={i} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 flex items-start justify-between gap-3 text-xs">
                   <div className="flex items-start gap-2.5">
                     <div className="h-2 w-2 rounded-full bg-primary mt-1.5 shrink-0" />
                     <div>
-                      <p className="font-semibold text-slate-800">{act.text}</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{act.text}</p>
                       <span className="text-[11px] text-slate-400 font-medium">{act.time}</span>
                     </div>
                   </div>
@@ -137,6 +132,9 @@ export const SupervisorDashboardPage: React.FC = () => {
                   </Badge>
                 </div>
               ))}
+              <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                No recent activity logged for verification or evaluation requests.
+              </div>
             </div>
           </CardContent>
         </Card>

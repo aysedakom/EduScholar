@@ -71,130 +71,15 @@ interface BatchRow {
   schoolEmail?: string;
 }
 
-const DEFAULT_SCHOLAR_ROWS: BatchRow[] = [
-  {
-    id: '1',
-    studentId: '23010366',
-    name: 'PIA MARIE TIBURCIO FANER',
-    email: 'faner.piamarie@bcp.edu.ph',
-    phone: '+63 917 849 2011',
-    barangay: 'Barangay Holy Spirit',
-    district: 'District 2',
-    householdIncome: '₱140,000.00 / yr',
-    is4Ps: false,
-    submissionDate: '2026-08-28',
-    programName: 'Tertiary Academic Scholarship',
-    course: 'B.S. Information Technology',
-    yearLevel: '4th Year',
-    unitsEnrolled: 21,
-    gwa: 1.00,
-    status: 'Verified Regular',
-    verified: true,
-    endorsedToAdmin: false,
-    remarks: 'Consistent President’s Lister. Officially enrolled in 21 academic units for 1st Sem AY 2026-2027.',
-    corFileName: 'COR_AY2026_23010366_Official.pdf',
-    torFileName: 'TOR_COG_Certified_23010366.pdf',
-    schoolName: 'Bestlink College of the Philippines (BCP QC)',
-    schoolEmail: 'bcp.edu67@gmail.com',
-    isMatchedInSchoolDatabase: true,
-    verificationNoticeSent: true,
-    verificationNoticeEmail: 'bcp.edu67@gmail.com',
-    verificationToken: 'bcp-23010366-token',
-    enrolledSubjects: [
-      { code: 'IT-401', title: 'Systems Integration & Architecture', units: 3, grade: '1.00' },
-      { code: 'IT-402', title: 'Information Assurance & Security II', units: 3, grade: '1.00' },
-      { code: 'IT-403', title: 'Capstone Project / Thesis II', units: 3, grade: '1.00' },
-      { code: 'IT-404', title: 'Cloud Infrastructure & DevOps', units: 3, grade: '1.00' },
-      { code: 'GE-109', title: 'Contemporary World & QC Governance', units: 3, grade: '1.00' },
-      { code: 'IT-405', title: 'Mobile Systems Engineering', units: 3, grade: '1.00' },
-      { code: 'PE-4', title: 'Physical Activities & Wellness IV', units: 3, grade: '1.00' },
-    ],
-  },
-  {
-    id: '2',
-    studentId: 'APP-QC-1787984507569',
-    name: 'Ar-jay Tabangin',
-    email: 'tabangin.arjay@qcu.edu.ph',
-    phone: '+63 920 481 9200',
-    barangay: 'Barangay San Bartolome',
-    district: 'District 5',
-    householdIncome: '₱120,000.00 / yr',
-    is4Ps: true,
-    submissionDate: '2026-08-27',
-    programName: 'QC Excel Scholarship (Tertiary)',
-    course: 'B.S. Information Technology',
-    yearLevel: '3rd Year',
-    unitsEnrolled: 21,
-    gwa: 1.75,
-    status: 'Verified Regular',
-    verified: true,
-    endorsedToAdmin: false,
-    remarks: 'Regular 3rd year student in good standing. Clean academic clearance.',
-    corFileName: 'COR_QCU_AY2026_ArJay.pdf',
-    torFileName: 'COG_Grades_Official_ArJay.pdf',
-    schoolName: 'Quezon City University (QCU Main)',
-    schoolEmail: 'qcu.edu67@gmail.com',
-    isMatchedInSchoolDatabase: true,
-    verificationNoticeSent: true,
-    verificationNoticeEmail: 'qcu.edu67@gmail.com',
-    verificationToken: 'qcu-178798-token',
-    enrolledSubjects: [
-      { code: 'IT-301', title: 'Advanced Database Management', units: 3, grade: '1.75' },
-      { code: 'IT-302', title: 'Web Application Architecture', units: 3, grade: '1.50' },
-      { code: 'IT-303', title: 'Network Security Administration', units: 3, grade: '1.75' },
-      { code: 'IT-304', title: 'Software Engineering Methodologies', units: 3, grade: '2.00' },
-      { code: 'GE-108', title: 'Ethics in Science and Technology', units: 3, grade: '1.50' },
-      { code: 'IT-305', title: 'Human-Computer Interaction', units: 3, grade: '1.75' },
-      { code: 'NSTP-2', title: 'Civic Welfare Training Service', units: 3, grade: '1.50' },
-    ],
-  },
-  {
-    id: '3',
-    studentId: '2024-00192',
-    name: 'Maria Santos',
-    email: 'santos.maria@bcp.edu.ph',
-    phone: '+63 918 392 0184',
-    barangay: 'Barangay Batasan Hills',
-    district: 'District 2',
-    householdIncome: '₱160,000.00 / yr',
-    is4Ps: false,
-    submissionDate: '2026-08-26',
-    programName: 'Economic Scholarship (Need-Based Tertiary)',
-    course: 'B.S. Information Technology',
-    yearLevel: '3rd Year',
-    unitsEnrolled: 21,
-    gwa: 1.50,
-    status: 'Verified Regular',
-    verified: true,
-    endorsedToAdmin: false,
-    remarks: 'Compliant with all university retention guidelines. Complete documents submitted.',
-    corFileName: 'COR_FirstSem_2026_MariaSantos.pdf',
-    torFileName: 'TOR_COG_MariaSantos_Official.pdf',
-    schoolName: 'Bestlink College of the Philippines (BCP QC)',
-    schoolEmail: 'bcp.edu67@gmail.com',
-    isMatchedInSchoolDatabase: true,
-    verificationNoticeSent: false,
-    verificationNoticeEmail: 'bcp.edu67@gmail.com',
-    verificationToken: 'bcp-2024-00192-token',
-    enrolledSubjects: [
-      { code: 'IT-301', title: 'Database Systems & Analytics', units: 3, grade: '1.50' },
-      { code: 'IT-302', title: 'Object-Oriented Programming II', units: 3, grade: '1.25' },
-      { code: 'IT-303', title: 'Data Structures and Algorithms', units: 3, grade: '1.50' },
-      { code: 'IT-304', title: 'Operating Systems & Shell Scripting', units: 3, grade: '1.75' },
-      { code: 'GE-107', title: 'Art Appreciation & Society', units: 3, grade: '1.25' },
-      { code: 'IT-305', title: 'Web Application Development', units: 3, grade: '1.50' },
-      { code: 'PE-3', title: 'Individual and Dual Sports', units: 3, grade: '1.25' },
-    ],
-  },
-];
+const DEFAULT_SCHOLAR_ROWS: BatchRow[] = [];
 
 export const BatchVerificationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || searchParams.get('q') || '';
   const initialFilter = searchParams.get('filter') || 'all';
 
-  const [fileName, setFileName] = useState<string | null>('QCU_BCP_Registrar_Enrollment_Master_2026.xlsx');
-  const [rows, setRows] = useState<BatchRow[]>(DEFAULT_SCHOLAR_ROWS);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [rows, setRows] = useState<BatchRow[]>([]);
   const [isVerifying, setIsVerifying] = useState(false);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [selectedFilter, setSelectedFilter] = useState<string>(initialFilter);
