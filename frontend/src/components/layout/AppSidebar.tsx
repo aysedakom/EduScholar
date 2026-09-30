@@ -65,6 +65,16 @@ const SIDEBAR_GROUPS: SidebarGroup[] = [
     ],
   },
   {
+    label: 'Student Campus Aid Portal',
+    items: [
+      { label: 'Scholarship Programs', to: '/scholarships', icon: GraduationCap, roles: ['student', 'admin', 'supervisor', 'school_coordinator', 'treasury', 'system_admin'] as const },
+      { label: 'Bursary & Need-Based Aid', to: '/bursaries', icon: DollarSign, roles: ['student', 'admin', 'supervisor', 'school_coordinator', 'treasury', 'system_admin'] as const },
+      { label: 'Work-Study Opportunities', to: '/work-study', icon: Clock, roles: ['student', 'admin', 'supervisor', 'school_coordinator', 'treasury', 'system_admin'] as const },
+      { label: 'My Applications', to: '/applications', icon: CheckSquare, roles: ['student', 'admin', 'supervisor', 'school_coordinator', 'treasury', 'system_admin'] as const },
+      { label: 'Document Vault', to: '/documents', icon: FileText, roles: ['student', 'admin', 'supervisor', 'school_coordinator', 'treasury', 'system_admin'] as const },
+    ],
+  },
+  {
     label: 'Admin Portal (QCYDO)',
     items: [
       { label: 'Scholarship Application Portal', to: '/admin/scholarships', icon: GraduationCap, roles: ['admin', 'system_admin'] as const },

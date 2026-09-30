@@ -24,6 +24,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { OpportunitiesPage } from './pages/OpportunitiesPage';
 import { ScholarshipsPage } from './pages/ScholarshipsPage';
 import { BursariesPage } from './pages/BursariesPage';
+import { WorkStudyPage } from './pages/WorkStudyPage';
 import { ScholarshipApplyPage } from './pages/ScholarshipApplyPage';
 import { ApplicationsPage } from './pages/ApplicationsPage';
 import { DocumentVaultPage } from './pages/DocumentVaultPage';
@@ -153,6 +154,10 @@ export function App() {
               <Route path="/apply/scholarship" element={<ScholarshipApplyPage />} />
               <Route path="/scholarships" element={<ScholarshipsPage />} />
               <Route path="/bursaries" element={<BursariesPage />} />
+              <Route path="/bursary" element={<BursariesPage />} />
+              <Route path="/work-study" element={<WorkStudyPage />} />
+              <Route path="/workstudy" element={<WorkStudyPage />} />
+              <Route path="/apply/work-study" element={<WorkStudyPage />} />
               <Route path="/reports" element={<ReportsModulePage />} />
               <Route path="/applications" element={<ApplicationsPage />} />
               <Route path="/applications/certificate" element={<ApplicationsPage />} />

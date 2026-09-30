@@ -185,6 +185,30 @@ export const LandingPage: React.FC = () => {
                       <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">E-SCHOLAR Hub, LGU QC Grants, Alumni Sheet</p>
                     </Link>
 
+                    <Link
+                      to="/bursaries"
+                      onClick={() => setEservicesOpen(false)}
+                      className="block p-2.5 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40 transition-all mb-1 group"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-emerald-900 dark:text-emerald-200 group-hover:text-emerald-700 dark:group-hover:text-emerald-300">Bursary & Need-Based Aid</p>
+                        <span className="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">New</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">Emergency Hardship, 3-Tier Relief, Indigency Grants</p>
+                    </Link>
+
+                    <Link
+                      to="/work-study"
+                      onClick={() => setEservicesOpen(false)}
+                      className="block p-2.5 rounded-xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/80 hover:bg-purple-100/80 dark:hover:bg-purple-900/40 transition-all mb-1 group"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-extrabold text-purple-900 dark:text-purple-200 group-hover:text-purple-700 dark:group-hover:text-purple-300">Work-Study Opportunities</p>
+                        <span className="bg-purple-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">New</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium mt-0.5">Campus Assistant Jobs, ₱120/hr, Time Logging</p>
+                    </Link>
+
                   </div>
                 )}
               </div>
