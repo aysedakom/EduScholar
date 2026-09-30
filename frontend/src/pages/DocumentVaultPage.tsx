@@ -197,9 +197,28 @@ export const DocumentVaultPage: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const usedMB = 14.8;
+  const calculateTotalUsedMB = (docs: VaultDocument[]) => {
+    let totalBytes = 0;
+    docs.forEach((doc) => {
+      if (doc.size) {
+        const match = doc.size.match(/([\d.]+)\s*(KB|MB|GB)?/i);
+        if (match) {
+          const val = parseFloat(match[1]);
+          const unit = (match[2] || 'MB').toUpperCase();
+          if (unit === 'KB') totalBytes += val * 1024;
+          else if (unit === 'GB') totalBytes += val * 1024 * 1024 * 1024;
+          else totalBytes += val * 1024 * 1024;
+        }
+      } else {
+        totalBytes += 1.5 * 1024 * 1024;
+      }
+    });
+    return Number((totalBytes / (1024 * 1024)).toFixed(1));
+  };
+
+  const usedMB = calculateTotalUsedMB(documents);
   const totalMB = 50.0;
-  const usedPercent = Math.round((usedMB / totalMB) * 100);
+  const usedPercent = Math.min(100, Math.round((usedMB / totalMB) * 100));
 
   // When user clicks View Certificate, change the whole page content to the certificate
   if (showAwardCertModal) {
