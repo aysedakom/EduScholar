@@ -58,31 +58,8 @@ async function seed() {
   await pool.query(`DELETE FROM users WHERE email = 'sysadmin.edu2026@gmail.com'`);
 
 
-  // 2. PURGE ALL STUDENT & APPLICANT DATA FOR CLEAN RESET
-  console.log('[seed] Resetting applicant database: Purging all student records, applications, documents, tickets, and logs...');
-  try {
-    await pool.query(`
-      TRUNCATE TABLE applications CASCADE;
-      TRUNCATE TABLE documents CASCADE;
-      TRUNCATE TABLE student_registry CASCADE;
-      TRUNCATE TABLE education_monitoring_reports CASCADE;
-      TRUNCATE TABLE student_evaluations CASCADE;
-      TRUNCATE TABLE notifications CASCADE;
-      TRUNCATE TABLE support_tickets CASCADE;
-      TRUNCATE TABLE chat_messages CASCADE;
-      TRUNCATE TABLE live_chat_messages CASCADE;
-      TRUNCATE TABLE live_chat_sessions CASCADE;
-      TRUNCATE TABLE email_logs CASCADE;
-      TRUNCATE TABLE system_logs CASCADE;
-      TRUNCATE TABLE user_otps CASCADE;
-
-      DELETE FROM users WHERE role NOT IN ('admin', 'treasury', 'school_coordinator', 'supervisor', 'system_admin');
-      DELETE FROM users WHERE email IN ('student.edu2026@gmail.com', 'student@gmail.com');
-    `);
-    console.log('[seed] All student records and application submissions successfully purged.');
-  } catch (purgeErr) {
-    console.warn('[seed] Data purge notice:', purgeErr.message);
-  }
+  // 2. PRESERVE STUDENT & APPLICANT DATA (STRICT DB CONTINUITY)
+  console.log('[seed] Verifying master catalog integrity while preserving all registered student accounts...');
 
   // 3. SEED ACCREDITED PARTNER SCHOOLS CATALOG
   console.log('[seed] Seeding accredited partner schools master catalog (3 institutions)...');

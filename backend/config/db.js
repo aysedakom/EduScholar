@@ -12,6 +12,10 @@ const DB_PASSWORD = process.env.DB_PASSWORD || 'January10';
 const DB_NAME = process.env.DB_NAME || 'eduscholar';
 
 const getCloudDatabaseUrl = () => {
+  if (process.env.PGHOST && process.env.PGPASSWORD && process.env.PGUSER && process.env.PGDATABASE) {
+    const port = process.env.PGPORT || 5432;
+    return `postgresql://${process.env.PGUSER}:${encodeURIComponent(process.env.PGPASSWORD)}@${process.env.PGHOST}:${port}/${process.env.PGDATABASE}`;
+  }
   return (
     process.env.DATABASE_PRIVATE_URL ||
     process.env.DATABASE_URL_PRIVATE ||
