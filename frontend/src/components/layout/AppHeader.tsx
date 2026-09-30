@@ -106,7 +106,7 @@ export function AppHeader({ onMenu }: AppHeaderProps) {
   }, [notifOpen, eservicesOpen, open]);
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 sm:px-4 md:px-6 shadow-md shadow-slate-200/80 dark:shadow-slate-950/50 text-slate-900 dark:text-slate-100 relative z-30 transition-colors duration-200">
+    <header className="w-full h-16 shrink-0 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 md:px-6 shadow-sm text-slate-900 dark:text-slate-100 sticky top-0 z-40 transition-colors duration-200">
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         <button
           onClick={onMenu}
