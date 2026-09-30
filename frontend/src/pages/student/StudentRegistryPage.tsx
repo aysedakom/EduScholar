@@ -52,17 +52,19 @@ export const StudentRegistryPage: React.FC = () => {
     toast.success('Official QC Student Registry Certificate downloaded (PDF)');
   };
 
+  const isVerified = Boolean((scholarRecord as any)?.is_verified_scholar || (scholarRecord?.grant_amount && scholarRecord.grant_amount > 0));
+
   const studentId = scholarRecord?.student_id || profile?.studentId || user?.student_id || (user?.id ? `2026-${String(user.id).padStart(5, '0')}` : 'Pending Assignment');
   const fullName = scholarRecord?.full_name || user?.name || profile?.fullName || 'Student Applicant';
-  const schoolName = scholarRecord?.school || user?.department || 'Quezon City University (QCU)';
-  const programName = scholarRecord?.program_name || 'Quezon City Financial Aid Program';
+  const schoolName = scholarRecord?.school || user?.department || 'Not Specified';
+  const programName = scholarRecord?.program_name || (isVerified ? 'Quezon City Financial Aid Program' : 'No Active Scholarship Grant');
   const department = scholarRecord?.department || user?.major || user?.department || 'Academic Department';
   const yearLevel = scholarRecord?.year_level || profile?.yearLevel || '1st Year';
-  const gwa = scholarRecord?.gwa || user?.gpa || profile?.gpa || 1.75;
+  const gwa = scholarRecord?.gwa ? scholarRecord.gwa : (user?.gpa || profile?.gpa || 'N/A');
   const currentTerm = scholarRecord?.current_term || '1st Semester AY 2026-2027';
-  const scholarshipAge = scholarRecord?.scholarship_age || 'Active Registration';
-  const status = scholarRecord?.status || (user?.status === 'active' ? 'Active Good Standing' : 'Pending Verification');
-  const grantAmount = scholarRecord?.grant_amount || 15000;
+  const scholarshipAge = scholarRecord?.scholarship_age || (isVerified ? 'Active Registration' : 'Applicant Status');
+  const status = scholarRecord?.status || (isVerified ? 'Active Good Standing' : 'Registered Student Applicant');
+  const grantAmount = scholarRecord?.grant_amount || 0;
   const barangay = scholarRecord?.barangay || user?.barangay || profile?.barangay || 'Quezon City';
 
   const digitalIDData: DigitalIDData = {
@@ -73,7 +75,7 @@ export const StudentRegistryPage: React.FC = () => {
     department,
     programName,
     yearLevel,
-    gwa,
+    gwa: typeof gwa === 'number' ? gwa : 1.75,
     status,
     validUntil: 'AY 2026-2027',
     avatar: scholarRecord?.avatar || user?.avatar,
@@ -92,8 +94,8 @@ export const StudentRegistryPage: React.FC = () => {
             <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
               Student Registry
             </h1>
-            <Badge variant="success" size="md">
-              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> Active QC Scholar Registry
+            <Badge variant={isVerified ? 'success' : 'outline'} size="md">
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" /> {isVerified ? 'Active QC Scholar Registry' : 'Student Applicant Registry'}
             </Badge>
           </div>
           <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1">
