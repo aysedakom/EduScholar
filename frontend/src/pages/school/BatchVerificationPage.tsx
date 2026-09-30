@@ -71,8 +71,6 @@ interface BatchRow {
   schoolEmail?: string;
 }
 
-const DEFAULT_SCHOLAR_ROWS: BatchRow[] = [];
-
 export const BatchVerificationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialSearch = searchParams.get('search') || searchParams.get('q') || '';

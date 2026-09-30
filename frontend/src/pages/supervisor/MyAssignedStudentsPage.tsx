@@ -19,8 +19,6 @@ interface AssignedStudent {
   latestScore?: number;
 }
 
-const INITIAL_ASSIGNED_STUDENTS: AssignedStudent[] = [];
-
 export const MyAssignedStudentsPage: React.FC = () => {
   const [students] = useState<AssignedStudent[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
