@@ -22,7 +22,7 @@ const getCloudDatabaseUrl = () => {
     process.env.POSTGRES_URL_NON_POOLING ||
     process.env.VERCEL_POSTGRES_URL ||
     process.env.RAILWAY_DATABASE_URL ||
-    'postgresql://neondb_owner:npg_suj9Gvxpb2ZJ@ep-purple-smoke-b5n7wfkx-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require'
+    null
   );
 };
 
