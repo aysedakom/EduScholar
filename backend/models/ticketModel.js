@@ -62,7 +62,9 @@ const findByUser = async (userId) => {
 const countByUser = async (userId) => {
   try {
     const res = await pool.query(
-      `SELECT COUNT(*)::integer as count FROM support_tickets WHERE user_id = $1`,
+      `SELECT COUNT(*)::integer as count 
+       FROM support_tickets 
+       WHERE user_id = $1 AND status NOT IN ('Closed', 'Resolved', 'Archived')`,
       [userId]
     );
     return res.rows[0]?.count || 0;

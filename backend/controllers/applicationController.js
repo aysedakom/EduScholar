@@ -54,12 +54,12 @@ const createApplication = async (req, res) => {
         });
       }
 
-      // Enforce single active application constraint per student
+      // Enforce single active application constraint per student (Gap #31: Duplicate Detection)
       const activeExisting = await applicationModel.findActiveByUserId(req.user.id);
       if (activeExisting) {
         return res.status(409).json({
           success: false,
-          message: 'You already have an active application on file. Applicants may only apply once for an active scholarship program.',
+          message: 'Duplicate Application Conflict Detected: You already have an active application on file. Applicants may only hold one active submission per academic cycle.',
           activeApplication: {
             id: activeExisting.reference_id || activeExisting.application_code || activeExisting.id,
             programName: activeExisting.program_name || activeExisting.title,
@@ -67,6 +67,27 @@ const createApplication = async (req, res) => {
             submissionDate: activeExisting.submission_date,
           },
         });
+      }
+
+      // Gap #34: Scholarship Conflict & Double-Dipping Prevention Check
+      const requestedType = req.body.type || 'Scholarship';
+      if (requestedType === 'Scholarship') {
+        const registryCheck = await pool.query(
+          `SELECT * FROM student_registry WHERE (user_id = $1 OR LOWER(email) = LOWER($2)) AND LOWER(status) LIKE '%active%'`,
+          [req.user.id, req.user.email || '']
+        );
+        if (registryCheck.rows.length > 0) {
+          const existingScholar = registryCheck.rows[0];
+          return res.status(409).json({
+            success: false,
+            message: `Scholarship Conflict Detected: You are already an active scholar under "${existingScholar.program_name}". Simultaneous enrollment in multiple merit scholarship programs is disallowed.`,
+            conflict: {
+              activeProgram: existingScholar.program_name,
+              school: existingScholar.school,
+              gwa: existingScholar.gwa
+            }
+          });
+        }
       }
     }
 

@@ -138,6 +138,7 @@ const calendarRoutes = require('./routes/calendar');
 const ticketRoutes = require('./routes/tickets');
 const portalSettingsRoutes = require('./routes/portalSettings');
 const liveChatRoutes = require('./routes/liveChat');
+const workStudyRoutes = require('./routes/workStudy');
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
@@ -147,6 +148,8 @@ app.use('/api/scholarships', scholarshipRoutes);
 app.use('/scholarships', scholarshipRoutes);
 app.use('/api/bursaries', bursaryRoutes);
 app.use('/bursaries', bursaryRoutes);
+app.use('/api/work-study', workStudyRoutes);
+app.use('/work-study', workStudyRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/applications', applicationRoutes);
 app.use('/api/documents', documentRoutes);

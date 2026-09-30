@@ -385,7 +385,72 @@ async function ensureTablesForPool(targetPool, label) {
           created_at TIMESTAMPTZ DEFAULT NOW(),
           updated_at TIMESTAMPTZ DEFAULT NOW()
         );
+
+        ALTER TABLE bursaries ADD COLUMN IF NOT EXISTS income_tier VARCHAR(50) DEFAULT 'Tier 1 (< ₱15,000/mo)';
+        ALTER TABLE bursaries ADD COLUMN IF NOT EXISTS required_documents JSONB DEFAULT '["Certificate of Indigency", "Proof of Household Income", "Student ID"]';
+
+        CREATE TABLE IF NOT EXISTS work_study_jobs (
+          id SERIAL PRIMARY KEY,
+          job_code VARCHAR(50) UNIQUE NOT NULL,
+          title VARCHAR(255) NOT NULL,
+          department VARCHAR(150) NOT NULL,
+          location VARCHAR(150) DEFAULT 'Quezon City Campus',
+          hourly_rate NUMERIC(10,2) NOT NULL DEFAULT 120.00,
+          max_hours_per_week INTEGER DEFAULT 20,
+          slots_available INTEGER DEFAULT 5,
+          slots_filled INTEGER DEFAULT 0,
+          supervisor_name VARCHAR(150),
+          supervisor_email VARCHAR(200),
+          description TEXT NOT NULL,
+          requirements JSONB DEFAULT '[]',
+          status VARCHAR(30) DEFAULT 'Open' CHECK (status IN ('Open', 'Closed', 'Filled')),
+          created_at TIMESTAMPTZ DEFAULT NOW(),
+          updated_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS work_study_logs (
+          id SERIAL PRIMARY KEY,
+          log_code VARCHAR(50) UNIQUE NOT NULL,
+          application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+          user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+          job_id INTEGER REFERENCES work_study_jobs(id) ON DELETE CASCADE,
+          work_date DATE NOT NULL,
+          clock_in TIME NOT NULL,
+          clock_out TIME NOT NULL,
+          hours_logged NUMERIC(5,2) NOT NULL,
+          tasks_completed TEXT NOT NULL,
+          status VARCHAR(40) DEFAULT 'Pending Approval' CHECK (status IN ('Pending Approval', 'Approved', 'Rejected')),
+          supervisor_remarks TEXT,
+          approved_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          approved_at TIMESTAMPTZ,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_work_study_logs_user ON work_study_logs(user_id, status);
+        CREATE INDEX IF NOT EXISTS idx_work_study_logs_job ON work_study_logs(job_id, status);
       `);
+
+      // Seed initial Work-Study jobs catalog if empty
+      const wsCheck = await targetPool.query(`SELECT COUNT(*)::int as count FROM work_study_jobs`);
+      if (wsCheck.rows[0].count === 0) {
+        const initialJobs = [
+          ['WS-QC-001', 'QCU Library Technical Assistant', 'University Library', 'QCU San Bartolome Campus', 120.00, 20, 5, 2, 'Ms. Maria Teresa Santos', 'library.supervisor@qcu.edu.ph', 'Assisting librarians with digital cataloging, shelf organization, and student inquiry desk service.', JSON.stringify(['Enrolled Student', 'Good Standing (GWA 2.25 or better)', 'Computer Literate'])],
+          ['WS-QC-002', 'IT Computer Lab Technical Aide', 'College of Computer Studies', 'QCU IT Building Floor 3', 135.00, 15, 4, 1, 'Prof. Engr. Mark Anthony Reyes', 'itlab.supervisor@qcu.edu.ph', 'Maintaining PC hardware setup, network cable checks, software installations, and lab assistant duties during programming classes.', JSON.stringify(['BSIT / BSCS Student', 'Passing Grades', 'Basic Hardware & Linux Knowledge'])],
+          ['WS-QC-003', 'Student Registrar Records Assistant', 'Office of the University Registrar', 'Admin Building Room 102', 115.00, 20, 6, 3, 'Dr. Aris Ramos (Registrar)', 'registrar.supervisor@qcu.edu.ph', 'Sorting student transcript requests, scanning enrollment forms, data entry, and student queuing management.', JSON.stringify(['Enrolled Student', 'Attention to Detail', 'Data Privacy Agreement Signee'])],
+          ['WS-QC-004', 'QCYDO Youth Program Student Facilitator', 'Quezon City Youth Development Office', 'QC Hall Annex Bldg', 140.00, 15, 8, 4, 'Mr. John Steaven Balansag', 'qcydo.supervisor@qc.gov.ph', 'Coordinating community outreach programs, registration desk management for city scholar orientation events, and social media posting.', JSON.stringify(['Active QC Resident', 'Strong Communication Skills', 'Leadership Experience'])],
+        ];
+
+        for (const j of initialJobs) {
+          await targetPool.query(
+            `INSERT INTO work_study_jobs 
+             (job_code, title, department, location, hourly_rate, max_hours_per_week, slots_available, slots_filled, supervisor_name, supervisor_email, description, requirements)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+             ON CONFLICT (job_code) DO NOTHING`,
+            j
+          );
+        }
+        console.log(`[db] Work-Study jobs catalog seeded on ${label}.`);
+      }
 
       const bcrypt = require('bcryptjs');
       const defaultPassHash = await bcrypt.hash('January10', 10);
