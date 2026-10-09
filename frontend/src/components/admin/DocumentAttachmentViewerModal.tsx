@@ -89,6 +89,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
   const [flagReasonInput, setFlagReasonInput] = useState('');
   const [jsonViewTab, setJsonViewTab] = useState<'structured' | 'raw'>('structured');
   const [activeMediaView, setActiveMediaView] = useState<'canvas' | 'raw_image'>('canvas');
+  const [isManuallyVerified, setIsManuallyVerified] = useState(false);
 
   if (!isOpen || documents.length === 0) return null;
 
@@ -248,16 +249,30 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               </Button>
             )}
             {onApproveApplication && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => {
-                  onClose();
-                  onApproveApplication();
-                }}
-              >
-                Approve Application
-              </Button>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                <label className="flex items-center gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    checked={isManuallyVerified}
+                    onChange={(e) => setIsManuallyVerified(e.target.checked)}
+                  />
+                  <span>Manually Verified with School Registrar (Call/Email)</span>
+                </label>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!isManuallyVerified}
+                  onClick={() => {
+                    onClose();
+                    onApproveApplication();
+                    toast.success('Application verified manually via LGU protocol.');
+                  }}
+                  className={!isManuallyVerified ? 'opacity-50 cursor-not-allowed' : ''}
+                >
+                  Approve Application
+                </Button>
+              </div>
             )}
           </div>
         </div>

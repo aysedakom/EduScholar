@@ -8,9 +8,9 @@ const ADMIN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes for QCYDO Admin, Treasury
 const STUDENT_TIMEOUT_MS = 45 * 60 * 1000; // 45 minutes for Students
 
 export const SessionTimeoutWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, role, isAuthenticated, logout } = useAuth();
+  const { role, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handleLogout = useCallback(() => {
     if (isAuthenticated) {
@@ -48,7 +48,7 @@ export const SessionTimeoutWrapper: React.FC<{ children: React.ReactNode }> = ({
     // Events to track user activity
     const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'];
 
-    let throttleTimer: NodeJS.Timeout | null = null;
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null;
     const handleActivity = () => {
       // Throttle resets to avoid excessive function calls (every 2 seconds max)
       if (throttleTimer) return;
