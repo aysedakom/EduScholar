@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { SessionTimeoutWrapper } from './components/auth/SessionTimeoutWrapper';
 
 import { LoginPage } from './pages/auth/LoginPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
@@ -140,7 +141,7 @@ export function App() {
 
           {/* Protected Application Shell */}
           <Route element={<ProtectedRoute />}>
-            <Route element={<AppLayout />}>
+            <Route element={<SessionTimeoutWrapper><AppLayout /></SessionTimeoutWrapper>}>
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/admin/dashboard" element={<DashboardPage />} />
               <Route path="/admin/home" element={<DashboardPage />} />

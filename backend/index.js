@@ -139,6 +139,7 @@ const ticketRoutes = require('./routes/tickets');
 const portalSettingsRoutes = require('./routes/portalSettings');
 const liveChatRoutes = require('./routes/liveChat');
 const workStudyRoutes = require('./routes/workStudy');
+const interopRoutes = require('./routes/interop');
 
 app.use('/api/auth', authRoutes);
 app.use('/auth', authRoutes);
@@ -182,6 +183,8 @@ app.use('/api/portal-settings', portalSettingsRoutes);
 app.use('/portal-settings', portalSettingsRoutes);
 app.use('/api/live-chat', liveChatRoutes);
 app.use('/live-chat', liveChatRoutes);
+app.use('/api/interop', interopRoutes);
+app.use('/interop', interopRoutes);
 
 app.get(['/api/health', '/health'], (req, res) => {
   res.json({

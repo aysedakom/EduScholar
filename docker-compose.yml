@@ -42,8 +42,8 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      # API Routing
-      - "traefik.http.routers.backend-api.rule=PathPrefix(`/api`)"
+      # API & Interoperability Routing
+      - "traefik.http.routers.backend-api.rule=PathPrefix(`/api`) || PathPrefix(`/interop`)"
       - "traefik.http.routers.backend-api.entrypoints=web"
       - "traefik.http.services.backend-api.loadbalancer.server.port=5000"
       # WebSocket Routing

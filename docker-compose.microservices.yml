@@ -1,0 +1,262 @@
+# docker-compose.microservices.yml
+# ==============================================================================
+# EduScholar / Campus Aid Hub — Microservices Service Mesh Architecture
+# 
+# Demonstrates container-level domain decomposition behind Traefik v3 API Gateway
+# with integrated support for the Quezon City Government Enterprise Interoperability Mesh
+# ==============================================================================
+
+services:
+  # -------------------------------------------------------------
+  # 0. PostgreSQL Database Cluster (ACID Persistence)
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:18-alpine
+    container_name: eduscholar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: January10
+      POSTGRES_DB: eduscholar
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./backend/db/triggers.sql:/docker-entrypoint-initdb.d/02-triggers.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eduscholar"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 1. Identity & Access Management Service (IAM)
+  # -------------------------------------------------------------
+  auth-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-auth
+    restart: unless-stopped
+    environment:
+      PORT: 5001
+      SERVICE_NAME: "AUTH_IAM_SERVICE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/api/auth`) || PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.entrypoints=web"
+      - "traefik.http.services.auth.loadbalancer.server.port=5001"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 2. Scholarship, Bursary & Intake Service
+  # -------------------------------------------------------------
+  scholarship-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-scholarships
+    restart: unless-stopped
+    environment:
+      PORT: 5002
+      SERVICE_NAME: "SCHOLARSHIP_INTAKE_SERVICE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.scholarships.rule=PathPrefix(`/api/applications`) || PathPrefix(`/api/scholarships`) || PathPrefix(`/api/bursaries`) || PathPrefix(`/api/opportunities`)"
+      - "traefik.http.routers.scholarships.entrypoints=web"
+      - "traefik.http.services.scholarships.loadbalancer.server.port=5002"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 3. Work-Study & Campus Employment Service
+  # -------------------------------------------------------------
+  work-study-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-workstudy
+    restart: unless-stopped
+    environment:
+      PORT: 5003
+      SERVICE_NAME: "WORK_STUDY_SERVICE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.workstudy.rule=PathPrefix(`/api/work-study`) || PathPrefix(`/work-study`)"
+      - "traefik.http.routers.workstudy.entrypoints=web"
+      - "traefik.http.services.workstudy.loadbalancer.server.port=5003"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 4. Partner University & Academic Sync Service (BCP, QCU, St. Claire)
+  # -------------------------------------------------------------
+  school-sync-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-schools
+    restart: unless-stopped
+    environment:
+      PORT: 5004
+      SERVICE_NAME: "SCHOOL_COORDINATOR_SYNC_SERVICE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.schools.rule=PathPrefix(`/api/schools-sync`) || PathPrefix(`/api/partners`)"
+      - "traefik.http.routers.schools.entrypoints=web"
+      - "traefik.http.services.schools.loadbalancer.server.port=5004"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 5. Treasury, Budget Pools & Disbursement Service
+  # -------------------------------------------------------------
+  treasury-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-treasury
+    restart: unless-stopped
+    environment:
+      PORT: 5005
+      SERVICE_NAME: "TREASURY_DISBURSEMENT_SERVICE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.treasury.rule=PathPrefix(`/api/treasury`) || PathPrefix(`/api/distributions`) || PathPrefix(`/api/funds`)"
+      - "traefik.http.routers.treasury.entrypoints=web"
+      - "traefik.http.services.treasury.loadbalancer.server.port=5005"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 6. QC Government Interoperability Gateway (All 10 Subsystems)
+  # -------------------------------------------------------------
+  interop-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-interop
+    restart: unless-stopped
+    environment:
+      PORT: 5006
+      SERVICE_NAME: "QC_GOVERNMENT_INTEROP_GATEWAY"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.interop.rule=PathPrefix(`/api/interop`) || PathPrefix(`/interop`) || PathPrefix(`/api/qcid`)"
+      - "traefik.http.routers.interop.entrypoints=web"
+      - "traefik.http.services.interop.loadbalancer.server.port=5006"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 7. Real-Time WebSockets & Notification Engine
+  # -------------------------------------------------------------
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eduscholar-svc-notifications
+    restart: unless-stopped
+    environment:
+      PORT: 5007
+      SERVICE_NAME: "NOTIFICATION_WEBSOCKET_ENGINE"
+      DATABASE_URL: postgresql://postgres:January10@postgres:5432/eduscholar
+      JWT_SECRET: eduscholar_secure_production_secret_key_2026
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notifications.rule=PathPrefix(`/api/notifications`) || PathPrefix(`/ws`) || PathPrefix(`/api/live-chat`)"
+      - "traefik.http.routers.notifications.entrypoints=web"
+      - "traefik.http.services.notifications.loadbalancer.server.port=5007"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 8. Single Page Application Presentation Layer (React 18 + Vite)
+  # -------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eduscholar-frontend
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - eduscholar-mesh
+
+  # -------------------------------------------------------------
+  # 9. Traefik v3.0 Edge API Gateway & Reverse Proxy
+  # -------------------------------------------------------------
+  traefik:
+    image: traefik:v3.0
+    container_name: eduscholar-gateway
+    restart: unless-stopped
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"        # Public Web Entrypoint (Frontend & APIs)
+      - "8080:8080"    # Traefik Visual Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - auth-service
+      - scholarship-service
+      - work-study-service
+      - school-sync-service
+      - treasury-service
+      - interop-service
+      - notification-service
+      - frontend
+    networks:
+      - eduscholar-mesh
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  eduscholar-mesh:
+    driver: bridge

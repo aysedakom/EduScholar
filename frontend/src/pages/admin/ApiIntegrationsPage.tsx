@@ -1,4 +1,3 @@
-// frontend/src/pages/admin/ApiIntegrationsPage.tsx
 import React, { useState, useEffect } from 'react';
 import {
   RefreshCw,
@@ -12,6 +11,10 @@ import {
   XCircle,
   Activity,
   Lock,
+  Network,
+  Layers,
+  Play,
+  Terminal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../../components/ui/Card';
@@ -21,14 +24,18 @@ import {
   getQcCitizenDirectory,
   verifyQcCitizen,
   verifySchoolEnrollment,
+  getInteropCatalog,
+  getInteropLogs,
+  simulateInteropSubsystem,
   type QcCitizenRecord,
   type QcVerificationResponse,
   type SchoolSyncStudentResponse,
+  type GovernmentSubsystem,
 } from '../../api/integrations';
 import { getPartners, type PartnerSchool } from '../../api/partners';
 
 export const ApiIntegrationsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'qcid' | 'schools' | 'adapters'>('qcid');
+  const [activeTab, setActiveTab] = useState<'qcid' | 'schools' | 'adapters' | 'qc-mesh'>('qc-mesh');
 
   // --- 1. QC ID Verification State ---
   const [qcIdQuery, setQcIdQuery] = useState('QC-2024-884920');
@@ -44,8 +51,55 @@ export const ApiIntegrationsPage: React.FC = () => {
   const [schoolSyncResult, setSchoolSyncResult] = useState<SchoolSyncStudentResponse | null>(null);
   const [isSyncingSchool, setIsSyncingSchool] = useState(false);
 
-  // Load initial citizen directory & partner schools
+  // --- 3. QC Government Service Management Mesh (10 Systems) ---
+  const [qcSubsystems, setQcSubsystems] = useState<GovernmentSubsystem[]>([]);
+  const [isLoadingMesh, setIsLoadingMesh] = useState(false);
+  const [simulatingCode, setSimulatingCode] = useState<string | null>(null);
+  const [simulationResult, setSimulationResult] = useState<any | null>(null);
+  const [interopLogs, setInteropLogs] = useState<any[]>([]);
+
+  const fetchMeshCatalog = async () => {
+    setIsLoadingMesh(true);
+    try {
+      const [catRes, logsRes] = await Promise.all([
+        getInteropCatalog(),
+        getInteropLogs(15)
+      ]);
+      if (catRes.data?.connected_subsystems) {
+        setQcSubsystems(catRes.data.connected_subsystems);
+      }
+      if (logsRes.data?.data) {
+        setInteropLogs(logsRes.data.data);
+      }
+    } catch (err) {
+      console.warn('Could not fetch interop catalog:', err);
+    } finally {
+      setIsLoadingMesh(false);
+    }
+  };
+
+  const handleSimulateSubsystem = async (systemCode: string, name: string) => {
+    setSimulatingCode(systemCode);
+    setSimulationResult(null);
+    toast.info(`Executing integration handshake with ${name}...`);
+    try {
+      const res = await simulateInteropSubsystem(systemCode);
+      if (res.data?.success) {
+        setSimulationResult(res.data.simulated_result);
+        toast.success(`Handshake succeeded with ${name}!`);
+        // Refresh logs
+        getInteropLogs(15).then(r => r.data?.data && setInteropLogs(r.data.data));
+      }
+    } catch (err: any) {
+      toast.error(`Handshake failed: ${err.message || 'Service unreachable'}`);
+    } finally {
+      setSimulatingCode(null);
+    }
+  };
+
+  // Load initial citizen directory, partner schools & mesh
   useEffect(() => {
+    fetchMeshCatalog();
     getQcCitizenDirectory()
       .then((res) => {
         if (res.data?.data) {
@@ -159,7 +213,19 @@ export const ApiIntegrationsPage: React.FC = () => {
       </div>
 
       {/* Segmented Navigation Tabs */}
-      <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl flex flex-wrap gap-1 border border-slate-200 dark:border-slate-700 max-w-2xl">
+      <div className="bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl flex flex-wrap gap-1 border border-slate-200 dark:border-slate-700 max-w-4xl">
+        <button
+          onClick={() => setActiveTab('qc-mesh')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'qc-mesh'
+              ? 'bg-white dark:bg-slate-900 text-purple-700 dark:text-purple-400 shadow-xs border border-slate-200 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 hover:bg-slate-200/50'
+          }`}
+        >
+          <Network className="h-4 w-4 text-purple-600" />
+          <span>QC Government Service Mesh (10 Systems)</span>
+        </button>
+
         <button
           onClick={() => setActiveTab('qcid')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -169,7 +235,7 @@ export const ApiIntegrationsPage: React.FC = () => {
           }`}
         >
           <ShieldCheck className="h-4 w-4 text-blue-600" />
-          <span>QC ID Citizen Verification</span>
+          <span>QC ID Verification</span>
         </button>
 
         <button
@@ -181,7 +247,7 @@ export const ApiIntegrationsPage: React.FC = () => {
           }`}
         >
           <Building2 className="h-4 w-4 text-indigo-600" />
-          <span>Partner School Registrar Sync</span>
+          <span>Partner School Sync</span>
         </button>
 
         <button
@@ -193,9 +259,259 @@ export const ApiIntegrationsPage: React.FC = () => {
           }`}
         >
           <Server className="h-4 w-4 text-emerald-600" />
-          <span>System Adapters & APIs</span>
+          <span>System Adapters</span>
         </button>
       </div>
+
+      {/* ========================================================================= */}
+      {/* TAB 0: QC GOVERNMENT SERVICE MANAGEMENT MESH (10 SYSTEMS)                */}
+      {/* ========================================================================= */}
+      {activeTab === 'qc-mesh' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Executive Overview Banner */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-purple-950 via-slate-900 to-indigo-950 p-6 text-white border border-purple-800/40 shadow-xl">
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold">
+                  <Network className="w-3.5 h-3.5" />
+                  Quezon City LGU Enterprise Interoperability System (EIS)
+                </div>
+                <h2 className="text-xl md:text-2xl font-extrabold tracking-tight font-heading">
+                  Subsystem 5: Education & Scholarship Management Mesh
+                </h2>
+                <p className="text-xs md:text-sm text-slate-300 max-w-2xl leading-relaxed">
+                  Decoupled API Gateway architecture connecting EduScholar to all 9 peer municipal subsystems.
+                  Exposes standardized RESTful adapters, transactional webhooks, and secure audit handshakes.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap md:flex-col gap-2">
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={fetchMeshCatalog}
+                  isLoading={isLoadingMesh}
+                  leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
+                  className="bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs"
+                >
+                  Refresh Mesh Status
+                </Button>
+                <div className="px-3 py-1.5 rounded-xl bg-white/10 backdrop-blur-xs text-[11px] font-mono text-purple-200 flex items-center gap-1.5 border border-white/10">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Gateway: Traefik v3.0 / WSS
+                </div>
+              </div>
+            </div>
+
+            {/* Mesh Stat Badges */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-purple-800/50">
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Total Subsystems</span>
+                <span className="text-xl font-heading font-extrabold text-white">10 Municipal Depts</span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Active Live Bridges</span>
+                <span className="text-xl font-heading font-extrabold text-emerald-400">4 Active Adapters</span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Integration Ready</span>
+                <span className="text-xl font-heading font-extrabold text-indigo-300">6 Subsystem Adapters</span>
+              </div>
+              <div className="p-3 rounded-2xl bg-white/5 border border-white/10">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Security & Privacy</span>
+                <span className="text-xl font-heading font-extrabold text-purple-300">RA 10173 • TLS 1.3</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Live Inspection Console */}
+          {simulationResult && (
+            <Card className="border border-purple-300 dark:border-purple-800/80 bg-purple-50/50 dark:bg-purple-950/20 shadow-md">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Terminal className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <CardTitle className="text-sm font-bold text-purple-950 dark:text-purple-200">
+                      Live Subsystem Handshake Response
+                    </CardTitle>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSimulationResult(null)}
+                    className="text-xs h-7 text-slate-500 hover:text-slate-800"
+                  >
+                    Clear Output
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <pre className="p-3 bg-slate-900 text-purple-300 rounded-xl text-[11px] font-mono overflow-x-auto max-h-60 border border-slate-800">
+                  {JSON.stringify(simulationResult, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 10 QC Government Subsystems Cards */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-purple-600" />
+                  Quezon City Government Service Management System Subsystems
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Department matrix defined in municipal IT governance plan. Select any subsystem to run a live handshake.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+              {qcSubsystems.map((subsystem) => {
+                const isCore = subsystem.code === 'SYS-05';
+                const isActive = subsystem.status.includes('ACTIVE');
+                return (
+                  <Card
+                    key={subsystem.code}
+                    className={`border transition-all ${
+                      isCore
+                        ? 'border-purple-500/70 bg-purple-50/30 dark:bg-purple-950/15 shadow-md ring-1 ring-purple-500/30'
+                        : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-purple-300 dark:hover:border-purple-800'
+                    }`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                            {subsystem.code}
+                          </span>
+                          <CardTitle className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                            {subsystem.name}
+                          </CardTitle>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                            {subsystem.department}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={isCore ? 'primary' : isActive ? 'success' : 'outline'}
+                          size="sm"
+                          className="font-bold whitespace-nowrap text-[10px]"
+                        >
+                          {isCore ? 'YOUR SYSTEM' : isActive ? 'Active Connected' : 'Adapter Ready'}
+                        </Badge>
+                      </div>
+                      <CardDescription className="text-xs mt-1 line-clamp-2">
+                        {subsystem.description}
+                      </CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="pt-0 space-y-3">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
+                          Integration Capabilities:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {subsystem.capabilities.map((cap, i) => (
+                            <span
+                              key={i}
+                              className="text-[10px] px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-100 dark:border-slate-700"
+                            >
+                              • {cap}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                        <span className="text-[10px] font-mono text-purple-700 dark:text-purple-400 font-semibold truncate max-w-[200px]">
+                          {subsystem.adapter_route}
+                        </span>
+                        {!isCore && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            isLoading={simulatingCode === subsystem.code}
+                            onClick={() => handleSimulateSubsystem(subsystem.code, subsystem.name)}
+                            leftIcon={<Play className="w-3 h-3 text-purple-600" />}
+                            className="text-xs h-7 font-bold border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/50"
+                          >
+                            Simulate Handshake
+                          </Button>
+                        )}
+                        {isCore && (
+                          <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> Core Orchestrator
+                          </span>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Audit Logs Table for Interoperability Events */}
+          <Card className="border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+            <CardHeader className="pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-sm font-bold text-slate-900 dark:text-white">
+                    Municipal Interoperability Transaction Log (Immutable Audit)
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Real-time audit records of payloads exchanged between EduScholar and peer QC departments.
+                  </CardDescription>
+                </div>
+                <Badge variant="secondary" size="sm" className="font-mono text-[10px]">
+                  {interopLogs.length} Events Captured
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {interopLogs.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500">
+                  No inter-system transactions logged yet. Click "Simulate Handshake" on any subsystem to initiate a live event.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 font-semibold text-[10px] uppercase">
+                        <th className="py-2.5 px-3">Timestamp</th>
+                        <th className="py-2.5 px-3">Source Subsystem</th>
+                        <th className="py-2.5 px-3">Event Type</th>
+                        <th className="py-2.5 px-3">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-[11px]">
+                      {interopLogs.map((log, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
+                          <td className="py-2 px-3 text-slate-500">
+                            {new Date(log.created_at || Date.now()).toLocaleTimeString()}
+                          </td>
+                          <td className="py-2 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                            {log.source_system}
+                          </td>
+                          <td className="py-2 px-3 text-purple-600 dark:text-purple-400">
+                            {log.event_type}
+                          </td>
+                          <td className="py-2 px-3">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                              {log.status || 'SUCCESS'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* ========================================================================= */}
       {/* TAB 1: QC IDENTIFICATION VERIFICATION HUB                                 */}

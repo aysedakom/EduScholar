@@ -126,3 +126,37 @@ export const submitGrantRemittance = (payload: {
 }) => {
   return api.post('/schools-sync/remit', payload);
 };
+
+// --- QC Government Subsystems Interoperability (EIS Gateway) ---
+export interface GovernmentSubsystem {
+  code: string;
+  name: string;
+  department: string;
+  status: string;
+  capabilities: string[];
+  adapter_route: string;
+  description: string;
+}
+
+export interface InteropCatalogResponse {
+  government_unit: string;
+  platform: string;
+  architecture: string;
+  connected_subsystems: GovernmentSubsystem[];
+  total_subsystems: number;
+  active_connections: number;
+  last_mesh_sync: string;
+}
+
+export const getInteropCatalog = () => {
+  return api.get<InteropCatalogResponse>('/interop/catalog');
+};
+
+export const getInteropLogs = (limit = 25) => {
+  return api.get<{ success: boolean; count: number; data: any[] }>('/interop/logs', { params: { limit } });
+};
+
+export const simulateInteropSubsystem = (systemCode: string) => {
+  return api.post<{ success: boolean; simulated_result: any }>('/interop/simulate', { systemCode });
+};
+
