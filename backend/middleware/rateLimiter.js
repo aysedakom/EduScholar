@@ -55,11 +55,11 @@ setInterval(() => {
   }
 }, 300000);
 
-// Auth Rate Limiter (Brute-force protection for login, register, OTP, password reset): 15 attempts per 5 mins
+// Auth Rate Limiter: 60 attempts per 2 mins (Protects against automated bot attacks without blocking real users testing logins)
 const authLimiter = createRateLimiter({
-  windowMs: 5 * 60 * 1000,
-  max: 15,
-  message: 'Too many authentication attempts. For your security, please wait 5 minutes before trying again.',
+  windowMs: 2 * 60 * 1000,
+  max: 60,
+  message: 'Too many authentication attempts. For your security, please wait 1 minute before trying again.',
 });
 
 // General API Rate Limiter: 300 requests per 1 min
