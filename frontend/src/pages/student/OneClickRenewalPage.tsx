@@ -95,18 +95,46 @@ export const OneClickRenewalPage: React.FC = () => {
 
   const [grant, setGrant] = useState<ActiveGrant>({
     id: 'grant-active-01',
-    programTitle: 'QC Excel Academic Scholarship Program',
-    grantType: 'Full Academic Support & Living Allowance',
-    currentGwa: 1.45,
+    programTitle: 'Academic Scholarship Program',
+    grantType: 'Educational Aid & Semestral Stipend',
+    currentGwa: 1.50,
     maxAllowedGwa: 1.75,
     documentsVerified: true,
-    awardValue: 10000,
+    awardValue: 15000,
     academicTerm: '1st Semester AY 2026-2027',
     renewalStatus: 'Eligible for Renewal',
   });
 
   const [isRenewing, setIsRenewing] = useState(false);
   const [agreedTerms, setAgreedTerms] = useState(true);
+
+  // Fetch real scholar record from database
+  useEffect(() => {
+    let isMounted = true;
+    import('../../api/registry').then(({ getMyScholarRecord }) => {
+      getMyScholarRecord()
+        .then((res) => {
+          if (isMounted && res.data) {
+            const d = res.data;
+            setGrant({
+              id: String(d.id || 'grant-active'),
+              programTitle: d.program_name || 'Academic Scholarship Program',
+              grantType: d.grant_amount ? `Educational Grant (₱${Number(d.grant_amount).toLocaleString()})` : 'Full Academic Support & Living Allowance',
+              currentGwa: Number(d.gwa) || 1.50,
+              maxAllowedGwa: 1.75,
+              documentsVerified: true,
+              awardValue: Number(d.grant_amount) || 15000,
+              academicTerm: d.current_term || '1st Semester AY 2026-2027',
+              renewalStatus: d.status?.toLowerCase().includes('renewal') ? 'Renewal Submitted' : 'Eligible for Renewal',
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Could not load live scholar grant for renewal:', err);
+        });
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const [renewalDocs, setRenewalDocs] = useState<RenewalDocumentItem[]>(() => {
     try {
