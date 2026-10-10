@@ -59,18 +59,46 @@ async function recordAuditLog({
 }
 
 /**
- * Fetch audit logs for a specific entity
+ * Fetch all audit logs across all users and activities with optional filters
  */
-async function getAuditLogsByEntity(entityType, entityId) {
+async function getAllAuditLogs({ entityType, actorId, limit = 100, offset = 0 } = {}) {
   await ensureAuditLogTable();
   try {
-    const result = await pool.query(
-      `SELECT * FROM audit_logs WHERE entity_type = $1 AND entity_id = $2 ORDER BY timestamp DESC`,
-      [entityType, entityId]
-    );
+    const conditions = [];
+    const params = [];
+    let paramIdx = 1;
+
+    if (entityType) {
+      conditions.push(`entity_type = $${paramIdx++}`);
+      params.push(entityType);
+    }
+
+    if (actorId) {
+      conditions.push(`(actor_id = $${paramIdx} OR entity_id = $${paramIdx})`);
+      paramIdx++;
+      params.push(String(actorId));
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    params.push(limit);
+    params.push(offset);
+
+    const query = `
+      SELECT 
+        a.*,
+        u.name as actor_name,
+        u.email as actor_email
+      FROM audit_logs a
+      LEFT JOIN users u ON u.email = a.actor_id OR CAST(u.id AS TEXT) = a.actor_id
+      ${whereClause}
+      ORDER BY a.timestamp DESC
+      LIMIT $${paramIdx++} OFFSET $${paramIdx++}
+    `;
+
+    const result = await pool.query(query, params);
     return result.rows;
   } catch (error) {
-    console.error('[AuditLogModel] Failed to fetch audit logs:', error.message);
+    console.error('[AuditLogModel] Failed to fetch all audit logs:', error.message);
     return [];
   }
 }
@@ -78,5 +106,6 @@ async function getAuditLogsByEntity(entityType, entityId) {
 module.exports = {
   recordAuditLog,
   getAuditLogsByEntity,
+  getAllAuditLogs,
   ensureAuditLogTable,
 };

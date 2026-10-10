@@ -505,6 +505,24 @@ const verifyOtp = async (req, res) => {
     // Successful OTP verification: reset any failed attempts
     clearFailedAttempts(user.email);
 
+    // Record immutable audit log for authentication
+    try {
+      const auditLogModel = require('../models/auditLogModel');
+      await auditLogModel.recordAuditLog({
+        actorId: user.email,
+        actorRole: user.role || 'user',
+        action: 'USER_LOGIN_SUCCESS',
+        newState: 'Authenticated',
+        entityType: 'auth',
+        entityId: String(user.id || user.student_id || user.email),
+        rationale: `User ${user.name} (${user.email}) successfully authenticated via 2FA/OTP`,
+        ipAddress: req.ip || req.headers['x-forwarded-for'],
+        userAgent: req.headers['user-agent'],
+      });
+    } catch (auditErr) {
+      console.warn('[authController] Login audit log record note:', auditErr.message);
+    }
+
     // Issue JWT token and return user profile
     const token = generateToken(user);
     res.json({
