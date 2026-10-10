@@ -109,9 +109,9 @@ export const UserManagementPage: React.FC = () => {
     setLoadingAudits(true);
     try {
       const res = await getAuditLogs({ limit: 150 });
-      if (res.data?.logs) {
-        setAuditLogs(res.data.logs);
-      }
+      const raw: any = res.data;
+      const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.logs) ? raw.logs : (Array.isArray(raw?.data) ? raw.data : []));
+      setAuditLogs(list);
     } catch (err: any) {
       console.warn('Could not load audit logs:', err);
     } finally {
