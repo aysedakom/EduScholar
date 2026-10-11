@@ -88,7 +88,7 @@ const applicationSchema = z.object({
   lastName: z.string().min(1, 'Last name is required'),
   suffix: z.string().optional(),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  gender: z.string().refine((val) => ['Male', 'Female', 'Prefer not to say'].includes(val), {
+  gender: z.string().refine((val) => ['Male', 'Female'].includes(val), {
     message: 'Please select your gender',
   }),
   civilStatus: z.string().refine((val) => ['Single', 'Married', 'Widowed', 'Separated'].includes(val), {
@@ -1361,7 +1361,6 @@ export const ApplicationForm: React.FC = () => {
                       <option value="">-- Select Gender --</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
-                      <option value="Prefer not to say">Prefer not to say</option>
                     </select>
                     {errors.gender && (
                       <p className="text-red-500 text-[11px] mt-1 font-semibold">{errors.gender.message}</p>
