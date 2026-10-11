@@ -112,23 +112,23 @@ function mapDbApplicationToReview(app: Application): ReviewApplication {
   return {
     id: app.reference_id || app.application_code || String(app.id),
     dbId: app.id,
-    studentName: app.applicant_name || (formData.firstName ? `${formData.firstName} ${formData.lastName}` : 'Student Applicant'),
-    studentId: app.student_id || formData.studentId || '23010366',
-    email: app.applicant_email || formData.email || 'student@university.edu',
+    studentName: app.applicant_name || (formData.firstName ? `${formData.firstName} ${formData.lastName || ''}`.trim() : 'Applicant'),
+    studentId: app.student_id || formData.studentId || `QC-${app.id}`,
+    email: app.applicant_email || formData.email || '',
     gpa: gpa,
-    program: formData.course || (app as any).major || app.program_name || 'B.S. Information Technology',
-    school: formData.school || (app as any).department || 'Bestlink College of the Philippines (BCP)',
+    program: formData.course || (app as any).major || app.program_name || '',
+    school: formData.school || (app as any).department || '',
     programId: app.program_id || (app as any).programCode || '',
-    scholarshipTitle: app.program_name || app.title || 'Economic Scholarship (Need-Based Tertiary)',
+    scholarshipTitle: app.program_name || app.title || 'Scholarship Application',
     amount: Number(app.amount) || getProgramTermGrant(app.program_id || app.program_name),
     submissionDate: parseIsoDateStr(app.submission_date || app.submissionDate),
     status: status,
     complianceFlags: complianceFlags,
     documentsUploaded: documentsUploaded,
-    notes: app.notes || 'Submitted through E-SCHOLAR Portal with complete attachments.',
+    notes: app.notes || '',
     schoolEndorsed: isSchoolEndorsed,
     formData: formData,
-    phone: formData.mobileNumber || formData.phone || 'N/A',
+    phone: formData.mobileNumber || formData.phone || '',
   };
 }
 
@@ -727,49 +727,68 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Contact / Mobile</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.formData?.mobileNumber || selectedApp.phone || 'N/A'}
+                      {selectedApp.formData?.mobileNumber || selectedApp.phone || selectedApp.email || 'None Provided'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Barangay & District</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.formData?.barangay || 'Mariana'}, District {selectedApp.formData?.district || '4'}
+                      {selectedApp.formData?.barangay
+                        ? `${selectedApp.formData.barangay}${selectedApp.formData.district ? `, District ${selectedApp.formData.district}` : ''}`
+                        : (selectedApp.formData?.address || 'Not Provided')}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Annual Household Income</span>
                     <span className="font-bold text-emerald-600 text-sm mt-0.5 block">
-                      {selectedApp.formData?.annualFamilyIncome ? `₱${Number(selectedApp.formData.annualFamilyIncome).toLocaleString()}` : '₱180,000.00'}
+                      {selectedApp.formData?.annualFamilyIncome
+                        ? `₱${Number(selectedApp.formData.annualFamilyIncome).toLocaleString()}`
+                        : (selectedApp.formData?.householdIncome ? `₱${Number(selectedApp.formData.householdIncome).toLocaleString()}` : 'Not Stated')}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Academic Level & Semester</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.formData?.yearLevel || '1st Year'} ({selectedApp.formData?.semester || '1st Sem'})
+                      {selectedApp.formData?.yearLevel || selectedApp.formData?.gradeLevel || 'College / Tertiary'}
+                      {selectedApp.formData?.semester ? ` (${selectedApp.formData.semester})` : ''}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">Disbursement Channel</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.formData?.payoutMethod || 'Landbank ATM Cash Card'}
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block truncate">
+                      {selectedApp.formData?.disbursementChannel ||
+                       selectedApp.formData?.payoutMethod ||
+                       selectedApp.formData?.preferredPayoutChannel ||
+                       (selectedApp.formData?.accountNumber ? `Account: ${selectedApp.formData.accountNumber}` : 'Pending Assignment')}
                     </span>
+                    {selectedApp.formData?.accountNumber && (
+                      <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block mt-0.5">
+                        {selectedApp.formData.accountName ? `${selectedApp.formData.accountName} • ` : ''}{selectedApp.formData.accountNumber}
+                      </span>
+                    )}
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold block">4Ps / Solo Parent Status</span>
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">4Ps / Sectoral Status</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.formData?.is4PsBeneficiary ? '4Ps Registered' : 'Non-4Ps'}
+                      {selectedApp.formData?.is4PsBeneficiary || selectedApp.formData?.is4Ps
+                        ? '4Ps Beneficiary'
+                        : selectedApp.formData?.isSoloParent
+                        ? 'Solo Parent Household'
+                        : selectedApp.formData?.isPWD
+                        ? 'PWD Student / Dependent'
+                        : 'General Applicant'}
                     </span>
                   </div>
 
                   <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 sm:col-span-2 md:col-span-3">
                     <span className="text-[10px] text-slate-400 uppercase font-bold block">School & Degree Program</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
-                      {selectedApp.school || 'Unspecified'} — {selectedApp.program || 'General Academic Course'}
+                      {selectedApp.school || 'Unspecified Institution'}{selectedApp.program ? ` — ${selectedApp.program}` : ''}
                     </span>
                   </div>
                 </div>
