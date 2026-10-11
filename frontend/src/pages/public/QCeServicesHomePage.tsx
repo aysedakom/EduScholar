@@ -433,8 +433,8 @@ export const QCeServicesHomePage: React.FC = () => {
                     isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
                   } hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]`}
                 >
-                  {/* Subtle, seamless ScholarHat background artwork aligned to bottom-right */}
-                  <div className="absolute right-0 bottom-0 w-44 h-44 pointer-events-none overflow-hidden opacity-35 dark:opacity-25 transition-all duration-500 group-hover:scale-110 group-hover:opacity-45">
+                  {/* Full card background cover with ScholarHat vividly visible across entire card */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <img
                       src="/ScholarHat.webp"
                       alt="Scholarship Graduation Hat"
@@ -444,11 +444,14 @@ export const QCeServicesHomePage: React.FC = () => {
                           target.src = '/ScholarHat.png';
                         }
                       }}
-                      className="w-full h-full object-cover object-center animate-float-slow"
-                      style={{
-                        WebkitMaskImage: 'radial-gradient(circle at bottom right, black 40%, transparent 80%)',
-                        maskImage: 'radial-gradient(circle at bottom right, black 40%, transparent 80%)',
-                      }}
+                      className="w-full h-full object-cover object-right-bottom opacity-40 dark:opacity-30 transition-transform duration-700 group-hover:scale-110"
+                    />
+                    <div
+                      className={`absolute inset-0 ${
+                        isDark
+                          ? 'bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent'
+                          : 'bg-gradient-to-r from-white via-white/80 to-transparent'
+                      }`}
                     />
                   </div>
 
