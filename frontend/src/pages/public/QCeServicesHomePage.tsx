@@ -454,28 +454,21 @@ export const QCeServicesHomePage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="space-y-4 relative z-10">
-                    <div className="flex items-start justify-end gap-3">
-                      <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md">
-                        {t('home.activePortal')}
-                      </Badge>
-                    </div>
-                    <div>
-                      <h3
-                        className={`text-base font-extrabold transition-colors ${
-                          isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
-                        }`}
-                      >
-                        {card.title}
-                      </h3>
-                      <p
-                        className={`text-xs leading-relaxed mt-2 font-medium ${
-                          isDark ? 'text-slate-400' : 'text-slate-600'
-                        }`}
-                      >
-                        {card.description}
-                      </p>
-                    </div>
+                  <div className="space-y-2 relative z-10">
+                    <h3
+                      className={`text-base font-extrabold transition-colors ${
+                        isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
+                      }`}
+                    >
+                      {card.title}
+                    </h3>
+                    <p
+                      className={`text-xs leading-relaxed mt-2 font-medium ${
+                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      }`}
+                    >
+                      {card.description}
+                    </p>
                   </div>
                 </div>
               );
