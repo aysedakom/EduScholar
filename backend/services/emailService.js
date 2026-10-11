@@ -93,7 +93,7 @@ function getSmtpTransporter() {
 /**
  * Sends an email using Brevo REST API (v3)
  */
-async function sendViaBrevoApi({ to, toName, subject, htmlContent, textContent }) {
+async function sendViaBrevoApi({ to, toName, subject, htmlContent, textContent, attachments }) {
   const apiKey = getBrevoApiKey();
   if (!apiKey) return null;
 
@@ -105,6 +105,23 @@ async function sendViaBrevoApi({ to, toName, subject, htmlContent, textContent }
     htmlContent,
     textContent: textContent || subject,
   };
+
+  if (attachments && Array.isArray(attachments) && attachments.length > 0) {
+    payload.attachment = attachments.map((att) => {
+      const name = att.filename || att.name || 'attachment.html';
+      let content = att.content;
+      if (Buffer.isBuffer(content)) {
+        content = content.toString('base64');
+      } else if (typeof content === 'string') {
+        content = Buffer.from(content, 'utf8').toString('base64');
+      }
+      return {
+        name,
+        content,
+        url: att.url || undefined,
+      };
+    });
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 12000);
@@ -587,6 +604,12 @@ function generateScholarshipAwardCertificateHtml({
     .sig-line { font-size: 11px; font-weight: 800; color: #0f172a; border-top: 1px solid #94a3b8; width: 75%; margin: 0 auto; padding-top: 4px; text-transform: uppercase; }
     .sig-title { font-size: 10px; color: #64748b; }
 
+    /* Download Card */
+    .download-card { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); border-radius: 14px; padding: 20px 24px; margin: 24px 0; color: #ffffff; text-align: center; box-shadow: 0 8px 20px -4px rgba(29, 78, 216, 0.3); }
+    .download-card h3 { margin: 0 0 6px 0; font-size: 16px; font-weight: 800; }
+    .download-card p { margin: 0 0 16px 0; font-size: 12px; color: #bfdbfe; line-height: 1.5; }
+    .download-btn { display: inline-block; background-color: #ffffff; color: #1e3a8a !important; font-weight: 800; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); letter-spacing: 0.3px; }
+
     .instructions-box { background: #f0fdf4; border-left: 4px solid #16a34a; padding: 16px 20px; border-radius: 10px; font-size: 13px; color: #14532d; line-height: 1.6; margin: 24px 0; }
     .footer-bar { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 24px; text-align: center; font-size: 11px; color: #94a3b8; }
   </style>
@@ -672,12 +695,23 @@ function generateScholarshipAwardCertificateHtml({
         </div>
       </div>
 
+      <!-- Download & Print Attachment Callout -->
+      <div class="download-card">
+        <h3>📥 Official Certificate Attached</h3>
+        <p>Your official credentials have been attached to this email (<strong>Official_Scholar_Certificate_${certNo}.html</strong>). You can save or print it directly to PDF.</p>
+        <div style="margin-top: 8px;">
+          <a href="data:text/html;charset=utf-8,${encodeURIComponent(generateStandalonePrintableCertificate({ name, studentId, programTitle, grantBreakdownText, certNo, dateStr, inst, deg }))}" download="Official_Scholar_Certificate_${certNo}.html" class="download-btn">
+            ⬇️ Download Official Certificate (.HTML / PDF)
+          </a>
+        </div>
+      </div>
+
       <div class="instructions-box">
         <strong>📋 Next Steps & Grant Release:</strong><br>
-        1. Keep a copy of this official certificate for your academic records.<br>
-        2. You may also download and print your official certificate directly from your <strong>EduScholar Document Vault</strong> anytime.<br>
-        3. Your stipend disbursement is currently queued for disbursement via your registered QCitizen Pay / bank channel.<br>
-        4. Maintain your academic standing (GWA >= 1.75) and participate in scheduled Quezon City youth development activities.
+        1. <strong>Download or print</strong> the attached certificate (see download button above or email attachments below) for your academic records.<br>
+        2. You can also view and download your certificate anytime inside your <strong>EduScholar Document Vault</strong>.<br>
+        3. Your stipend disbursement is queued for processing via your registered QCitizen Pay / bank channel.<br>
+        4. Maintain your academic standing (GWA &gt;= 1.75) and participate in scheduled Quezon City youth development activities.
       </div>
     </div>
 
@@ -689,6 +723,111 @@ function generateScholarshipAwardCertificateHtml({
 </body>
 </html>
   `;
+}
+
+/**
+ * Generates an elegant, high-resolution printable standalone certificate file
+ */
+function generateStandalonePrintableCertificate({
+  name,
+  studentId,
+  programTitle,
+  grantBreakdownText,
+  certNo,
+  dateStr,
+  inst,
+  deg,
+}) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Official Certificate of Scholarship - ${certNo}</title>
+  <style>
+    @page { size: landscape; margin: 12mm; }
+    body { font-family: 'Times New Roman', Times, serif, system-ui; background: #ffffff; color: #0f172a; margin: 0; padding: 24px; text-align: center; }
+    .frame { border: 6px double #b45309; padding: 36px 32px; background: #fffdf8; box-shadow: inset 0 0 40px rgba(180, 83, 9, 0.05); }
+    .gov-header { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; color: #78350f; }
+    .sub-header { font-size: 14px; font-weight: bold; color: #92400e; margin-top: 4px; }
+    .cert-heading { font-size: 26px; font-weight: 900; color: #451a03; text-transform: uppercase; letter-spacing: 2px; margin: 24px 0 12px 0; border-top: 2px solid #d97706; border-bottom: 2px solid #d97706; padding: 12px 0; }
+    .cert-no { font-family: monospace; font-size: 13px; font-weight: bold; color: #b45309; margin-bottom: 20px; }
+    .conferred { font-size: 14px; font-weight: bold; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+    .recipient { font-size: 28px; font-weight: 900; color: #1e3a8a; text-decoration: underline; margin: 12px 0; text-transform: uppercase; letter-spacing: 1px; }
+    .student-id { font-family: monospace; font-size: 13px; color: #475569; margin-bottom: 18px; }
+    .cert-desc { font-size: 15px; line-height: 1.7; max-width: 720px; margin: 0 auto 24px auto; text-align: justify; color: #334155; }
+    .meta-table { width: 100%; border-collapse: collapse; margin: 20px 0; text-align: left; }
+    .meta-table td { padding: 10px 14px; border: 1px solid #e2e8f0; font-size: 13px; }
+    .meta-label { color: #64748b; font-weight: bold; font-size: 11px; text-transform: uppercase; }
+    .meta-val { color: #0f172a; font-weight: bold; }
+    .signatures { width: 100%; margin-top: 40px; display: table; }
+    .sig-col { display: table-cell; width: 50%; text-align: center; vertical-align: bottom; }
+    .sig-line { font-weight: bold; font-size: 13px; border-top: 1px solid #475569; width: 65%; margin: 0 auto; padding-top: 6px; }
+    .sig-title { font-size: 11px; color: #64748b; }
+    .no-print { margin-top: 24px; }
+    .print-btn { background: #1e3a8a; color: #ffffff; padding: 12px 28px; border: none; border-radius: 8px; font-size: 14px; font-weight: bold; cursor: pointer; }
+    @media print { .no-print { display: none; } body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="gov-header">Republic of the Philippines • City Government of Quezon City</div>
+    <div class="sub-header">Quezon City Youth Development Office (QCYDO)</div>
+    <div class="cert-heading">Certificate of Scholarship Award & Qualification</div>
+    <div class="cert-no">Official Award Certificate No: ${certNo}</div>
+    <div class="conferred">This is formally conferred upon</div>
+    <div class="recipient">${name}</div>
+    <div class="student-id">Student ID: ${studentId}</div>
+    <div class="cert-desc">
+      having satisfactorily fulfilled all rigorous documentary credentials, biometric verification, and academic standards established under the Quezon City Scholarship Code. The bearer is hereby designated an <strong>Official Quezon City Scholar</strong> in Active Good Standing with full grant entitlement.
+    </div>
+    <table class="meta-table">
+      <tr>
+        <td>
+          <div class="meta-label">Scholarship Program</div>
+          <div class="meta-val">${programTitle}</div>
+        </td>
+        <td>
+          <div class="meta-label">Approved Educational Grant & Aid</div>
+          <div class="meta-val" style="color: #16a34a;">${grantBreakdownText}</div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="meta-label">School / Institution</div>
+          <div class="meta-val">${inst}</div>
+        </td>
+        <td>
+          <div class="meta-label">Degree / Course</div>
+          <div class="meta-val">${deg}</div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="meta-label">Date Conferred</div>
+          <div class="meta-val">${dateStr}</div>
+        </td>
+        <td>
+          <div class="meta-label">Status Clearance</div>
+          <div class="meta-val" style="color: #2563eb;">✓ Verified & Authenticated</div>
+        </td>
+      </tr>
+    </table>
+    <div class="signatures">
+      <div class="sig-col">
+        <div class="sig-line">HON. ROBERTO V. CRUZ</div>
+        <div class="sig-title">Executive Director, QCYDO</div>
+      </div>
+      <div class="sig-col">
+        <div class="sig-line">HON. MA. JOSEFINA "JOY" BELMONTE</div>
+        <div class="sig-title">City Mayor, Quezon City</div>
+      </div>
+    </div>
+  </div>
+  <div class="no-print">
+    <button class="print-btn" onclick="window.print()">🖨️ Print or Save as PDF</button>
+  </div>
+</body>
+</html>`;
 }
 
 /**
@@ -717,14 +856,41 @@ async function sendScholarshipAwardCertificateEmail({
     course,
     issueDate,
   });
-  const textContent = `Congratulations ${name}! You have been officially approved as a Quezon City Government Scholar for ${programTitle}. Official Certificate Number: ${certNo}. Approved Educational Grant: PHP ${awardAmount}. Visit your EduScholar Document Vault to view and download your full certificate.`;
+  const textContent = `Congratulations ${name}! You have been officially approved as a Quezon City Government Scholar for ${programTitle}. Official Certificate Number: ${certNo}. Approved Educational Grant: PHP ${awardAmount}. An official downloadable certificate has been attached to this email. You may also visit your EduScholar Document Vault to view and download your certificate anytime.`;
 
-  // 1. Try Brevo REST API
+  // Prepare downloadable certificate attachment
+  const standaloneCertHtml = generateStandalonePrintableCertificate({
+    name,
+    studentId,
+    programTitle,
+    grantBreakdownText: Number(awardAmount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' }),
+    certNo,
+    dateStr: issueDate || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+    inst: school || 'Quezon City University / Partner Institution',
+    deg: course || 'Tertiary Degree Program',
+  });
+
+  const attachments = [
+    {
+      filename: `Official_Scholar_Certificate_${certNo}.html`,
+      content: standaloneCertHtml,
+      contentType: 'text/html',
+    },
+  ];
+
+  // 1. Try Brevo REST API with attachments
   const apiKey = getBrevoApiKey();
   if (apiKey) {
     try {
-      const apiResult = await sendViaBrevoApi({ to, toName: name, subject, htmlContent, textContent });
-      console.log(`[EmailService] ✅ Official Award Certificate emailed via Brevo API to ${to} (MessageId: ${apiResult.messageId})`);
+      const apiResult = await sendViaBrevoApi({
+        to,
+        toName: name,
+        subject,
+        htmlContent,
+        textContent,
+        attachments,
+      });
+      console.log(`[EmailService] ✅ Official Award Certificate emailed with attachment via Brevo API to ${to} (MessageId: ${apiResult.messageId})`);
       logEmailToDatabase({ recipientEmail: to, recipientName: name, emailType: 'scholarship_award_certificate', subject, codeOrUrl: certNo, dispatchMethod: 'brevo_api' });
       return { success: true, method: 'brevo_api', messageId: apiResult.messageId, certificateNumber: certNo };
     } catch (apiErr) {
@@ -745,7 +911,7 @@ async function sendScholarshipAwardCertificateEmail({
         attachments: [
           {
             filename: `Official_Scholar_Certificate_${certNo}.html`,
-            content: htmlContent,
+            content: standaloneCertHtml,
             contentType: 'text/html',
           },
         ],
@@ -767,6 +933,7 @@ async function sendScholarshipAwardCertificateEmail({
   console.log(`  💰 GRANT AMOUNT:    PHP ${awardAmount}`);
   console.log(`  🏫 INSTITUTION:     ${school || 'Partner Institution'}`);
   console.log(`  📚 PROGRAM:         ${programTitle}`);
+  console.log(`  📎 ATTACHMENT:      Official_Scholar_Certificate_${certNo}.html`);
   console.log('====================================================');
 
   logEmailToDatabase({ recipientEmail: to, recipientName: name, emailType: 'scholarship_award_certificate', subject, codeOrUrl: certNo, dispatchMethod: 'simulation' });
