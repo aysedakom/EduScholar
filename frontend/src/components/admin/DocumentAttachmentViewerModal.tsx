@@ -19,9 +19,10 @@ import {
   Award,
   BookOpen,
   CreditCard,
-  HeartHandshake
+  HeartHandshake,
+  ArrowLeft,
+  X
 } from 'lucide-react';
-import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { toast } from 'sonner';
@@ -213,74 +214,53 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
     }
   };
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Submitted Attachment Inspection & Verification Desk"
-      description={`Reviewing official document submissions for ${applicantName} (${applicantId})`}
-      maxWidth="6xl"
-      footer={
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 text-xs">
-          <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-            <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            <span>
-              Attachment {selectedIndex + 1} of {documents.length} •{' '}
-              <strong className="text-slate-900 dark:text-white">
-                {Object.values(verifiedDocs).filter(Boolean).length} / {documents.length} Verified
-              </strong>
-            </span>
-          </div>
+  if (!isOpen) return null;
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={onClose}>
-              Close Inspector
-            </Button>
-            {onRejectApplication && (
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => {
-                  onClose();
-                  onRejectApplication();
-                }}
-              >
-                Reject Application
-              </Button>
-            )}
-            {onApproveApplication && (
-              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                <label className="flex items-center gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                    checked={isManuallyVerified}
-                    onChange={(e) => setIsManuallyVerified(e.target.checked)}
-                  />
-                  <span>Manually Verified with School Registrar (Call/Email)</span>
-                </label>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!isManuallyVerified}
-                  onClick={() => {
-                    onClose();
-                    onApproveApplication();
-                    toast.success('Application verified manually via LGU protocol.');
-                  }}
-                  className={!isManuallyVerified ? 'opacity-50 cursor-not-allowed' : ''}
-                >
-                  Approve Application
-                </Button>
-              </div>
-            )}
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden animate-in fade-in duration-200">
+      {/* Top Full-Page Header */}
+      <div className="flex items-center justify-between px-6 py-3.5 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-xs shrink-0">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClose}
+            className="font-bold text-xs flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer shrink-0"
+            leftIcon={<ArrowLeft className="h-4 w-4" />}
+          >
+            Back
+          </Button>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="font-heading text-lg font-extrabold text-slate-900 dark:text-white">
+                Attachment Inspection & Verification Desk
+              </h2>
+              <Badge variant="secondary" className="font-mono text-[11px]">
+                {applicantId}
+              </Badge>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Reviewing verified documentary submissions for <strong className="text-slate-800 dark:text-slate-200">{applicantName}</strong> • {programTitle}
+            </p>
           </div>
         </div>
-      }
-    >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[580px]">
-        {/* Left Side: Attachment Index Drawer (4 Cols) */}
-        <div className="lg:col-span-4 space-y-3 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-4 lg:pb-0 lg:pr-4">
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            title="Close Inspector"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Full-Page Inspection Canvas */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[calc(100vh-140px)]">
+          {/* Left Side: Attachment Index Drawer (4 Cols) */}
+          <div className="lg:col-span-4 space-y-3 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-4 lg:pb-0 lg:pr-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Submitted Attachments ({documents.length})
@@ -1281,6 +1261,67 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
           </div>
         </div>
       </div>
-    </Modal>
+    </div>
+
+      {/* Sticky Bottom Inspection Decision Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-3.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-lg shrink-0 gap-3 text-xs">
+        <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <span>
+            Attachment {selectedIndex + 1} of {documents.length} •{' '}
+            <strong className="text-slate-900 dark:text-white">
+              {Object.values(verifiedDocs).filter(Boolean).length} / {documents.length} Verified
+            </strong>
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" size="sm" onClick={onClose} className="cursor-pointer">
+            Close Inspector
+          </Button>
+          {onRejectApplication && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                onClose();
+                onRejectApplication();
+              }}
+              className="cursor-pointer"
+            >
+              Reject Application
+            </Button>
+          )}
+          {onApproveApplication && (
+            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+              <label className="flex items-center gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  checked={isManuallyVerified}
+                  onChange={(e) => setIsManuallyVerified(e.target.checked)}
+                />
+                <span>Manually Verified with School Registrar (Call/Email)</span>
+              </label>
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={!isManuallyVerified}
+                onClick={() => {
+                  onClose();
+                  onApproveApplication();
+                  toast.success('Application verified manually via LGU protocol.');
+                }}
+                className={!isManuallyVerified ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+              >
+                Approve Application
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
+
+export default DocumentAttachmentViewerModal;
