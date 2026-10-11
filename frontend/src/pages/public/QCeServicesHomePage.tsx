@@ -5,6 +5,7 @@ import {
   Moon,
   ChevronDown,
   Menu,
+  GraduationCap,
   Users,
   FileText,
   Heart,
@@ -422,57 +423,59 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Education & Scholarship Card: Preserves the signature ScholarHat design, perfectly proportioned to span 2 cols on wide screens
+            // Featured Education & Scholarship Card: Preserves signature ScholarHat aesthetic, perfectly sized into a single standard card
             if (isFeatured) {
               return (
                 <div
                   key={idx}
                   onClick={() => handleCardClick(card.title, card.path)}
-                  className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover-lift hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 border border-slate-200/80 dark:border-slate-800 md:col-span-2 lg:col-span-2 flex flex-col justify-between ${
+                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 ${
                     isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
-                  }`}
+                  } hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]`}
                 >
-                  <div className="grid grid-cols-1 sm:grid-cols-12 items-center min-h-[220px] sm:min-h-[240px] h-full">
-                    {/* Left Content Area */}
-                    <div className="p-6 sm:p-8 sm:col-span-7 z-10 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 shadow-md">
-                          {t('home.activePortal')}
-                        </Badge>
+                  {/* Subtle, seamless ScholarHat background artwork aligned to bottom-right */}
+                  <div className="absolute right-0 bottom-0 w-44 h-44 pointer-events-none overflow-hidden opacity-35 dark:opacity-25 transition-all duration-500 group-hover:scale-110 group-hover:opacity-45">
+                    <img
+                      src="/ScholarHat.webp"
+                      alt="Scholarship Graduation Hat"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (target.src.includes('ScholarHat.webp')) {
+                          target.src = '/ScholarHat.png';
+                        }
+                      }}
+                      className="w-full h-full object-cover object-center animate-float-slow"
+                      style={{
+                        WebkitMaskImage: 'radial-gradient(circle at bottom right, black 40%, transparent 80%)',
+                        maskImage: 'radial-gradient(circle at bottom right, black 40%, transparent 80%)',
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-lg bg-blue-600 text-white">
+                        <GraduationCap className="h-6 w-6" />
                       </div>
+                      <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md">
+                        {t('home.activePortal')}
+                      </Badge>
+                    </div>
+                    <div>
                       <h3
-                        className={`text-xl sm:text-2xl lg:text-3xl font-heading font-black tracking-tight transition-colors ${
+                        className={`text-base font-extrabold transition-colors ${
                           isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
                         }`}
                       >
                         {card.title}
                       </h3>
                       <p
-                        className={`text-xs sm:text-sm leading-relaxed font-semibold ${
-                          isDark ? 'text-slate-300' : 'text-slate-600'
+                        className={`text-xs leading-relaxed mt-2 font-medium ${
+                          isDark ? 'text-slate-400' : 'text-slate-600'
                         }`}
                       >
                         {card.description}
                       </p>
-                    </div>
-
-                    {/* Right Image Area with CSS Mask Image for flawless seamless fade */}
-                    <div className="sm:col-span-5 h-48 sm:h-full min-h-[190px] relative overflow-hidden flex items-center justify-center">
-                      <img
-                        src="/ScholarHat.webp"
-                        alt="Scholarship Graduation Hat"
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (target.src.includes('ScholarHat.webp')) {
-                            target.src = '/ScholarHat.png';
-                          }
-                        }}
-                        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110 animate-float-slow"
-                        style={{
-                          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
-                          maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
-                        }}
-                      />
                     </div>
                   </div>
                 </div>
