@@ -13,7 +13,8 @@ import {
   Building,
   DollarSign,
   Car,
-  Building2
+  Building2,
+  ArrowRight
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -422,17 +423,17 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Education & Scholarship Card: Preserves signature ScholarHat aesthetic, perfectly sized into a single standard card
+            // Featured Education & Scholarship Card: Preserves signature ScholarHat aesthetic, perfectly balanced into a gorgeous flagship card
             if (isFeatured) {
               return (
                 <div
                   key={idx}
                   onClick={() => handleCardClick(card.title, card.path)}
-                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 ${
+                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border border-blue-200/80 dark:border-blue-900/50 ${
                     isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
-                  } hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]`}
+                  } hover:shadow-2xl hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02] min-h-[230px]`}
                 >
-                  {/* Full card background cover with ScholarHat vividly visible across entire card */}
+                  {/* Full card background cover with ScholarHat clearly visible across entire card */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <img
                       src="/ScholarHat.webp"
@@ -443,32 +444,51 @@ export const QCeServicesHomePage: React.FC = () => {
                           target.src = '/ScholarHat.png';
                         }
                       }}
-                      className="w-full h-full object-cover object-right-bottom opacity-40 dark:opacity-30 transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     />
+                    {/* Sophisticated frosted gradient overlay ensuring crystal clear text readability while showcasing the graduation hat */}
                     <div
-                      className={`absolute inset-0 ${
+                      className={`absolute inset-0 transition-all duration-300 ${
                         isDark
-                          ? 'bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent'
-                          : 'bg-gradient-to-r from-white via-white/80 to-transparent'
+                          ? 'bg-gradient-to-br from-slate-950/92 via-slate-950/80 to-slate-900/50 backdrop-blur-[0.5px]'
+                          : 'bg-gradient-to-br from-white/95 via-white/85 to-white/45 backdrop-blur-[0.5px]'
                       }`}
                     />
                   </div>
 
+                  {/* Top content area with subtle category kicker and clear typography */}
                   <div className="space-y-2 relative z-10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                        Quezon City Campus Aid
+                      </span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                    </div>
                     <h3
-                      className={`text-base font-extrabold transition-colors ${
+                      className={`text-lg sm:text-xl font-heading font-black tracking-tight leading-snug transition-colors ${
                         isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
                       }`}
                     >
                       {card.title}
                     </h3>
                     <p
-                      className={`text-xs leading-relaxed mt-2 font-medium ${
-                        isDark ? 'text-slate-400' : 'text-slate-600'
+                      className={`text-xs leading-relaxed font-semibold ${
+                        isDark ? 'text-slate-300' : 'text-slate-600'
                       }`}
                     >
                       {card.description}
                     </p>
+                  </div>
+
+                  {/* Bottom anchored action bar balancing card height */}
+                  <div className="pt-4 mt-auto relative z-10 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      {isTagalog ? 'Mag-aplay & Sumangguni' : 'Student Grants & Aid'}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 dark:text-blue-400 group-hover:gap-2.5 transition-all">
+                      <span>{isTagalog ? 'Buksan ang Portal' : 'Access Portal'}</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </span>
                   </div>
                 </div>
               );
