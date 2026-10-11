@@ -78,6 +78,25 @@ async function recordAuditLog({
 }
 
 /**
+ * Fetch audit logs for a specific entity
+ */
+async function getAuditLogsByEntity(entityType, entityId) {
+  await ensureAuditLogTable();
+  try {
+    const result = await pool.query(
+      `SELECT * FROM audit_logs 
+       WHERE entity_type = $1 AND entity_id = $2 
+       ORDER BY timestamp DESC`,
+      [entityType, String(entityId)]
+    );
+    return result.rows;
+  } catch (error) {
+    console.error('[AuditLogModel] Failed to fetch audit logs by entity:', error.message);
+    return [];
+  }
+}
+
+/**
  * Fetch all audit logs across all users and activities with optional filters
  */
 async function getAllAuditLogs({ entityType, actorId, limit = 100, offset = 0 } = {}) {
