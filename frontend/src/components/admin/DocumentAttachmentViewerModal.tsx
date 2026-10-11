@@ -1267,43 +1267,47 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
       {/* Sticky Bottom Inspection Decision Bar */}
       <div className="flex flex-col sm:flex-row items-center justify-between px-6 py-3.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-lg shrink-0 gap-3 text-xs">
         <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
-          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span>
-            Attachment {selectedIndex + 1} of {documents.length} •{' '}
-            <strong className="text-slate-900 dark:text-white">
+            Attachment <strong className="text-slate-900 dark:text-white font-bold">{selectedIndex + 1}</strong> of {documents.length} •{' '}
+            <strong className="text-emerald-600 dark:text-emerald-400 font-bold">
               {Object.values(verifiedDocs).filter(Boolean).length} / {documents.length} Verified
             </strong>
           </span>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button variant="outline" size="sm" onClick={onClose} className="cursor-pointer">
+        <div className="flex items-center gap-2.5 flex-wrap justify-end">
+          <Button variant="outline" size="sm" onClick={onClose} className="cursor-pointer text-xs font-semibold">
             Close Inspector
           </Button>
+
           {onRejectApplication && (
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
               onClick={() => {
                 onClose();
                 onRejectApplication();
               }}
-              className="cursor-pointer"
+              className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/40 dark:hover:bg-rose-950/30 cursor-pointer"
             >
               Reject Application
             </Button>
           )}
+
           {onApproveApplication && (
-            <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-              <label className="flex items-center gap-2 text-[10px] font-bold text-slate-700 dark:text-slate-300 cursor-pointer">
+            <div className="flex items-center gap-2.5 bg-slate-100 dark:bg-slate-800/90 pl-3 pr-1.5 py-1 rounded-xl border border-slate-200 dark:border-slate-700">
+              <label className="flex items-center gap-2 text-[11px] font-medium text-slate-700 dark:text-slate-300 cursor-pointer select-none">
                 <input 
                   type="checkbox" 
-                  className="w-3.5 h-3.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer accent-blue-600"
                   checked={isManuallyVerified}
                   onChange={(e) => setIsManuallyVerified(e.target.checked)}
                 />
-                <span>Manually Verified with School Registrar (Call/Email)</span>
+                <span className="hidden md:inline">Manually Verified with Registrar</span>
+                <span className="md:hidden">Verified</span>
               </label>
+
               <Button
                 variant="primary"
                 size="sm"
@@ -1313,7 +1317,11 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                   onApproveApplication();
                   toast.success('Application verified manually via LGU protocol.');
                 }}
-                className={!isManuallyVerified ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                className={`text-xs font-bold transition-all shadow-xs ${
+                  isManuallyVerified
+                    ? 'bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed bg-slate-400 text-white'
+                }`}
               >
                 Approve Application
               </Button>

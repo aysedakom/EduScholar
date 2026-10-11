@@ -444,82 +444,95 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
         {/* Top Navigation & Workspace Header */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
-          <div className="flex items-start sm:items-center gap-3">
+        <div className="bg-white dark:bg-slate-900 p-5 sm:p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft space-y-4">
+          {/* Top Row: Back Navigation + Primary Status */}
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3.5">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setSelectedApp(null)}
-              className="font-bold text-xs flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer shrink-0"
+              className="font-bold text-xs flex items-center gap-1.5 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer shadow-2xs"
               leftIcon={<ArrowLeft className="h-4 w-4" />}
             >
               Back to Review Queue
             </Button>
-            <div>
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
-                  Evaluation Desk: {selectedApp.studentName}
-                </h1>
-                <Badge variant={selectedApp.status === 'Approved' ? 'success' : selectedApp.status === 'Rejected' ? 'destructive' : 'warning'}>
-                  {selectedApp.status}
-                </Badge>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-slate-900 dark:text-slate-200">Application Code:</span>
-                <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-bold">{selectedApp.id}</code>
-                <span>•</span>
-                <span>Track: <strong className="text-slate-900 dark:text-white">{selectedApp.scholarshipTitle}</strong></span>
-              </p>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider hidden sm:inline">Status:</span>
+              <Badge variant={selectedApp.status === 'Approved' ? 'success' : selectedApp.status === 'Rejected' ? 'destructive' : 'warning'} className="text-xs px-2.5 py-0.5 font-bold">
+                {selectedApp.status}
+              </Badge>
             </div>
           </div>
 
-          {/* Quick Action Buttons in Top Header */}
-          <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setDocViewerApp(selectedApp)}
-              className="font-bold text-xs"
-              leftIcon={<FileText className="h-4 w-4" />}
-            >
-              Inspect {selectedApp.documentsUploaded.length} Attachments
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleEscalateFraud}
-              className="font-bold text-xs text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-              leftIcon={<AlertTriangle className="h-4 w-4" />}
-            >
-              Escalate to Audit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowRevisionModal(true)}
-              className="font-bold text-xs text-amber-600 dark:text-amber-400 border-amber-300 hover:bg-amber-50"
-              leftIcon={<AlertTriangle className="h-4 w-4" />}
-            >
-              5-Day Revision
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleReject(selectedApp.id)}
-              className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50"
-              leftIcon={<XCircle className="h-4 w-4" />}
-            >
-              Reject
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => handleApprove(selectedApp.id)}
-              className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
-              leftIcon={<CheckCircle2 className="h-4 w-4" />}
-            >
-              Approve Application
-            </Button>
+          {/* Main Header Content Row: Title Info on Left, Action Desk on Right */}
+          <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs uppercase tracking-wider font-extrabold text-blue-600 dark:text-blue-400">
+                  Evaluation Desk
+                </span>
+                <span className="text-slate-300 dark:text-slate-700">•</span>
+                <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                  {selectedApp.id}
+                </code>
+              </div>
+              <h1 className="font-heading font-extrabold text-2xl sm:text-3xl text-slate-900 dark:text-white tracking-tight">
+                {selectedApp.studentName}
+              </h1>
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2 flex-wrap">
+                <span>Scholarship Program:</span>
+                <strong className="text-slate-800 dark:text-slate-200 font-semibold">{selectedApp.scholarshipTitle}</strong>
+              </p>
+            </div>
+
+            {/* Structured Action Toolbar */}
+            <div className="flex items-center gap-2 flex-wrap xl:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDocViewerApp(selectedApp)}
+                className="font-bold text-xs bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 shadow-2xs"
+                leftIcon={<FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />}
+              >
+                Inspect {selectedApp.documentsUploaded.length} Attachments
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEscalateFraud}
+                className="font-bold text-xs text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+                leftIcon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
+              >
+                Escalate
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowRevisionModal(true)}
+                className="font-bold text-xs text-amber-600 dark:text-amber-400 border-amber-300 hover:bg-amber-50"
+                leftIcon={<AlertTriangle className="h-4 w-4" />}
+              >
+                5-Day Revision
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleReject(selectedApp.id)}
+                className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50"
+                leftIcon={<XCircle className="h-4 w-4" />}
+              >
+                Reject
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleApprove(selectedApp.id)}
+                className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs px-3.5"
+                leftIcon={<CheckCircle2 className="h-4 w-4" />}
+              >
+                Approve Application
+              </Button>
+            </div>
           </div>
         </div>
 
