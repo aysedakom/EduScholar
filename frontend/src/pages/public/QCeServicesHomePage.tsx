@@ -4,7 +4,16 @@ import {
   Sun,
   Moon,
   ChevronDown,
-  Menu
+  Menu,
+  Users,
+  FileText,
+  Heart,
+  Activity,
+  ShieldAlert,
+  Building,
+  DollarSign,
+  Car,
+  Building2
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -66,6 +75,72 @@ export const QCeServicesHomePage: React.FC = () => {
       title: t('service.edu.title'),
       description: t('service.edu.desc'),
       path: '/education-scholarship',
+      active: true,
+      featured: true, // Signature EduScholar card with ScholarHat image
+    },
+    {
+      title: t('service.drrm.title'),
+      description: t('service.drrm.desc'),
+      icon: ShieldAlert,
+      color: 'bg-amber-500 text-white',
+      active: true,
+      externalUrl: 'https://govservedrrm.up.railway.app/',
+    },
+    {
+      title: t('service.citizen.title'),
+      description: t('service.citizen.desc'),
+      icon: Users,
+      color: 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400',
+      active: false,
+    },
+    {
+      title: t('service.permits.title'),
+      description: t('service.permits.desc'),
+      icon: FileText,
+      color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400',
+      active: false,
+    },
+    {
+      title: t('service.social.title'),
+      description: t('service.social.desc'),
+      icon: Heart,
+      color: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400',
+      active: false,
+    },
+    {
+      title: t('service.health.title'),
+      description: t('service.health.desc'),
+      icon: Activity,
+      color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400',
+      active: false,
+    },
+    {
+      title: t('service.urban.title'),
+      description: t('service.urban.desc'),
+      icon: Building,
+      color: 'bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400',
+      active: false,
+    },
+    {
+      title: t('service.treasury.title'),
+      description: t('service.treasury.desc'),
+      icon: DollarSign,
+      color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
+      active: false,
+    },
+    {
+      title: t('service.transport.title'),
+      description: t('service.transport.desc'),
+      icon: Car,
+      color: 'bg-violet-50 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
+      active: false,
+    },
+    {
+      title: t('service.assets.title'),
+      description: t('service.assets.desc'),
+      icon: Building2,
+      color: 'bg-cyan-50 text-cyan-600 dark:bg-cyan-950/60 dark:text-cyan-400',
+      active: false,
     },
   ];
 
@@ -340,52 +415,117 @@ export const QCeServicesHomePage: React.FC = () => {
           <p className={`text-xs sm:text-sm max-w-2xl mx-auto ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{t('home.dirSubtitle')}</p>
         </div>
 
-        <div className="max-w-4xl lg:max-w-5xl mx-auto">
+        {/* 10 eServices Directory Grid: EduScholar Signature Card + Other QC Services */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {serviceCards.map((card, idx) => {
+            const IconComponent = (card as any).icon;
+            const isExternal = !!(card as any).externalUrl;
+            const isFeatured = (card as any).featured;
+
+            // Featured Education & Scholarship Card: Preserves the signature ScholarHat design, perfectly proportioned to span 2 cols on wide screens
+            if (isFeatured) {
+              return (
+                <div
+                  key={idx}
+                  onClick={() => handleCardClick(card.title, card.path)}
+                  className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover-lift hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 border border-slate-200/80 dark:border-slate-800 md:col-span-2 lg:col-span-2 flex flex-col justify-between ${
+                    isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
+                  }`}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-12 items-center min-h-[220px] sm:min-h-[240px] h-full">
+                    {/* Left Content Area */}
+                    <div className="p-6 sm:p-8 sm:col-span-7 z-10 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-0.5 shadow-md">
+                          {t('home.activePortal')}
+                        </Badge>
+                      </div>
+                      <h3
+                        className={`text-xl sm:text-2xl lg:text-3xl font-heading font-black tracking-tight transition-colors ${
+                          isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
+                        }`}
+                      >
+                        {card.title}
+                      </h3>
+                      <p
+                        className={`text-xs sm:text-sm leading-relaxed font-semibold ${
+                          isDark ? 'text-slate-300' : 'text-slate-600'
+                        }`}
+                      >
+                        {card.description}
+                      </p>
+                    </div>
+
+                    {/* Right Image Area with CSS Mask Image for flawless seamless fade */}
+                    <div className="sm:col-span-5 h-48 sm:h-full min-h-[190px] relative overflow-hidden flex items-center justify-center">
+                      <img
+                        src="/ScholarHat.webp"
+                        alt="Scholarship Graduation Hat"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (target.src.includes('ScholarHat.webp')) {
+                            target.src = '/ScholarHat.png';
+                          }
+                        }}
+                        className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110 animate-float-slow"
+                        style={{
+                          WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
+                          maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.3) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Other 9 Standard eServices Cards
             return (
               <div
                 key={idx}
-                onClick={() => handleCardClick(card.title, card.path)}
-                className={`group relative overflow-hidden rounded-3xl cursor-pointer shadow-xl transition-all duration-300 hover-lift hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 border border-slate-200/80 dark:border-slate-800 ${
+                onClick={() => handleCardClick(card.title, card.path, (card as any).externalUrl)}
+                className={`group p-6 rounded-2xl transition-all duration-300 cursor-pointer shadow-lg flex flex-col justify-between border border-slate-200/80 dark:border-slate-800 ${
                   isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
+                } ${
+                  isExternal
+                    ? 'hover:shadow-2xl hover:shadow-amber-500/20 hover:ring-2 hover:ring-amber-500 hover:scale-[1.02]'
+                    : card.active
+                    ? 'hover:shadow-2xl hover:shadow-blue-500/20 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02]'
+                    : 'hover:shadow-2xl hover:scale-[1.01]'
                 }`}
               >
-                <div className="grid grid-cols-1 md:grid-cols-12 items-center min-h-[260px] sm:min-h-[290px]">
-                  {/* Left Content Area */}
-                  <div className="p-8 sm:p-10 lg:p-12 md:col-span-7 z-10 space-y-4">
-                    <h3
-                      className={`text-2xl sm:text-3xl lg:text-4xl font-heading font-black tracking-tight transition-colors ${
-                        isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div
+                      className={`h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-md ${
+                        card.active ? (isExternal ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30' : 'bg-blue-600 text-white shadow-lg') : (card as any).color
                       }`}
                     >
-                      {card.title}
+                      {IconComponent && <IconComponent className="h-6 w-6" />}
+                    </div>
+                    {isExternal ? (
+                      <Badge variant="primary" size="sm" className="bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md flex items-center gap-1">
+                        <span>Live DRRM Portal</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </Badge>
+                    ) : card.active ? (
+                      <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md">
+                        {t('home.activePortal')}
+                      </Badge>
+                    ) : (
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-slate-100 text-slate-600'}`}>
+                        {t('home.qcService')}
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className={`text-base font-extrabold transition-colors flex items-center gap-1.5 ${isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'}`}>
+                      <span>{card.title}</span>
+                      {isExternal && <ExternalLink className="h-4 w-4 opacity-75 group-hover:opacity-100 text-amber-500 shrink-0" />}
                     </h3>
-                    <p
-                      className={`text-sm sm:text-base lg:text-lg leading-relaxed font-semibold ${
-                        isDark ? 'text-slate-300' : 'text-slate-600'
-                      }`}
-                    >
+                    <p className={`text-xs leading-relaxed mt-2 font-medium ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                       {card.description}
                     </p>
-                  </div>
-
-                  {/* Right Image Area with CSS Mask Image for flawless seamless fade without lines */}
-                  <div className="md:col-span-5 h-64 sm:h-72 md:h-full min-h-[240px] md:min-h-[290px] relative overflow-hidden flex items-center justify-center">
-                    <img
-                      src="/ScholarHat.webp"
-                      alt="Scholarship Graduation Hat"
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (target.src.includes('ScholarHat.webp')) {
-                          target.src = '/ScholarHat.png';
-                        }
-                      }}
-                      className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-110 animate-float-slow"
-                      style={{
-                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
-                        maskImage: 'linear-gradient(to right, transparent 0%, rgba(0,0,0,0.4) 15%, rgba(0,0,0,1) 40%, rgba(0,0,0,1) 100%)',
-                      }}
-                    />
                   </div>
                 </div>
               </div>
