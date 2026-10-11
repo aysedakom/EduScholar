@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  GraduationCap,
   Users,
   FileText,
   Heart,
@@ -456,10 +455,7 @@ export const QCeServicesHomePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-4 relative z-10">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="h-12 w-12 rounded-2xl flex items-center justify-center font-bold shrink-0 shadow-lg bg-blue-600 text-white">
-                        <GraduationCap className="h-6 w-6" />
-                      </div>
+                    <div className="flex items-start justify-end gap-3">
                       <Badge variant="primary" size="sm" className="bg-blue-600 text-white font-extrabold text-[10px] px-2.5 py-1 shadow-md">
                         {t('home.activePortal')}
                       </Badge>
