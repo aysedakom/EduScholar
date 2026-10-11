@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Inbox, X } from 'lucide-react';
+import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Inbox, X, User } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
@@ -439,6 +439,452 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
     }
   };
 
+  // When an applicant is selected for evaluation, render the dedicated full-page Evaluation Desk workspace
+  if (selectedApp) {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+        {/* Top Navigation & Workspace Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-soft">
+          <div className="flex items-start sm:items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedApp(null)}
+              className="font-bold text-xs flex items-center gap-1.5 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer shrink-0"
+              leftIcon={<ArrowLeft className="h-4 w-4" />}
+            >
+              Back to Review Queue
+            </Button>
+            <div>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <h1 className="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
+                  Evaluation Desk: {selectedApp.studentName}
+                </h1>
+                <Badge variant={selectedApp.status === 'Approved' ? 'success' : selectedApp.status === 'Rejected' ? 'destructive' : 'warning'}>
+                  {selectedApp.status}
+                </Badge>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                <span className="font-semibold text-slate-900 dark:text-slate-200">Application Code:</span>
+                <code className="bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-blue-600 dark:text-blue-400 font-bold">{selectedApp.id}</code>
+                <span>•</span>
+                <span>Track: <strong className="text-slate-900 dark:text-white">{selectedApp.scholarshipTitle}</strong></span>
+              </p>
+            </div>
+          </div>
+
+          {/* Quick Action Buttons in Top Header */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 lg:pt-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setDocViewerApp(selectedApp)}
+              className="font-bold text-xs"
+              leftIcon={<FileText className="h-4 w-4" />}
+            >
+              Inspect {selectedApp.documentsUploaded.length} Attachments
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEscalateFraud}
+              className="font-bold text-xs text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40"
+              leftIcon={<AlertTriangle className="h-4 w-4" />}
+            >
+              Escalate to Audit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowRevisionModal(true)}
+              className="font-bold text-xs text-amber-600 dark:text-amber-400 border-amber-300 hover:bg-amber-50"
+              leftIcon={<AlertTriangle className="h-4 w-4" />}
+            >
+              5-Day Revision
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleReject(selectedApp.id)}
+              className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50"
+              leftIcon={<XCircle className="h-4 w-4" />}
+            >
+              Reject
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleApprove(selectedApp.id)}
+              className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
+              leftIcon={<CheckCircle2 className="h-4 w-4" />}
+            >
+              Approve Application
+            </Button>
+          </div>
+        </div>
+
+        {/* Quick Metrics & Financial Grant Ribbon */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Student ID Number</span>
+            <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block">{selectedApp.studentId}</span>
+          </Card>
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">General GWA (Weighted Average)</span>
+            <span className={`text-base font-extrabold mt-1 block ${selectedApp.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+              {selectedApp.gpa.toFixed(2)}
+            </span>
+          </Card>
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Term Grant Allocation</span>
+            <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
+              {formatCurrency(selectedApp.amount)} <span className="text-xs font-normal text-slate-500">/ semester</span>
+            </span>
+          </Card>
+          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Workflow Status</span>
+            <span className="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-1 block">
+              {selectedApp.status}
+            </span>
+          </Card>
+        </div>
+
+        {/* Main 2-Column Full-Page Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Automated Ingestion & Submitted Profile (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Phase 2: Automated Ingestion & Fraud Pre-Check Inspection Card */}
+            <Card className="bg-blue-50/70 dark:bg-slate-900 border-blue-200 dark:border-slate-800">
+              <CardHeader className="border-b border-blue-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-blue-950 dark:text-blue-200 flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    Automated Ingestion & Fraud Pre-Check
+                  </span>
+                  <Badge variant="success" className="text-[10px] py-0.5">
+                    Pre-Check Passed
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 font-semibold text-[11px]">MIME & Hash Check</p>
+                      <p className="text-[10px] text-slate-400">SHA-256 cryptographic check</p>
+                    </div>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">✅ Clean</span>
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 font-semibold text-[11px]">OCR Grade Slip</p>
+                      <p className="text-[10px] text-slate-400">Confidence match ({selectedApp.gpa.toFixed(2)})</p>
+                    </div>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">✅ 97.4% Match</span>
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 font-semibold text-[11px]">QC Residency & QCID</p>
+                      <p className="text-[10px] text-slate-400">Cross-reference municipal records</p>
+                    </div>
+                    <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">✅ Validated</span>
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 flex items-center justify-between shadow-2xs">
+                    <div>
+                      <p className="text-slate-500 dark:text-slate-400 font-semibold text-[11px]">School Registry Match</p>
+                      <p className="text-[10px] text-slate-400">Accreditation registry</p>
+                    </div>
+                    <span className={`font-extrabold text-xs ${selectedApp.school?.includes('Other') ? 'text-amber-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                      {selectedApp.school?.includes('Other') ? '⚠️ Unlisted School' : '✅ DepEd/CHED Verified'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Applicant Profile & Submitted Form Breakdown */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4 text-primary" />
+                  <h3 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                    Detailed Applicant Profile & Submitted Data
+                  </h3>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-xs">
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Contact / Mobile</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.formData?.mobileNumber || selectedApp.phone || 'N/A'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Barangay & District</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.formData?.barangay || 'Mariana'}, District {selectedApp.formData?.district || '4'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Annual Household Income</span>
+                    <span className="font-bold text-emerald-600 text-sm mt-0.5 block">
+                      {selectedApp.formData?.annualFamilyIncome ? `₱${Number(selectedApp.formData.annualFamilyIncome).toLocaleString()}` : '₱180,000.00'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Academic Level & Semester</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.formData?.yearLevel || '1st Year'} ({selectedApp.formData?.semester || '1st Sem'})
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">Disbursement Channel</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.formData?.payoutMethod || 'Landbank ATM Cash Card'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">4Ps / Solo Parent Status</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.formData?.is4PsBeneficiary ? '4Ps Registered' : 'Non-4Ps'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-100 dark:border-slate-800 sm:col-span-2 md:col-span-3">
+                    <span className="text-[10px] text-slate-400 uppercase font-bold block">School & Degree Program</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200 text-sm mt-0.5 block">
+                      {selectedApp.school || 'Unspecified'} — {selectedApp.program || 'General Academic Course'}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Compliance Flags If Present */}
+            {selectedApp.complianceFlags.length > 0 && (
+              <div className="p-4 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-2xl space-y-2">
+                <span className="font-bold text-rose-900 dark:text-rose-200 flex items-center gap-1.5 text-xs">
+                  <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400" /> Compliance Flags Detected:
+                </span>
+                <ul className="list-disc pl-5 text-rose-800 dark:text-rose-300 space-y-1 text-xs">
+                  {selectedApp.complianceFlags.map((flag, idx) => (
+                    <li key={idx}>{flag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Attachments & Evaluator Committee Decision (5 Cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Uploaded Documents Dossier */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-3 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <h3 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                    Attached Documents ({selectedApp.documentsUploaded.length})
+                  </h3>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setDocViewerApp(selectedApp)}
+                  className="font-bold text-xs"
+                >
+                  View All
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <div className="space-y-2.5">
+                  {selectedApp.documentsUploaded.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No attached documents found.</p>
+                  ) : (
+                    selectedApp.documentsUploaded.map((doc, idx) => (
+                      <div
+                        key={doc.id || idx}
+                        onClick={() => setDocViewerApp(selectedApp)}
+                        className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-blue-50/60 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700/80 flex items-center justify-between cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="h-8 w-8 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <FileText className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{doc.label || doc.name}</p>
+                            <p className="text-[10px] text-slate-400">{doc.category || 'Verification Document'} • {doc.size || 'PDF'}</p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 shrink-0 ml-2">Inspect →</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Committee Evaluation Notes & Decision Panel */}
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
+              <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 className="font-heading font-extrabold text-sm text-slate-900 dark:text-white">
+                  Evaluator Notes & Committee Resolution
+                </h3>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-4">
+                <div className="space-y-1.5">
+                  <label className="font-bold text-xs text-slate-800 dark:text-slate-200 block">
+                    Evaluation Justification & Remarks:
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={reviewNotes}
+                    onChange={(e) => setReviewNotes(e.target.value)}
+                    placeholder="Enter evaluation justification, verified GWA grades, or reason for action..."
+                    className="w-full p-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 resize-none text-xs placeholder:text-slate-400"
+                  />
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowRevisionModal(true)}
+                      className="font-bold text-xs text-amber-600 dark:text-amber-400 border-amber-300 hover:bg-amber-50 justify-center"
+                      leftIcon={<AlertTriangle className="h-4 w-4" />}
+                    >
+                      5-Day Revision
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleEscalateFraud}
+                      className="font-bold text-xs text-amber-700 dark:text-amber-300 border-amber-300 hover:bg-amber-50 justify-center"
+                      leftIcon={<AlertTriangle className="h-4 w-4" />}
+                    >
+                      Escalate to Audit
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReject(selectedApp.id)}
+                      className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50 justify-center"
+                      leftIcon={<XCircle className="h-4 w-4" />}
+                    >
+                      Reject Application
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleApprove(selectedApp.id)}
+                      className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs justify-center"
+                      leftIcon={<CheckCircle2 className="h-4 w-4" />}
+                    >
+                      Approve Application
+                    </Button>
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedApp(null)}
+                    className="w-full font-bold text-xs text-slate-500 hover:text-slate-700 justify-center"
+                  >
+                    Close & Return to Queue
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Interactive Document Attachment Viewer Modal */}
+        {docViewerApp && (
+          <DocumentAttachmentViewerModal
+            isOpen={!!docViewerApp}
+            onClose={() => setDocViewerApp(null)}
+            applicantId={docViewerApp.id}
+            applicantName={docViewerApp.studentName}
+            programTitle={docViewerApp.scholarshipTitle}
+            studentSchool={docViewerApp.school}
+            studentCourse={docViewerApp.program}
+            studentGpa={docViewerApp.gpa}
+            documents={docViewerApp.documentsUploaded as any}
+            onApproveApplication={() => handleApprove(docViewerApp.id)}
+            onRejectApplication={() => handleReject(docViewerApp.id)}
+          />
+        )}
+
+        {/* Phase 4: 5-Day Document Revision Request Modal */}
+        {showRevisionModal && selectedApp && (
+          <Modal
+            isOpen={showRevisionModal}
+            onClose={() => setShowRevisionModal(false)}
+            title="Request 5-Day Document Amendment (Phase 4 Sub-Flow)"
+            description={`Applicant: ${selectedApp.studentName} (${selectedApp.id}) • Target missing or unclear requirement`}
+            footer={
+              <div className="flex items-center justify-end gap-2 w-full pt-2">
+                <Button variant="outline" size="sm" onClick={() => setShowRevisionModal(false)}>
+                  Cancel
+                </Button>
+                <Button variant="primary" size="sm" onClick={handleRequestRevision} className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
+                  Send 5-Day Amendment Notice
+                </Button>
+              </div>
+            }
+          >
+            <div className="space-y-4 text-xs">
+              <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200">
+                <p className="font-bold">5-Day Grace Period Policy:</p>
+                <p className="text-[11px] mt-0.5">
+                  The applicant will receive an urgent in-app and email alert with a 5-day countdown timer. Prior entries are preserved—the applicant only needs to upload the targeted missing attachment.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-200">Target Incomplete Requirement *</label>
+                <select
+                  value={revisionDocType}
+                  onChange={(e) => setRevisionDocType(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  <option value="Proof of Household Income / Indigency">Proof of Household Income / Indigency (ITR or Barangay Certificate)</option>
+                  <option value="Official Transcript / Certified Grades (COG)">Official Transcript / Certified Grades (COG / Form 137)</option>
+                  <option value="Valid School ID / QC Resident ID">Valid School ID / QC Resident ID</option>
+                  <option value="Barangay Certificate of Residency">Barangay Certificate of Residency</option>
+                  <option value="Certificate of Enrollment (Unlisted School)">Certificate of Enrollment (For Unlisted School Validation)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-200">Specific Evaluator Instructions for Student</label>
+                <textarea
+                  rows={3}
+                  value={revisionDetails}
+                  onChange={(e) => setRevisionDetails(e.target.value)}
+                  placeholder="e.g. The uploaded income certificate was blurred or cropped. Please upload a clear, signed copy with the barangay seal visible."
+                  className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                />
+              </div>
+            </div>
+          </Modal>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 animate-in fade-in duration-300">
       {/* Header Banner */}
@@ -722,6 +1168,9 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           applicantId={docViewerApp.id}
           applicantName={docViewerApp.studentName}
           programTitle={docViewerApp.scholarshipTitle}
+          studentSchool={docViewerApp.school}
+          studentCourse={docViewerApp.program}
+          studentGpa={docViewerApp.gpa}
           documents={docViewerApp.documentsUploaded as any}
           onApproveApplication={() => handleApprove(docViewerApp.id)}
           onRejectApplication={() => handleReject(docViewerApp.id)}
@@ -738,253 +1187,6 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
           }}
           recipient={noticeRecipient}
         />
-      )}
-
-      {/* Comprehensive Evaluation Decision Modal */}
-      {selectedApp && (
-        <Modal
-          isOpen={!!selectedApp}
-          onClose={() => setSelectedApp(null)}
-          title={`Evaluation Desk: ${selectedApp.studentName}`}
-          description={`Application Code: ${selectedApp.id} • Track: ${selectedApp.scholarshipTitle}`}
-          footer={
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between w-full gap-2 pt-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDocViewerApp(selectedApp)}
-                  className="font-bold text-xs"
-                  leftIcon={<FileText className="h-4 w-4" />}
-                >
-                  Inspect {selectedApp.documentsUploaded.length} Attachments
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleEscalateFraud}
-                  className="font-bold text-xs text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40"
-                  leftIcon={<AlertTriangle className="h-4 w-4" />}
-                >
-                  Escalate to Audit
-                </Button>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowRevisionModal(true)}
-                  className="font-bold text-xs text-amber-600 dark:text-amber-400 border-amber-300 hover:bg-amber-50"
-                  leftIcon={<AlertTriangle className="h-4 w-4" />}
-                >
-                  5-Day Revision
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleReject(selectedApp.id)}
-                  className="font-bold text-xs text-rose-600 border-rose-200 hover:bg-rose-50"
-                  leftIcon={<XCircle className="h-4 w-4" />}
-                >
-                  Reject
-                </Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleApprove(selectedApp.id)}
-                  className="font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-                  leftIcon={<CheckCircle2 className="h-4 w-4" />}
-                >
-                  Approve Application
-                </Button>
-              </div>
-            </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            {/* Phase 2: Automated Ingestion & Fraud Pre-Check Inspection Card */}
-            <div className="p-3.5 bg-blue-50/80 dark:bg-slate-800/80 rounded-2xl border border-blue-200/90 dark:border-slate-700 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-950 dark:text-blue-200 flex items-center gap-1.5">
-                  <ShieldAlert className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  Automated Ingestion & Fraud Pre-Check
-                </span>
-                <Badge variant="success" className="text-[9px] py-0">
-                  Pre-Check Passed
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
-                <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-slate-500 font-semibold">MIME & SHA-256 Hash Check</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">✅ Enforced & Clean</span>
-                </div>
-                <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-slate-500 font-semibold">OCR Grade Slip Extraction</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">✅ 97.4% Match ({selectedApp.gpa.toFixed(2)})</span>
-                </div>
-                <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-slate-500 font-semibold">QC Residency & QCID Cross-Check</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400">✅ Validated (0 Duplicates)</span>
-                </div>
-                <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-slate-500 font-semibold">School Registry Match</span>
-                  <span className={`font-extrabold ${selectedApp.school?.includes('Other') ? 'text-amber-600' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                    {selectedApp.school?.includes('Other') ? '⚠️ Unlisted School (Exception Flow)' : '✅ DepEd/CHED Verified'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-              <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Student ID</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">{selectedApp.studentId}</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">General GWA</span>
-                <span className={`font-bold ${selectedApp.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}`}>
-                  {selectedApp.gpa.toFixed(2)}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Term Grant Package</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(selectedApp.amount)} / sem</span>
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Current Status</span>
-                <span className="font-bold text-blue-600 dark:text-blue-400">{selectedApp.status}</span>
-              </div>
-            </div>
-
-            {/* Applicant Profile & Submitted Form Breakdown */}
-            {selectedApp.formData && Object.keys(selectedApp.formData).length > 0 && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
-                <span className="font-extrabold text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                  Detailed Applicant Profile & Submitted Form Data
-                </span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">Phone / Mobile</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedApp.formData.mobileNumber || selectedApp.phone || 'N/A'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">Barangay & District</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedApp.formData.barangay || 'Batasan Hills'}, District {selectedApp.formData.district || '2'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">Annual Household Income</span>
-                    <span className="font-bold text-emerald-600">
-                      {selectedApp.formData.annualFamilyIncome ? `₱${Number(selectedApp.formData.annualFamilyIncome).toLocaleString()}` : '₱180,000.00'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">Year Level / Term</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedApp.formData.yearLevel || '3rd Year'} ({selectedApp.formData.semester || '1st Sem'})
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">Disbursement Channel</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedApp.formData.payoutMethod || 'Landbank ATM Cash Card'}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 font-bold block">4Ps / Solo Parent Status</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedApp.formData.is4PsBeneficiary ? '4Ps Registered' : 'Non-4Ps'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {selectedApp.complianceFlags.length > 0 && (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl space-y-1">
-                <span className="font-bold text-rose-900 dark:text-rose-200 flex items-center gap-1.5">
-                  <ShieldAlert className="h-4 w-4 text-rose-600 dark:text-rose-400" /> Compliance Flags Detected:
-                </span>
-                <ul className="list-disc pl-5 text-rose-800 dark:text-rose-300 space-y-0.5">
-                  {selectedApp.complianceFlags.map((flag, idx) => (
-                    <li key={idx}>{flag}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <label className="font-bold text-slate-800 dark:text-slate-200 block">Evaluator Notes & Committee Resolution:</label>
-              <textarea
-                rows={3}
-                value={reviewNotes}
-                onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="Enter evaluation justification, verified grades, or reason for action..."
-                className="w-full p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 resize-none text-xs placeholder:text-slate-400"
-              />
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Phase 4: 5-Day Document Revision Request Modal */}
-      {showRevisionModal && selectedApp && (
-        <Modal
-          isOpen={showRevisionModal}
-          onClose={() => setShowRevisionModal(false)}
-          title="Request 5-Day Document Amendment (Phase 4 Sub-Flow)"
-          description={`Applicant: ${selectedApp.studentName} (${selectedApp.id}) • Target missing or unclear requirement`}
-          footer={
-            <div className="flex items-center justify-end gap-2 w-full pt-2">
-              <Button variant="outline" size="sm" onClick={() => setShowRevisionModal(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" size="sm" onClick={handleRequestRevision} className="bg-amber-600 hover:bg-amber-700 text-white font-bold">
-                Send 5-Day Amendment Notice
-              </Button>
-            </div>
-          }
-        >
-          <div className="space-y-4 text-xs">
-            <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-amber-900 dark:text-amber-200">
-              <p className="font-bold">5-Day Grace Period Policy:</p>
-              <p className="text-[11px] mt-0.5">
-                The applicant will receive an urgent in-app and email alert with a 5-day countdown timer. Prior entries are preserved—the applicant only needs to upload the targeted missing attachment.
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-200">Target Incomplete Requirement *</label>
-              <select
-                value={revisionDocType}
-                onChange={(e) => setRevisionDocType(e.target.value)}
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                <option value="Proof of Household Income / Indigency">Proof of Household Income / Indigency (ITR or Barangay Certificate)</option>
-                <option value="Official Transcript / Certified Grades (COG)">Official Transcript / Certified Grades (COG / Form 137)</option>
-                <option value="Valid School ID / QC Resident ID">Valid School ID / QC Resident ID</option>
-                <option value="Barangay Certificate of Residency">Barangay Certificate of Residency</option>
-                <option value="Certificate of Enrollment (Unlisted School)">Certificate of Enrollment (For Unlisted School Validation)</option>
-              </select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-200">Specific Evaluator Instructions for Student</label>
-              <textarea
-                rows={3}
-                value={revisionDetails}
-                onChange={(e) => setRevisionDetails(e.target.value)}
-                placeholder="e.g. The uploaded income certificate was blurred or cropped. Please upload a clear, signed copy with the barangay seal visible."
-                className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs outline-none focus:ring-2 focus:ring-amber-500 resize-none"
-              />
-            </div>
-          </div>
-        </Modal>
       )}
     </div>
   );

@@ -19,6 +19,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { formatCurrency } from '../../utils/cn';
+import { useAuth } from '../../context/AuthContext';
 
 interface PartneredScholarship {
   id: string;
@@ -256,6 +257,12 @@ const PARTNER_SCHOOLS: PartnerSchool[] = [
 
 export const PartnerSchoolDatabasePage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isStaffOrAdmin =
+    user?.role === 'admin' ||
+    user?.role === 'system_admin' ||
+    user?.role === 'school_coordinator' ||
+    user?.role === 'supervisor';
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('All');
   const [expandedSchools, setExpandedSchools] = useState<Record<string, boolean>>({});
@@ -439,13 +446,15 @@ export const PartnerSchoolDatabasePage: React.FC = () => {
                               <span className="text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md">
                                 {sch.type}
                               </span>
-                              <button
-                                onClick={() => handleApplyScholarship(sch.title)}
-                                className="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
-                              >
-                                Apply for Scholarship
-                                <ArrowRight className="h-3 w-3" />
-                              </button>
+                              {!isStaffOrAdmin && (
+                                <button
+                                  onClick={() => handleApplyScholarship(sch.title)}
+                                  className="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
+                                >
+                                  Apply for Scholarship
+                                  <ArrowRight className="h-3 w-3" />
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}

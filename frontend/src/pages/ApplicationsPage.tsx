@@ -285,9 +285,11 @@ export const ApplicationsPage: React.FC = () => {
           <Button variant="outline" size="sm" onClick={() => navigate('/documents')}>
             Document Vault
           </Button>
-          <Button variant="primary" size="sm" onClick={() => navigate('/scholar-prog-available')} className="font-bold">
-            Apply for Scholarship
-          </Button>
+          {!isStaffOrCoordinator && (
+            <Button variant="primary" size="sm" onClick={() => navigate('/scholar-prog-available')} className="font-bold">
+              Apply for Scholarship
+            </Button>
+          )}
         </div>
       </div>
 
@@ -302,9 +304,11 @@ export const ApplicationsPage: React.FC = () => {
               <p className="text-xs text-slate-500">
                 You haven't submitted any scholarship applications for the current academic year yet.
               </p>
-              <Button variant="primary" size="sm" onClick={() => navigate('/scholar-prog-available')} className="font-bold">
-                Browse Open Programs
-              </Button>
+              {!isStaffOrCoordinator && (
+                <Button variant="primary" size="sm" onClick={() => navigate('/scholar-prog-available')} className="font-bold">
+                  Browse Open Programs
+                </Button>
+              )}
             </div>
           </Card>
         ) : (
@@ -462,14 +466,16 @@ export const ApplicationsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate('/scholar-prog-available')}
-                      className="border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-bold text-xs shrink-0"
-                    >
-                      Browse Other Programs
-                    </Button>
+                    {!isStaffOrCoordinator && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate('/scholar-prog-available')}
+                        className="border-rose-300 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/40 font-bold text-xs shrink-0"
+                      >
+                        Browse Other Programs
+                      </Button>
+                    )}
                   </div>
                 )}
 

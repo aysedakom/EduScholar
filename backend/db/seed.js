@@ -12,7 +12,7 @@ async function seed() {
   console.log('[seed] Seeding primary official system accounts...');
   const officialAccounts = [
     {
-      name: 'ADMIN / System Administrator',
+      name: 'ADMIN',
       email: 'support.edu2026@gmail.com',
       role: 'admin',
       dept: 'Quezon City Youth Development Office (QCYDO) & IT Administration',

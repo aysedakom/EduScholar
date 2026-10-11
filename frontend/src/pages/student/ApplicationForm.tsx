@@ -705,6 +705,8 @@ export const ApplicationForm: React.FC = () => {
             name: docMeta?.name,
             size: docMeta?.size,
             uploadedAt: docMeta?.uploadedAt,
+            fileData: docMeta?.dataUrl,
+            mimeType: docMeta?.type,
           })),
           notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} required documents submitted. Documents queued for administrative verification.`,
           remarks: 'Application submitted via student portal. Documents and credentials queued for initial secretariat review.',
@@ -762,6 +764,8 @@ export const ApplicationForm: React.FC = () => {
           name: docMeta?.name,
           size: docMeta?.size,
           uploadedAt: docMeta?.uploadedAt,
+          fileData: docMeta?.dataUrl,
+          mimeType: docMeta?.type,
         })),
         notes: `Submitted for ${selectedProgram.title}. All ${activeRequiredDocs.length} program-specific documentary attachments attached. Under review by QCYDO Screening Committee.`,
       };

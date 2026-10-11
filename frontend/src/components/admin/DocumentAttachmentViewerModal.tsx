@@ -88,7 +88,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
   const [flagInputModal, setFlagInputModal] = useState(false);
   const [flagReasonInput, setFlagReasonInput] = useState('');
   const [jsonViewTab, setJsonViewTab] = useState<'structured' | 'raw'>('structured');
-  const [activeMediaView, setActiveMediaView] = useState<'canvas' | 'raw_image'>('canvas');
+  const [activeMediaView, setActiveMediaView] = useState<'canvas' | 'raw_image'>('raw_image');
   const [isManuallyVerified, setIsManuallyVerified] = useState(false);
 
   if (!isOpen || documents.length === 0) return null;

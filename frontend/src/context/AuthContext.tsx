@@ -386,7 +386,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (err: any) {
       const emailLower = (email || '').toLowerCase().trim();
       const officialGovernanceEmails: Record<string, any> = {
-        'support.edu2026@gmail.com': { id: '1', name: 'ADMIN / System Administrator', role: 'admin', email: 'support.edu2026@gmail.com' },
+        'support.edu2026@gmail.com': { id: '1', name: 'ADMIN', role: 'admin', email: 'support.edu2026@gmail.com' },
         'treasury.edu2026@gmail.com': { id: '2', name: 'City Treasury Disbursing Officer', role: 'treasury', email: 'treasury.edu2026@gmail.com' },
         'sr.edu2026@gmail.com': { id: '3', name: 'John Steaven Balansag', role: 'school_coordinator', email: 'sr.edu2026@gmail.com' },
         'sv.edu2026@gmail.com': { id: '4', name: 'Scholarship Program Supervisor', role: 'supervisor', email: 'sv.edu2026@gmail.com' },

@@ -364,8 +364,8 @@ const login = async (req, res) => {
     // Fallback for official governance accounts if DB record is missing or DB is initializing
     if (!user) {
       const defaultAccounts = {
-        'support.edu2026@gmail.com': { id: 1, name: 'ADMIN / System Administrator', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
-        'sysadmin.edu2026@gmail.com': { id: 1, name: 'ADMIN / System Administrator', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
+        'support.edu2026@gmail.com': { id: 1, name: 'ADMIN', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
+        'sysadmin.edu2026@gmail.com': { id: 1, name: 'ADMIN', role: 'admin', department: 'Quezon City Youth Development Office (QCYDO) & IT Administration', major: 'Scholarship Head & System Administrator' },
         'treasury.edu2026@gmail.com': { id: 2, name: 'City Treasury Disbursing Officer', role: 'treasury', department: 'Quezon City Hall Treasury Office', major: 'Disbursement & Fund Settlement' },
         'sr.edu2026@gmail.com': { id: 3, name: 'John Steaven Balansag', role: 'school_coordinator', department: 'Quezon City University & Partner Schools', major: 'University Registrar & Endorsement' },
         'sv.edu2026@gmail.com': { id: 4, name: 'Scholarship Program Supervisor', role: 'supervisor', department: 'Quezon City Youth Development Office (QCYDO)', major: 'Evaluation Executive Reviewer' },

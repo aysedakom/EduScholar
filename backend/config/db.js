@@ -461,7 +461,7 @@ async function ensureTablesForPool(targetPool, label) {
       
       const seedUsers = [
         {
-          name: 'ADMIN / System Administrator',
+          name: 'ADMIN',
           email: 'support.edu2026@gmail.com',
           role: 'admin',
           dept: 'Quezon City Youth Development Office (QCYDO) & IT Administration',

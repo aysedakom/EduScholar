@@ -191,6 +191,7 @@ export function App() {
               {/* Admin, Supervisor & Staff Phase 4 & 8 Routes */}
               <Route element={<ProtectedRoute allowedRoles={['admin', 'supervisor', 'system_admin']} />}>
                 <Route path="/admin/review-queue" element={<ApplicationReviewQueuePage />} />
+                <Route path="/admin/application-review" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/review" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/queue" element={<ApplicationReviewQueuePage />} />
                 <Route path="/admin/applications" element={<ApplicationReviewQueuePage />} />
