@@ -257,21 +257,21 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
       </div>
 
       {/* Main Full-Page Inspection Canvas */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-[calc(100vh-140px)]">
-          {/* Left Side: Attachment Index Drawer (4 Cols) */}
-          <div className="lg:col-span-4 space-y-3 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-4 lg:pb-0 lg:pr-4 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Submitted Attachments ({documents.length})
-            </span>
-            <span className="text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-              Click to Open File
-            </span>
-          </div>
+      <div className="flex-1 overflow-hidden p-3 sm:p-4 flex flex-col min-h-0">
+        <div className="flex flex-col lg:flex-row gap-3 sm:gap-4 flex-1 min-h-0">
+          {/* Left Side: Attachment Index Drawer (Compact, w-72 on desktop) */}
+          <div className="w-full lg:w-72 xl:w-80 shrink-0 space-y-2.5 flex flex-col border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-slate-800 pb-3 lg:pb-0 lg:pr-3 bg-white dark:bg-slate-900 p-3 sm:p-3.5 rounded-2xl shadow-xs overflow-hidden">
+            <div className="flex items-center justify-between shrink-0">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Submitted Attachments ({documents.length})
+              </span>
+              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                Click to Open File
+              </span>
+            </div>
 
-          {/* Document list */}
-          <div className="space-y-2 max-h-[430px] overflow-y-auto pr-1">
+            {/* Document list */}
+            <div className="space-y-1.5 flex-1 overflow-y-auto pr-1 min-h-0">
             {documents.map((doc, idx) => {
               const isSelected = idx === selectedIndex;
               const isVer = verifiedDocs[doc.id];
@@ -288,7 +288,8 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                     setSelectedIndex(idx);
                     setZoomLevel(100);
                     setRotation(0);
-                    setActiveMediaView('canvas');
+                    const hasImg = doc.fileData && (doc.fileData.startsWith('data:image/') || doc.fileData.startsWith('http'));
+                    setActiveMediaView(hasImg ? 'raw_image' : 'canvas');
                   }}
                   className={`w-full text-left p-3 rounded-2xl border transition-all flex items-start gap-3 cursor-pointer ${
                     isSelected
@@ -353,18 +354,18 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
           </div>
 
           {/* Quick Summary Applicant Credentials */}
-          <div className="p-3.5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-1.5 text-xs">
+          <div className="p-2.5 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1 text-[11px] shrink-0">
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Applicant:</span>
-              <span className="font-bold text-slate-900 dark:text-white">{applicantName}</span>
+              <span className="font-bold text-slate-900 dark:text-white truncate max-w-[150px]">{applicantName}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">School / College:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">{studentSchool}</span>
+              <span className="text-slate-500 dark:text-slate-400">School:</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">{studentSchool}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Course / Major:</span>
-              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[170px]">{studentCourse}</span>
+              <span className="text-slate-500 dark:text-slate-400">Course:</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[150px]">{studentCourse}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Recorded GWA:</span>
@@ -373,10 +374,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
           </div>
         </div>
 
-        {/* Right Side: Document Canvas & Interactive Previewer (8 Cols) */}
-        <div className="lg:col-span-8 flex flex-col justify-between space-y-3">
+        {/* Right Side: Document Canvas & Interactive Previewer */}
+        <div className="flex-1 min-w-0 flex flex-col space-y-2.5 min-h-0">
           {/* Top Inspector Controls Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+          <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
             <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
@@ -544,22 +545,22 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
           )}
 
           {/* Dynamic Visual Document Canvas Preview (Renders Actual Content Inside) */}
-          <div className="relative flex-1 bg-slate-950 dark:bg-black rounded-3xl border border-slate-800 p-4 sm:p-6 overflow-auto max-h-[510px] flex items-center justify-center shadow-2xl">
+          <div className="relative flex-1 bg-slate-950 dark:bg-black rounded-2xl border border-slate-800 p-2.5 sm:p-4 overflow-auto min-h-0 flex items-start justify-center shadow-2xl">
             
             {/* RAW UPLOADED IMAGE VIEW (if active) */}
             {hasRealImageSource && activeMediaView === 'raw_image' ? (
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="flex items-center justify-center max-w-full"
+                className="flex items-center justify-center max-w-full my-2 sm:my-3"
               >
                 <img
                   src={currentDoc.fileData}
                   alt={currentDoc.name}
-                  className="max-h-[460px] object-contain rounded-xl shadow-2xl border border-slate-700 bg-white"
+                  className="max-h-[78vh] object-contain rounded-xl shadow-2xl border border-slate-700 bg-white"
                 />
               </div>
             ) : isJson ? (
@@ -567,10 +568,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-slate-900 text-slate-100 rounded-2xl shadow-2xl p-6 space-y-4 border border-slate-700 font-sans"
+                className="w-full max-w-4xl bg-slate-900 text-slate-100 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-4 border border-slate-700 font-sans my-2 sm:my-3"
               >
                 <div className="flex items-center justify-between border-b border-slate-700 pb-3">
                   <div className="flex items-center gap-2">
@@ -636,7 +637,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                     </div>
                   </div>
                 ) : (
-                  <pre className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-emerald-300 overflow-x-auto max-h-[260px]">
+                  <pre className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-[11px] font-mono text-emerald-300 overflow-x-auto max-h-[350px]">
                     {JSON.stringify(sampleJsonData, null, 2)}
                   </pre>
                 )}
@@ -646,10 +647,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-[#fffdfa] text-slate-900 rounded-xl shadow-2xl p-8 space-y-5 border-4 border-double border-amber-900/40 font-serif relative"
+                className="w-full max-w-4xl bg-[#fffdfa] text-slate-900 rounded-xl shadow-2xl p-8 sm:p-12 space-y-6 border-4 border-double border-amber-900/40 font-serif relative my-2 sm:my-3"
               >
                 {/* Official Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.06] pointer-events-none text-9xl font-black rotate-[-30deg] uppercase select-none text-slate-900">
@@ -732,10 +733,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-white text-slate-900 rounded-xl shadow-2xl p-7 space-y-4 border-2 border-slate-300 font-sans relative"
+                className="w-full max-w-4xl bg-white text-slate-900 rounded-xl shadow-2xl p-8 sm:p-10 space-y-4 border-2 border-slate-300 font-sans relative my-2 sm:my-3"
               >
                 {/* Official Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-[0.05] pointer-events-none text-8xl font-black rotate-[-25deg] uppercase select-none text-blue-900">
@@ -763,7 +764,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                 </div>
 
                 {/* Student Credentials Strip */}
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div>
                     <span className="text-[9px] uppercase font-bold text-slate-400 block">Student Name</span>
                     <span className="font-bold text-slate-900 truncate block">{applicantName}</span>
@@ -784,66 +785,66 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
 
                 {/* Course Subjects & Grade Breakdown Table */}
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-left text-[11px]">
-                    <thead className="bg-slate-100 text-slate-600 font-bold border-b">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 text-slate-600 font-bold border-b text-[11px]">
                       <tr>
-                        <th className="p-2">Subject Code</th>
-                        <th className="p-2">Descriptive Course Title</th>
-                        <th className="p-2 text-center">Units</th>
-                        <th className="p-2 text-center">Final Grade</th>
-                        <th className="p-2 text-center">Remark</th>
+                        <th className="p-2.5">Subject Code</th>
+                        <th className="p-2.5">Descriptive Course Title</th>
+                        <th className="p-2.5 text-center">Units</th>
+                        <th className="p-2.5 text-center">Final Grade</th>
+                        <th className="p-2.5 text-center">Remark</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT401</td>
-                        <td className="p-2">Capstone Project & Systems Development</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.25</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT401</td>
+                        <td className="p-2.5">Capstone Project & Systems Development</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.25</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT402</td>
-                        <td className="p-2">Information Assurance and Cybersecurity</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.50</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT402</td>
+                        <td className="p-2.5">Information Assurance and Cybersecurity</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.50</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT403</td>
-                        <td className="p-2">Advanced Database Systems & Management</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.50</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT403</td>
+                        <td className="p-2.5">Advanced Database Systems & Management</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.50</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT404</td>
-                        <td className="p-2">Cloud Computing Infrastructure & DevOps</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.75</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT404</td>
+                        <td className="p-2.5">Cloud Computing Infrastructure & DevOps</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.75</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT405</td>
-                        <td className="p-2">Web Application Architecture & RESTful APIs</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.25</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT405</td>
+                        <td className="p-2.5">Web Application Architecture & RESTful APIs</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.25</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                       <tr>
-                        <td className="p-2 font-mono font-bold text-blue-700">IT406</td>
-                        <td className="p-2">Professional Ethics, Governance & IPR</td>
-                        <td className="p-2 text-center">3.0</td>
-                        <td className="p-2 text-center font-bold text-emerald-700">1.50</td>
-                        <td className="p-2 text-center font-bold text-emerald-600">PASSED</td>
+                        <td className="p-2.5 font-mono font-bold text-blue-700">IT406</td>
+                        <td className="p-2.5">Professional Ethics, Governance & IPR</td>
+                        <td className="p-2.5 text-center">3.0</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-700">1.50</td>
+                        <td className="p-2.5 text-center font-bold text-emerald-600">PASSED</td>
                       </tr>
                     </tbody>
                     <tfoot className="bg-blue-50/70 border-t font-bold text-slate-800">
                       <tr>
-                        <td colSpan={2} className="p-2 text-right">TOTAL ENROLLED UNITS & TERM GWA:</td>
-                        <td className="p-2 text-center text-blue-900">18.0</td>
-                        <td className="p-2 text-center font-extrabold text-emerald-700 text-xs">{studentGpa.toFixed(2)} GWA</td>
-                        <td className="p-2 text-center text-emerald-700">HONOR TIER</td>
+                        <td colSpan={2} className="p-2.5 text-right">TOTAL ENROLLED UNITS & TERM GWA:</td>
+                        <td className="p-2.5 text-center text-blue-900">18.0</td>
+                        <td className="p-2.5 text-center font-extrabold text-emerald-700 text-xs">{studentGpa.toFixed(2)} GWA</td>
+                        <td className="p-2.5 text-center text-emerald-700">HONOR TIER</td>
                       </tr>
                     </tfoot>
                   </table>
@@ -862,10 +863,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-[#fafafa] text-slate-900 rounded-xl shadow-2xl p-7 space-y-4 border-2 border-slate-300 font-sans relative"
+                className="w-full max-w-4xl bg-[#fafafa] text-slate-900 rounded-xl shadow-2xl p-8 sm:p-10 space-y-4 border-2 border-slate-300 font-sans relative my-2 sm:my-3"
               >
                 <div className="flex items-center justify-between border-b-2 border-slate-800 pb-3">
                   <div className="flex items-center gap-3">
@@ -915,10 +916,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-[#fffdfa] text-slate-900 rounded-xl shadow-2xl p-8 space-y-5 border-4 border-double border-blue-900/30 font-serif relative"
+                className="w-full max-w-4xl bg-[#fffdfa] text-slate-900 rounded-xl shadow-2xl p-8 sm:p-12 space-y-5 border-4 border-double border-blue-900/30 font-serif relative my-2 sm:my-3"
               >
                 <div className="text-center space-y-1 border-b-2 border-blue-900/30 pb-4">
                   <div className="inline-flex items-center justify-center p-2 rounded-full bg-blue-100 text-blue-800 mb-1">
@@ -938,7 +939,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                   </span>
                 </div>
 
-                <div className="space-y-3 text-xs leading-relaxed text-slate-800 text-justify font-serif">
+                <div className="space-y-3 text-xs sm:text-sm leading-relaxed text-slate-800 text-justify font-serif">
                   <p className="font-bold font-sans">TO THE SCHOLARSHIP SCREENING COMMITTEE:</p>
                   <p>
                     This is to certify that <strong className="font-sans font-bold text-slate-900">{applicantName}</strong> (Student No. <span className="font-mono">{applicantId}</span>) is a student of good moral character and has maintained exemplary civic and academic conduct in this institution.
@@ -971,10 +972,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-white text-slate-900 rounded-xl shadow-2xl p-7 space-y-4 border-2 border-slate-300 font-sans relative"
+                className="w-full max-w-4xl bg-white text-slate-900 rounded-xl shadow-2xl p-8 sm:p-10 space-y-4 border-2 border-slate-300 font-sans relative my-2 sm:my-3"
               >
                 <div className="flex items-center justify-between border-b-2 border-slate-800 pb-3">
                   <div>
@@ -1011,10 +1012,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-2xl shadow-2xl p-6 space-y-4 border border-blue-700 font-sans relative overflow-hidden"
+                className="w-full max-w-3xl bg-gradient-to-br from-blue-900 via-blue-800 to-indigo-950 text-white rounded-2xl shadow-2xl p-7 sm:p-8 space-y-5 border border-blue-700 font-sans relative overflow-hidden my-2 sm:my-3"
               >
                 {/* Card Glow Elements */}
                 <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/20 rounded-full blur-2xl pointer-events-none" />
@@ -1068,10 +1069,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-white text-slate-900 rounded-xl shadow-2xl p-7 space-y-4 border-2 border-slate-300 font-sans relative"
+                className="w-full max-w-4xl bg-white text-slate-900 rounded-xl shadow-2xl p-8 sm:p-10 space-y-4 border-2 border-slate-300 font-sans relative my-2 sm:my-3"
               >
                 <div className="flex items-center justify-between border-b-2 border-slate-800 pb-3">
                   <div className="flex items-center gap-3">
@@ -1115,10 +1116,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-slate-900 text-slate-100 rounded-2xl shadow-2xl p-6 space-y-4 border border-slate-700 font-sans"
+                className="w-full max-w-4xl bg-slate-900 text-slate-100 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-4 border border-slate-700 font-sans my-2 sm:my-3"
               >
                 <div className="flex items-center justify-between border-b border-slate-700 pb-3">
                   <div className="flex items-center gap-2">
@@ -1131,7 +1132,7 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
                   <span className="text-[11px] font-mono text-slate-400">{currentDoc.size || '6.2 KB'}</span>
                 </div>
 
-                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 space-y-3 max-h-[300px] overflow-y-auto leading-relaxed">
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-slate-300 space-y-3 max-h-[400px] overflow-y-auto leading-relaxed">
                   <div className="border-b border-slate-800 pb-2">
                     <p className="text-emerald-400 font-bold text-sm"># Academic Goals & Study Plan (AY 2026-2027)</p>
                     <p className="text-slate-400 text-[11px] mt-0.5">Applicant: {applicantName} • {studentCourse}</p>
@@ -1167,10 +1168,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-white text-slate-900 rounded-2xl shadow-2xl p-7 space-y-4 border border-slate-200 font-sans"
+                className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-2xl p-8 sm:p-10 space-y-4 border border-slate-200 font-sans my-2 sm:my-3"
               >
                 <div className="text-center space-y-1 border-b pb-3">
                   <div className="inline-flex items-center justify-center p-3 rounded-full bg-emerald-50 text-emerald-600 mb-1">
@@ -1200,10 +1201,10 @@ export const DocumentAttachmentViewerModal: React.FC<DocumentAttachmentViewerMod
               <div
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
-                  transformOrigin: 'center center',
+                  transformOrigin: 'top center',
                   transition: 'transform 0.2s ease-out',
                 }}
-                className="w-full max-w-2xl bg-white text-slate-900 rounded-2xl shadow-2xl p-8 space-y-6 border border-slate-200 font-serif relative"
+                className="w-full max-w-4xl bg-white text-slate-900 rounded-2xl shadow-2xl p-8 sm:p-12 space-y-6 border border-slate-200 font-serif relative my-2 sm:my-3"
               >
                 {/* Header */}
                 <div className="text-center border-b-2 border-slate-800 pb-4 space-y-1">
