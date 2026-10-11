@@ -36,8 +36,24 @@ export const createApplication = async (payload: CreateApplicationPayload) => {
   return res;
 };
 
-export const updateApplicationStatus = async (id: string | number, status: string, notes?: string, remarks?: string) => {
-  const res = await api.patch<Application>(`/applications/${id}/status`, { status, notes, remarks });
+export const updateApplicationStatus = async (
+  id: string | number,
+  status: string,
+  notes?: string,
+  remarks?: string,
+  extra?: {
+    assignedProgramId?: string;
+    assignedProgramName?: string;
+    assignedAmount?: number;
+  }
+) => {
+  const payload = {
+    status,
+    notes,
+    remarks,
+    ...(extra || {}),
+  };
+  const res = await api.patch<Application>(`/applications/${id}/status`, payload);
   try {
     appSyncChannel?.postMessage({ type: 'APPLICATION_UPDATED', id, status, timestamp: Date.now() });
   } catch (_) {}

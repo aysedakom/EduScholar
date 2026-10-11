@@ -140,7 +140,7 @@ const create = async (data) => {
   }
 };
 
-const updateStatus = async (id, status, notes, remarks) => {
+const updateStatus = async (id, status, notes, remarks, extra = {}) => {
   try {
     const statusLower = String(status || '').toLowerCase().trim();
     let progress = 33;
@@ -194,6 +194,7 @@ const updateStatus = async (id, status, notes, remarks) => {
       progress = 16;
     }
 
+    const { assignedProgramId, assignedProgramName, assignedAmount } = extra;
     const isNum = !isNaN(Number(id)) && String(id).trim() !== '' && !String(id).includes('-');
     const queryStr = isNum
       ? `UPDATE applications 
@@ -201,6 +202,10 @@ const updateStatus = async (id, status, notes, remarks) => {
              notes = COALESCE($3, notes),
              remarks = COALESCE($4, remarks),
              progress = $5,
+             program_id = COALESCE($6, program_id),
+             title = COALESCE($7, title),
+             program_name = COALESCE($7, program_name),
+             amount = COALESCE($8, amount),
              updated_at = NOW() 
          WHERE id = $1 
          RETURNING *`
@@ -209,11 +214,24 @@ const updateStatus = async (id, status, notes, remarks) => {
              notes = COALESCE($3, notes),
              remarks = COALESCE($4, remarks),
              progress = $5,
+             program_id = COALESCE($6, program_id),
+             title = COALESCE($7, title),
+             program_name = COALESCE($7, program_name),
+             amount = COALESCE($8, amount),
              updated_at = NOW() 
          WHERE reference_id = $1 OR application_code = $1 OR id::text = $1 
          RETURNING *`;
 
-    const result = await pool.query(queryStr, [id, status, notes || null, remarks || null, progress]);
+    const result = await pool.query(queryStr, [
+      id,
+      status,
+      notes || null,
+      remarks || null,
+      progress,
+      assignedProgramId || null,
+      assignedProgramName || null,
+      assignedAmount ? Number(assignedAmount) : null
+    ]);
 
     const updatedApp = result.rows[0];
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Inbox, X, User } from 'lucide-react';
+import { Search, CheckCircle2, XCircle, AlertTriangle, Eye, ShieldAlert, FileText, Send, Layers, ArrowLeft, Inbox, X, User, Award } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card, CardHeader, CardContent } from '../../components/ui/Card';
@@ -208,6 +208,14 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
   // Evaluation Modal State
   const [selectedApp, setSelectedApp] = useState<ReviewApplication | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  const [assignedProgramId, setAssignedProgramId] = useState<string>('');
+
+  // Whenever an applicant is selected for evaluation, initialize their assigned track to their current program
+  useEffect(() => {
+    if (selectedApp) {
+      setAssignedProgramId(selectedApp.programId || '');
+    }
+  }, [selectedApp?.id]);
 
   // 5-Day Revision Request Modal State (Phase 4)
   const [showRevisionModal, setShowRevisionModal] = useState(false);
@@ -286,11 +294,31 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
     const approvedNotes = reviewNotes || 'All documentary attachments verified and approved by QCYDO Review Committee.';
 
+    // Check if admin reclassified or assigned a different track
+    const matchedProgramSpec = ALL_SCHOLARSHIP_PROGRAMS.find(p => p.id === assignedProgramId);
+    const finalProgramId = matchedProgramSpec ? matchedProgramSpec.id : (appRecord?.programId || 'tertiary-academic');
+    const finalProgramTitle = matchedProgramSpec ? matchedProgramSpec.title : (appRecord?.scholarshipTitle || 'Tertiary Academic Scholarship');
+    const finalGrantAmount = matchedProgramSpec ? matchedProgramSpec.termGrantAmount : (appRecord?.amount || 20000);
+
+    const isReclassified = assignedProgramId && appRecord?.programId && assignedProgramId !== appRecord.programId;
+
     if (appRecord?.dbId) {
       try {
-        await updateApplicationStatus(appRecord.dbId, 'Approved', approvedNotes, approvedNotes);
+        await updateApplicationStatus(
+          appRecord.dbId,
+          'Approved',
+          approvedNotes,
+          approvedNotes,
+          {
+            assignedProgramId: finalProgramId,
+            assignedProgramName: finalProgramTitle,
+            assignedAmount: finalGrantAmount,
+          }
+        );
         toast.success(`Application #${id} Approved!`, {
-          description: `Applicant ${appRecord.studentName} has been enrolled into the Student Registry. System notification & award certificate email dispatched.`,
+          description: isReclassified
+            ? `Applicant ${appRecord.studentName} reclassified & enrolled into "${finalProgramTitle}". Notification & certificate dispatched.`
+            : `Applicant ${appRecord.studentName} has been enrolled into the Student Registry. System notification & award certificate email dispatched.`,
           duration: 8000,
         });
       } catch (err) {
@@ -301,7 +329,16 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
 
     setApplications((prev) =>
       prev.map((app) =>
-        app.id === id ? { ...app, status: 'Approved', notes: approvedNotes } : app
+        app.id === id
+          ? {
+              ...app,
+              status: 'Approved',
+              notes: approvedNotes,
+              programId: finalProgramId,
+              scholarshipTitle: finalProgramTitle,
+              amount: finalGrantAmount,
+            }
+          : app
       )
     );
 
@@ -313,6 +350,9 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
         if (activeApp.id === id || activeApp.applicantName === selectedApp?.studentName) {
           activeApp.status = 'Approved';
           activeApp.notes = approvedNotes;
+          activeApp.programId = finalProgramId;
+          activeApp.programName = finalProgramTitle;
+          activeApp.amount = finalGrantAmount;
           localStorage.setItem('qc_active_student_application', JSON.stringify(activeApp));
         }
       }
@@ -534,33 +574,87 @@ export const ApplicationReviewQueuePage: React.FC<ApplicationReviewQueuePageProp
               </Button>
             </div>
           </div>
+
+          {/* Committee Scholarship Track Assignment & Reclassification Strip */}
+          {(() => {
+            const isReassigned = assignedProgramId && selectedApp.programId && assignedProgramId !== selectedApp.programId;
+
+            return (
+              <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-800/40 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 p-4 sm:px-6 rounded-b-3xl flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <div className="h-7 w-7 rounded-lg bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                    <Award className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
+                      Admin Committee Program Assignment:
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Applicant applied for: <strong className="text-slate-700 dark:text-slate-300">{selectedApp.scholarshipTitle}</strong>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {isReassigned && (
+                    <Badge variant="warning" className="text-[10px] font-bold">
+                      Reclassified by Committee
+                    </Badge>
+                  )}
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-2xs">
+                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      Assign Track:
+                    </span>
+                    <select
+                      value={assignedProgramId || selectedApp.programId || 'tertiary-academic'}
+                      onChange={(e) => setAssignedProgramId(e.target.value)}
+                      className="text-xs font-bold text-blue-600 dark:text-blue-400 bg-transparent focus:outline-none cursor-pointer max-w-[280px] truncate"
+                    >
+                      {ALL_SCHOLARSHIP_PROGRAMS.map((prog) => (
+                        <option key={prog.id} value={prog.id} className="text-slate-900 dark:text-white font-medium">
+                          {prog.title} ({formatCurrency(prog.termGrantAmount)}/sem)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Quick Metrics & Financial Grant Ribbon */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
-            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Student ID Number</span>
-            <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block">{selectedApp.studentId}</span>
-          </Card>
-          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
-            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">General GWA (Weighted Average)</span>
-            <span className={`text-base font-extrabold mt-1 block ${selectedApp.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
-              {selectedApp.gpa.toFixed(2)}
-            </span>
-          </Card>
-          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
-            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Term Grant Allocation</span>
-            <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
-              {formatCurrency(selectedApp.amount)} <span className="text-xs font-normal text-slate-500">/ semester</span>
-            </span>
-          </Card>
-          <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
-            <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Workflow Status</span>
-            <span className="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-1 block">
-              {selectedApp.status}
-            </span>
-          </Card>
-        </div>
+        {(() => {
+          const activeSpec = ALL_SCHOLARSHIP_PROGRAMS.find(p => p.id === assignedProgramId);
+          const currentGrant = activeSpec ? activeSpec.termGrantAmount : selectedApp.amount;
+
+          return (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+                <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Student ID Number</span>
+                <span className="text-base font-extrabold text-slate-900 dark:text-white mt-1 block">{selectedApp.studentId}</span>
+              </Card>
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+                <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">General GWA (Weighted Average)</span>
+                <span className={`text-base font-extrabold mt-1 block ${selectedApp.gpa <= 2.5 ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'}`}>
+                  {selectedApp.gpa.toFixed(2)}
+                </span>
+              </Card>
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+                <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Term Grant Allocation</span>
+                <span className="text-base font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
+                  {formatCurrency(currentGrant)} <span className="text-xs font-normal text-slate-500">/ semester</span>
+                </span>
+              </Card>
+              <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 p-4">
+                <span className="text-[11px] text-slate-400 dark:text-slate-400 uppercase font-bold block">Workflow Status</span>
+                <span className="text-base font-extrabold text-blue-600 dark:text-blue-400 mt-1 block">
+                  {selectedApp.status}
+                </span>
+              </Card>
+            </div>
+          );
+        })()}
 
         {/* Main 2-Column Full-Page Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

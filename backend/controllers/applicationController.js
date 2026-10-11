@@ -263,8 +263,12 @@ const createApplication = async (req, res) => {
 // @route  PATCH /api/applications/:id/status
 const updateStatus = async (req, res) => {
   try {
-    const { status, notes, remarks } = req.body;
-    const application = await applicationModel.updateStatus(req.params.id, status, notes, remarks);
+    const { status, notes, remarks, assignedProgramId, assignedProgramName, assignedAmount } = req.body;
+    const application = await applicationModel.updateStatus(req.params.id, status, notes, remarks, {
+      assignedProgramId,
+      assignedProgramName,
+      assignedAmount,
+    });
     if (!application) return res.status(404).json({ message: 'Application not found' });
 
     // Broadcast status change immediately to all connected clients
