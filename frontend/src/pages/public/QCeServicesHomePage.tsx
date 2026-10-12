@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  Heart,
   Activity,
   Building,
   DollarSign,
@@ -123,9 +122,14 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.social.title'),
       description: t('service.social.desc'),
-      icon: Heart,
-      color: 'bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400',
       active: false,
+      featured: true, // Signature Social Services & Welfare card
+      bgImage: '/Social.png',
+      fallbackImage: '/Social.jpg',
+      kicker: 'Quezon City Social Welfare',
+      subText: isTagalog ? 'Kagalingang Panlipunan' : 'Community & Family Aid',
+      actionText: isTagalog ? 'Nakatakdang Ilabas' : 'Coming Soon',
+      themeColor: 'rose',
     },
     {
       title: t('service.health.title'),
@@ -494,7 +498,7 @@ export const QCeServicesHomePage: React.FC = () => {
                   } hover:shadow-2xl hover:scale-[1.02] min-h-[230px]`}
                 >
                   {/* Full card background cover with artwork clearly visible across entire card */}
-                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-950">
                     <img
                       src={(card as any).bgImage}
                       alt={card.title}
@@ -503,6 +507,8 @@ export const QCeServicesHomePage: React.FC = () => {
                         const fallback = (card as any).fallbackImage;
                         if (fallback && target.src.includes((card as any).bgImage)) {
                           target.src = fallback;
+                        } else {
+                          target.style.display = 'none';
                         }
                       }}
                       className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
@@ -526,7 +532,9 @@ export const QCeServicesHomePage: React.FC = () => {
                         {(card as any).kicker}
                       </span>
                       <span
-                        className={`h-1.5 w-1.5 rounded-full animate-pulse ${pulseDotClass}`}
+                        className={`h-1.5 w-1.5 rounded-full ${
+                          card.active ? `animate-pulse ${pulseDotClass}` : 'bg-slate-400 dark:bg-slate-500'
+                        }`}
                       />
                     </div>
                     <h3
@@ -551,7 +559,9 @@ export const QCeServicesHomePage: React.FC = () => {
                       {(card as any).subText}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${actionColorClass}`}
+                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${
+                        card.active ? actionColorClass : 'text-slate-500 dark:text-slate-400'
+                      }`}
                     >
                       <span>{(card as any).actionText}</span>
                       {isExternal ? (
