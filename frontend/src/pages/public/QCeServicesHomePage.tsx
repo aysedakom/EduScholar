@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  FileText,
   Heart,
   Activity,
   Building,
@@ -111,9 +110,15 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.permits.title'),
       description: t('service.permits.desc'),
-      icon: FileText,
-      color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400',
-      active: false,
+      active: true,
+      featured: true, // Signature Permits & Licensing card with official stamping artwork
+      externalUrl: 'https://govserve.up.railway.app/',
+      bgImage: '/Permits.png',
+      fallbackImage: '/Permits.jpg',
+      kicker: 'Quezon City Permits & Licensing',
+      subText: isTagalog ? 'Opisyal na Licensing Portal' : 'Clearance & Licensing Hub',
+      actionText: isTagalog ? 'Buksan ang Live Portal' : 'Live Licensing Portal',
+      themeColor: 'indigo',
     },
     {
       title: t('service.social.title'),
@@ -437,38 +442,47 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Cards with custom background artwork (Education & Scholarship, DRRM, Citizen Engagement)
+            // Featured Cards with custom background artwork (Education & Scholarship, DRRM, Citizen Engagement, Permits & Licensing)
             if (isFeatured) {
               const theme = (card as any).themeColor || 'blue';
               const isAmber = theme === 'amber';
               const isRose = theme === 'rose';
+              const isIndigo = theme === 'indigo';
 
               const borderHoverClass = isRose
                 ? 'border-rose-200/80 dark:border-rose-900/50 hover:shadow-rose-500/25 hover:ring-2 hover:ring-rose-500'
                 : isAmber
                 ? 'border-amber-200/80 dark:border-amber-900/50 hover:shadow-amber-500/25 hover:ring-2 hover:ring-amber-500'
+                : isIndigo
+                ? 'border-indigo-200/80 dark:border-indigo-900/50 hover:shadow-indigo-500/25 hover:ring-2 hover:ring-indigo-500'
                 : 'border-blue-200/80 dark:border-blue-900/50 hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500';
 
               const kickerColorClass = isRose
                 ? 'text-rose-600 dark:text-rose-400'
                 : isAmber
                 ? 'text-amber-600 dark:text-amber-400'
+                : isIndigo
+                ? 'text-indigo-600 dark:text-indigo-400'
                 : 'text-blue-600 dark:text-blue-400';
 
               const pulseDotClass = isRose
                 ? 'bg-rose-500'
                 : isAmber
                 ? 'bg-amber-500'
+                : isIndigo
+                ? 'bg-indigo-500'
                 : 'bg-blue-500';
 
               const titleHoverColor = isDark
-                ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : 'group-hover:text-blue-400')
-                : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : 'group-hover:text-blue-600');
+                ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : isIndigo ? 'group-hover:text-indigo-400' : 'group-hover:text-blue-400')
+                : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : isIndigo ? 'group-hover:text-indigo-600' : 'group-hover:text-blue-600');
 
               const actionColorClass = isRose
                 ? 'text-rose-600 dark:text-rose-400'
                 : isAmber
                 ? 'text-amber-600 dark:text-amber-400'
+                : isIndigo
+                ? 'text-indigo-600 dark:text-indigo-400'
                 : 'text-blue-600 dark:text-blue-400';
 
               return (
