@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  Car,
   Building2,
   ArrowRight
 } from 'lucide-react';
@@ -167,9 +166,14 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.transport.title'),
       description: t('service.transport.desc'),
-      icon: Car,
-      color: 'bg-violet-50 text-violet-600 dark:bg-violet-950/60 dark:text-violet-400',
       active: false,
+      featured: true, // Signature Transport & Mobility Management card
+      bgImage: '/Transport.png',
+      fallbackImage: '/Transport.jpg',
+      kicker: 'Quezon City Transport & Mobility',
+      subText: isTagalog ? 'Transportasyon at Mobilidad' : 'Traffic Network & Smart Transit',
+      actionText: isTagalog ? 'Nakatakdang Ilabas' : 'Coming Soon',
+      themeColor: 'violet',
     },
     {
       title: t('service.assets.title'),
@@ -458,7 +462,7 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Cards with custom background artwork (Education & Scholarship, DRRM, Citizen Engagement, Permits & Licensing, Health & Sanitation, Social Services, Urban Planning)
+            // Featured Cards with custom background artwork (Education & Scholarship, DRRM, Citizen Engagement, Permits & Licensing, Health & Sanitation, Social Services, Urban Planning, Transport)
             if (isFeatured) {
               const theme = (card as any).themeColor || 'blue';
               const isAmber = theme === 'amber';
@@ -466,6 +470,7 @@ export const QCeServicesHomePage: React.FC = () => {
               const isIndigo = theme === 'indigo';
               const isEmerald = theme === 'emerald';
               const isSky = theme === 'sky';
+              const isViolet = theme === 'violet';
 
               const borderHoverClass = isRose
                 ? 'border-rose-200/80 dark:border-rose-900/50 hover:shadow-rose-500/25 hover:ring-2 hover:ring-rose-500'
@@ -477,6 +482,8 @@ export const QCeServicesHomePage: React.FC = () => {
                 ? 'border-emerald-200/80 dark:border-emerald-900/50 hover:shadow-emerald-500/25 hover:ring-2 hover:ring-emerald-500'
                 : isSky
                 ? 'border-sky-200/80 dark:border-sky-900/50 hover:shadow-sky-500/25 hover:ring-2 hover:ring-sky-500'
+                : isViolet
+                ? 'border-violet-200/80 dark:border-violet-900/50 hover:shadow-violet-500/25 hover:ring-2 hover:ring-violet-500'
                 : 'border-blue-200/80 dark:border-blue-900/50 hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500';
 
               const kickerColorClass = isRose
@@ -489,6 +496,8 @@ export const QCeServicesHomePage: React.FC = () => {
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : isSky
                 ? 'text-sky-600 dark:text-sky-400'
+                : isViolet
+                ? 'text-violet-600 dark:text-violet-400'
                 : 'text-blue-600 dark:text-blue-400';
 
               const pulseDotClass = isRose
@@ -501,11 +510,13 @@ export const QCeServicesHomePage: React.FC = () => {
                 ? 'bg-emerald-500'
                 : isSky
                 ? 'bg-sky-500'
+                : isViolet
+                ? 'bg-violet-500'
                 : 'bg-blue-500';
 
               const titleHoverColor = isDark
-                ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : isIndigo ? 'group-hover:text-indigo-400' : isEmerald ? 'group-hover:text-emerald-400' : isSky ? 'group-hover:text-sky-400' : 'group-hover:text-blue-400')
-                : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : isIndigo ? 'group-hover:text-indigo-600' : isEmerald ? 'group-hover:text-emerald-600' : isSky ? 'group-hover:text-sky-600' : 'group-hover:text-blue-600');
+                ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : isIndigo ? 'group-hover:text-indigo-400' : isEmerald ? 'group-hover:text-emerald-400' : isSky ? 'group-hover:text-sky-400' : isViolet ? 'group-hover:text-violet-400' : 'group-hover:text-blue-400')
+                : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : isIndigo ? 'group-hover:text-indigo-600' : isEmerald ? 'group-hover:text-emerald-600' : isSky ? 'group-hover:text-sky-600' : isViolet ? 'group-hover:text-violet-600' : 'group-hover:text-blue-600');
 
               const actionColorClass = isRose
                 ? 'text-rose-600 dark:text-rose-400'
@@ -517,6 +528,8 @@ export const QCeServicesHomePage: React.FC = () => {
                 ? 'text-emerald-600 dark:text-emerald-400'
                 : isSky
                 ? 'text-sky-600 dark:text-sky-400'
+                : isViolet
+                ? 'text-violet-600 dark:text-violet-400'
                 : 'text-blue-600 dark:text-blue-400';
 
               return (
