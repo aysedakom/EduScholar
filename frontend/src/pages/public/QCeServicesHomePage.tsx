@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  Users,
   FileText,
   Heart,
   Activity,
@@ -99,9 +98,15 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.citizen.title'),
       description: t('service.citizen.desc'),
-      icon: Users,
-      color: 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400',
-      active: false,
+      active: true,
+      featured: true, // Signature Citizen Engagement card with official signing artwork
+      externalUrl: 'https://govservecitizen.eprovider.site/',
+      bgImage: '/Citizen.png',
+      fallbackImage: '/Citizen.jpg',
+      kicker: 'Quezon City Citizen Engagement',
+      subText: isTagalog ? 'Opisyal na Citizen Portal' : 'Community & Feedback Hub',
+      actionText: isTagalog ? 'Buksan ang Live Portal' : 'Live Citizen Portal',
+      themeColor: 'rose',
     },
     {
       title: t('service.permits.title'),
@@ -432,18 +437,45 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Cards with custom background artwork (Education & Scholarship, DRRM)
+            // Featured Cards with custom background artwork (Education & Scholarship, DRRM, Citizen Engagement)
             if (isFeatured) {
-              const isAmber = (card as any).themeColor === 'amber';
+              const theme = (card as any).themeColor || 'blue';
+              const isAmber = theme === 'amber';
+              const isRose = theme === 'rose';
+
+              const borderHoverClass = isRose
+                ? 'border-rose-200/80 dark:border-rose-900/50 hover:shadow-rose-500/25 hover:ring-2 hover:ring-rose-500'
+                : isAmber
+                ? 'border-amber-200/80 dark:border-amber-900/50 hover:shadow-amber-500/25 hover:ring-2 hover:ring-amber-500'
+                : 'border-blue-200/80 dark:border-blue-900/50 hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500';
+
+              const kickerColorClass = isRose
+                ? 'text-rose-600 dark:text-rose-400'
+                : isAmber
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-blue-600 dark:text-blue-400';
+
+              const pulseDotClass = isRose
+                ? 'bg-rose-500'
+                : isAmber
+                ? 'bg-amber-500'
+                : 'bg-blue-500';
+
+              const titleHoverColor = isDark
+                ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : 'group-hover:text-blue-400')
+                : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : 'group-hover:text-blue-600');
+
+              const actionColorClass = isRose
+                ? 'text-rose-600 dark:text-rose-400'
+                : isAmber
+                ? 'text-amber-600 dark:text-amber-400'
+                : 'text-blue-600 dark:text-blue-400';
+
               return (
                 <div
                   key={idx}
                   onClick={() => handleCardClick(card.title, card.path, (card as any).externalUrl)}
-                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border ${
-                    isAmber
-                      ? 'border-amber-200/80 dark:border-amber-900/50 hover:shadow-amber-500/25 hover:ring-2 hover:ring-amber-500'
-                      : 'border-blue-200/80 dark:border-blue-900/50 hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500'
-                  } ${
+                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border ${borderHoverClass} ${
                     isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
                   } hover:shadow-2xl hover:scale-[1.02] min-h-[230px]`}
                 >
@@ -475,26 +507,18 @@ export const QCeServicesHomePage: React.FC = () => {
                   <div className="space-y-2 relative z-10">
                     <div className="flex items-center gap-2">
                       <span
-                        className={`text-[10px] font-black uppercase tracking-widest ${
-                          isAmber ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
-                        }`}
+                        className={`text-[10px] font-black uppercase tracking-widest ${kickerColorClass}`}
                       >
                         {(card as any).kicker}
                       </span>
                       <span
-                        className={`h-1.5 w-1.5 rounded-full animate-pulse ${
-                          isAmber ? 'bg-amber-500' : 'bg-blue-500'
-                        }`}
+                        className={`h-1.5 w-1.5 rounded-full animate-pulse ${pulseDotClass}`}
                       />
                     </div>
                     <h3
                       className={`text-lg sm:text-xl font-heading font-black tracking-tight leading-snug transition-colors ${
-                        isDark
-                          ? 'text-white group-hover:text-amber-400'
-                          : isAmber
-                          ? 'text-slate-900 group-hover:text-amber-600'
-                          : 'text-slate-900 group-hover:text-blue-600'
-                      }`}
+                        isDark ? 'text-white' : 'text-slate-900'
+                      } ${titleHoverColor}`}
                     >
                       {card.title}
                     </h3>
@@ -513,9 +537,7 @@ export const QCeServicesHomePage: React.FC = () => {
                       {(card as any).subText}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${
-                        isAmber ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${actionColorClass}`}
                     >
                       <span>{(card as any).actionText}</span>
                       {isExternal ? (
