@@ -9,7 +9,6 @@ import {
   FileText,
   Heart,
   Activity,
-  ShieldAlert,
   Building,
   DollarSign,
   Car,
@@ -78,14 +77,24 @@ export const QCeServicesHomePage: React.FC = () => {
       path: '/education-scholarship',
       active: true,
       featured: true, // Signature EduScholar card with ScholarHat image
+      bgImage: '/ScholarHat.webp',
+      fallbackImage: '/ScholarHat.png',
+      kicker: 'Quezon City Campus Aid',
+      subText: isTagalog ? 'Mag-aplay & Sumangguni' : 'Student Grants & Aid',
+      actionText: isTagalog ? 'Buksan ang Portal' : 'Access Portal',
+      themeColor: 'blue',
     },
     {
       title: t('service.drrm.title'),
       description: t('service.drrm.desc'),
-      icon: ShieldAlert,
-      color: 'bg-amber-500 text-white',
       active: true,
+      featured: true, // Signature DRRM card with DRRM background image
       externalUrl: 'https://govservedrrm.up.railway.app/',
+      bgImage: '/DRRM.png',
+      kicker: 'Quezon City Disaster Risk Reduction',
+      subText: isTagalog ? 'Opisyal na DRRM Hub' : 'Emergency & Disaster Hub',
+      actionText: isTagalog ? 'Buksan ang Live Portal' : 'Live DRRM Portal',
+      themeColor: 'amber',
     },
     {
       title: t('service.citizen.title'),
@@ -423,30 +432,36 @@ export const QCeServicesHomePage: React.FC = () => {
             const isExternal = !!(card as any).externalUrl;
             const isFeatured = (card as any).featured;
 
-            // Featured Education & Scholarship Card: Preserves signature ScholarHat aesthetic, perfectly balanced into a gorgeous flagship card
+            // Featured Cards with custom background artwork (Education & Scholarship, DRRM)
             if (isFeatured) {
+              const isAmber = (card as any).themeColor === 'amber';
               return (
                 <div
                   key={idx}
-                  onClick={() => handleCardClick(card.title, card.path)}
-                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border border-blue-200/80 dark:border-blue-900/50 ${
+                  onClick={() => handleCardClick(card.title, card.path, (card as any).externalUrl)}
+                  className={`group relative overflow-hidden rounded-2xl cursor-pointer shadow-lg transition-all duration-300 p-6 flex flex-col justify-between border ${
+                    isAmber
+                      ? 'border-amber-200/80 dark:border-amber-900/50 hover:shadow-amber-500/25 hover:ring-2 hover:ring-amber-500'
+                      : 'border-blue-200/80 dark:border-blue-900/50 hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500'
+                  } ${
                     isDark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900'
-                  } hover:shadow-2xl hover:shadow-blue-500/25 hover:ring-2 hover:ring-blue-500 hover:scale-[1.02] min-h-[230px]`}
+                  } hover:shadow-2xl hover:scale-[1.02] min-h-[230px]`}
                 >
-                  {/* Full card background cover with ScholarHat clearly visible across entire card */}
+                  {/* Full card background cover with artwork clearly visible across entire card */}
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <img
-                      src="/ScholarHat.webp"
-                      alt="Scholarship Graduation Hat"
+                      src={(card as any).bgImage}
+                      alt={card.title}
                       onError={(e) => {
                         const target = e.currentTarget;
-                        if (target.src.includes('ScholarHat.webp')) {
-                          target.src = '/ScholarHat.png';
+                        const fallback = (card as any).fallbackImage;
+                        if (fallback && target.src.includes((card as any).bgImage)) {
+                          target.src = fallback;
                         }
                       }}
                       className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     />
-                    {/* Sophisticated frosted gradient overlay ensuring crystal clear text readability while showcasing the graduation hat */}
+                    {/* Sophisticated frosted gradient overlay ensuring crystal clear text readability while showcasing the artwork */}
                     <div
                       className={`absolute inset-0 transition-all duration-300 ${
                         isDark
@@ -459,14 +474,26 @@ export const QCeServicesHomePage: React.FC = () => {
                   {/* Top content area with subtle category kicker and clear typography */}
                   <div className="space-y-2 relative z-10">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
-                        Quezon City Campus Aid
+                      <span
+                        className={`text-[10px] font-black uppercase tracking-widest ${
+                          isAmber ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
+                        }`}
+                      >
+                        {(card as any).kicker}
                       </span>
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full animate-pulse ${
+                          isAmber ? 'bg-amber-500' : 'bg-blue-500'
+                        }`}
+                      />
                     </div>
                     <h3
                       className={`text-lg sm:text-xl font-heading font-black tracking-tight leading-snug transition-colors ${
-                        isDark ? 'text-white group-hover:text-amber-400' : 'text-slate-900 group-hover:text-blue-600'
+                        isDark
+                          ? 'text-white group-hover:text-amber-400'
+                          : isAmber
+                          ? 'text-slate-900 group-hover:text-amber-600'
+                          : 'text-slate-900 group-hover:text-blue-600'
                       }`}
                     >
                       {card.title}
@@ -483,11 +510,19 @@ export const QCeServicesHomePage: React.FC = () => {
                   {/* Bottom anchored action bar balancing card height */}
                   <div className="pt-4 mt-auto relative z-10 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60">
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                      {isTagalog ? 'Mag-aplay & Sumangguni' : 'Student Grants & Aid'}
+                      {(card as any).subText}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-blue-600 dark:text-blue-400 group-hover:gap-2.5 transition-all">
-                      <span>{isTagalog ? 'Buksan ang Portal' : 'Access Portal'}</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${
+                        isAmber ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'
+                      }`}
+                    >
+                      <span>{(card as any).actionText}</span>
+                      {isExternal ? (
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      ) : (
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      )}
                     </span>
                   </div>
                 </div>
