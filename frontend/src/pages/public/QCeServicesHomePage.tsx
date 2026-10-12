@@ -82,6 +82,7 @@ export const QCeServicesHomePage: React.FC = () => {
       featured: true, // Signature DRRM card with DRRM background image
       externalUrl: 'https://govservedrrm.up.railway.app/',
       bgImage: '/DRRM.png',
+      fallbackImage: '/DRRM.jpg',
       kicker: 'Quezon City Disaster Risk Reduction',
       subText: isTagalog ? 'Opisyal na DRRM Hub' : 'Emergency & Disaster Hub',
       actionText: isTagalog ? 'Buksan ang Live Portal' : 'Live DRRM Portal',
