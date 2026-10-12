@@ -5,7 +5,6 @@ import {
   Moon,
   ChevronDown,
   Menu,
-  DollarSign,
   Car,
   Building2,
   ArrowRight
@@ -156,9 +155,14 @@ export const QCeServicesHomePage: React.FC = () => {
     {
       title: t('service.treasury.title'),
       description: t('service.treasury.desc'),
-      icon: DollarSign,
-      color: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400',
       active: false,
+      featured: true, // Signature Revenue Collection & Treasury Services card
+      bgImage: '/Treasury.png',
+      fallbackImage: '/Treasury.jpg',
+      kicker: 'Quezon City Treasury & Revenue',
+      subText: isTagalog ? 'Koleksyon ng Buwis at Ingat-yaman' : 'Tax Assessment & Treasury',
+      actionText: isTagalog ? 'Nakatakdang Ilabas' : 'Coming Soon',
+      themeColor: 'emerald',
     },
     {
       title: t('service.transport.title'),
