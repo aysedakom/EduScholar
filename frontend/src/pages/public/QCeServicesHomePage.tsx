@@ -4,8 +4,7 @@ import {
   Sun,
   Moon,
   ChevronDown,
-  Menu,
-  ArrowRight
+  Menu
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button';
@@ -529,22 +528,6 @@ export const QCeServicesHomePage: React.FC = () => {
                 ? (isRose ? 'group-hover:text-rose-400' : isAmber ? 'group-hover:text-amber-400' : isIndigo ? 'group-hover:text-indigo-400' : isEmerald ? 'group-hover:text-emerald-400' : isSky ? 'group-hover:text-sky-400' : isViolet ? 'group-hover:text-violet-400' : isCyan ? 'group-hover:text-cyan-400' : 'group-hover:text-blue-400')
                 : (isRose ? 'group-hover:text-rose-600' : isAmber ? 'group-hover:text-amber-600' : isIndigo ? 'group-hover:text-indigo-600' : isEmerald ? 'group-hover:text-emerald-600' : isSky ? 'group-hover:text-sky-600' : isViolet ? 'group-hover:text-violet-600' : isCyan ? 'group-hover:text-cyan-600' : 'group-hover:text-blue-600');
 
-              const actionColorClass = isRose
-                ? 'text-rose-600 dark:text-rose-400'
-                : isAmber
-                ? 'text-amber-600 dark:text-amber-400'
-                : isIndigo
-                ? 'text-indigo-600 dark:text-indigo-400'
-                : isEmerald
-                ? 'text-emerald-600 dark:text-emerald-400'
-                : isSky
-                ? 'text-sky-600 dark:text-sky-400'
-                : isViolet
-                ? 'text-violet-600 dark:text-violet-400'
-                : isCyan
-                ? 'text-cyan-600 dark:text-cyan-400'
-                : 'text-blue-600 dark:text-blue-400';
-
               return (
                 <div
                   key={idx}
@@ -569,12 +552,12 @@ export const QCeServicesHomePage: React.FC = () => {
                       }}
                       className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
                     />
-                    {/* Sophisticated frosted gradient overlay ensuring crystal clear text readability while showcasing the artwork */}
+                    {/* Frosted gradient overlay ensuring crystal clear text readability while showcasing the artwork vibrantly */}
                     <div
                       className={`absolute inset-0 transition-all duration-300 ${
                         isDark
                           ? 'bg-gradient-to-br from-slate-950/92 via-slate-950/80 to-slate-900/50 backdrop-blur-[0.5px]'
-                          : 'bg-gradient-to-br from-white/95 via-white/85 to-white/45 backdrop-blur-[0.5px]'
+                          : 'bg-gradient-to-br from-white/80 via-white/60 to-white/20 backdrop-blur-[0.5px]'
                       }`}
                     />
                   </div>
@@ -602,30 +585,11 @@ export const QCeServicesHomePage: React.FC = () => {
                     </h3>
                     <p
                       className={`text-xs leading-relaxed font-semibold ${
-                        isDark ? 'text-slate-300' : 'text-slate-600'
+                        isDark ? 'text-slate-300' : 'text-slate-700'
                       }`}
                     >
                       {card.description}
                     </p>
-                  </div>
-
-                  {/* Bottom anchored action bar balancing card height */}
-                  <div className="pt-4 mt-auto relative z-10 flex items-center justify-between border-t border-slate-200/60 dark:border-slate-800/60">
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                      {(card as any).subText}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 text-xs font-black group-hover:gap-2.5 transition-all ${
-                        card.active ? actionColorClass : 'text-slate-500 dark:text-slate-400'
-                      }`}
-                    >
-                      <span>{(card as any).actionText}</span>
-                      {isExternal ? (
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      ) : (
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      )}
-                    </span>
                   </div>
                 </div>
               );
