@@ -154,4 +154,5 @@ See [system_security_inventory.md](system_security_inventory.md) for details.
 
 ## 📄 License
 
-ISC (backend). Add or update the license to match your project's terms.
+Developed for academic purposes.
+© 2026 EduScholar. All rights reserved.
